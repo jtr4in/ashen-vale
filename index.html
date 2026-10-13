@@ -331,12 +331,12 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   <div class="box">
     <h1>Ashen Vale</h1>
     <p>Choose a class. You'll find only your class's weapons, in three sub-types that each fight with their own combo, and you'll learn skills from your class's pool as you level.</p>
-    <div class="modes" id="modes"><button class="mode on" type="button" data-m="dungeon"><b>Dungeon</b><span>Crawl a dark maze, kill the boss, descend</span></button><button class="mode" type="button" data-m="arena"><b>Arena</b><span>Endless waves in the open vale</span></button><button class="mode" type="button" data-m="trail"><b>Island Trail</b><span>Fight down a narrow cliff path to the far shore</span></button><button class="mode" type="button" data-m="coop"><b>Co-op</b><span>Dungeon or arena with a friend</span></button></div>
+    <div class="modes" id="modes"><button class="mode on" type="button" data-m="dungeon"><b>Dungeon</b><span>Crawl a dark maze, kill the boss, descend</span></button><button class="mode" type="button" data-m="arena"><b>Arena</b><span>Endless waves in the open vale</span></button><button class="mode" type="button" data-m="trail"><b>Island Trail</b><span>Fight down a narrow cliff path to the far shore</span></button><button class="mode" type="button" data-m="coop"><b>Co-op</b><span>Dungeon, arena or island with a friend</span></button></div>
     <div id="coopBox" hidden>
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
-      <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button></div>
+      <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button><button class="mbtn kb" type="button" data-k="trail">Island</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 26</div>
+      <div id="coopDiag">Version 27</div>
     </div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
@@ -402,7 +402,7 @@ const EFX = {
 };
 const ARENA = 56;
 let mode = 'arena', selMode = 'dungeon', coopKind = 'dungeon';
-const TR = { group: null, n: 1, M: 0, pi: 0, best: 0, name: '', goal: '' }; // Island Trail state
+const TR = { group: null, n: 1, M: 0, pi: 0, api: 0, best: 0, name: '', goal: '' }; // Island Trail state
 
 /* ---------------- renderer, scenes ---------------- */
 const view = $('view');
@@ -2087,7 +2087,7 @@ function startAs(base) {
   requestLock(); if (isTouch) $('touch').hidden = false;
   toast(`${CLASSES[base].name}<small>Pick your first Q skill: press 1 or 2</small>`, 2.2);
   pendingPicks = 1;
-  if (selMode === 'coop') { if (!coop.host) coopGuestStart(); else if (coopKind === 'arena') { coop.kind = 'arena'; nextWave(); } else { coop.kind = 'dungeon'; enterDungeon(1); } }
+  if (selMode === 'coop') { if (!coop.host) coopGuestStart(); else if (coopKind === 'arena') { coop.kind = 'arena'; nextWave(); } else if (coopKind === 'trail') { coop.kind = 'trail'; enterTrail(1); } else { coop.kind = 'dungeon'; enterDungeon(1); } }
   else if (selMode === 'dungeon') enterDungeon(1); else if (selMode === 'trail') enterTrail(1); else nextWave();
 }
 $('resumeBtn').addEventListener('click', () => { setPaused(false); requestLock(); });
@@ -4396,15 +4396,15 @@ function genTrail(n) {
   const A1 = rand(16, 24), A2 = rand(5, 8);
   const fx = (s) => A1 * Math.sin(s * 0.011 + p1) + A2 * Math.sin(s * 0.034 + p2), x0 = fx(0);
   Object.assign(TR, { M, L, px: new Float32Array(M + 1), pz: new Float32Array(M + 1), ph: new Float32Array(M + 1), hw: new Float32Array(M + 1), cw: new Float32Array(M + 1) });
-  const cpI = [0.27, 0.52, 0.76].map(f => Math.round(f * M)), plat = L - 34;
+  const cpI = [0.27, 0.52, 0.76].map(f => Math.round(f * M)), plat = L - 34, W0 = coop ? 3.4 : 2.3; // two players get a wider path
   for (let i = 0; i <= M; i++) {
     const s = i * TSTEP, sh = clamp(s, 16, plat);
     TR.px[i] = fx(s) - x0; TR.pz[i] = -s;
     TR.ph[i] = 8 + Math.sin(sh * 0.012 + p3) * 3 + Math.sin(sh * 0.05 + p4) * 1.1 + 7 * sh / L;
     // narrow almost everywhere: wider at the landing, around each campfire and on the boss's plateau
-    let w = 2.3 + 3.7 * (1 - smooth01((s - 14) / 12));
-    for (const c of cpI) w = Math.max(w, 2.3 + 4.2 * (1 - smooth01((Math.abs(s - c * TSTEP) - 4) / 8)));
-    TR.hw[i] = Math.max(w, 2.3 + 8.7 * smooth01((s - (plat - 12)) / 12));
+    let w = W0 + Math.max(0, 6 - W0) * (1 - smooth01((s - 14) / 12));
+    for (const c of cpI) w = Math.max(w, W0 + Math.max(0, 6.5 - W0) * (1 - smooth01((Math.abs(s - c * TSTEP) - 4) / 8)));
+    TR.hw[i] = Math.max(w, W0 + (11 - W0) * smooth01((s - (plat - 12)) / 12));
     TR.cw[i] = 5 + 7 * (0.5 + 0.5 * Math.sin(s * 0.017 + p5)) + (s < 20 || s > plat ? 6 : 0);
   }
   const g = new T.Group(); TR.group = g;
@@ -4513,36 +4513,42 @@ function genTrail(n) {
 }
 function trailLevel() { wave = 1 + (TR.n - 1) * 3 + Math.floor(3 * TR.best / Math.max(1, TR.M)); return wave; }
 function trailSpawnBoss() {
-  if (TR.bossDone) return;
+  if (TR.bossDone || (coop && !coop.host)) return;
   const k = TR.M - 6, b = spawnEnemy('boss', 1 + (TR.n - 1) * 3 + 3, { x: TR.px[k], z: TR.pz[k] });
   b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.parts.g.rotation.y = 0; b.name = TBOSS[(TR.n - 1) % TBOSS.length]; TR.boss = b;
 }
 function enterTrail(n) {
   runId++;
   const carry = tomes.length > 0; clearWorld(); if (carry) pendingPicks++;
+  enemySeq = 0; DG.dead = new Set();
   setMode('trail');
   if (TR.group) { scene.remove(TR.group); TR.group = null; }
   TR.n = n; genTrail(n);
-  Object.assign(TR, { name: ISLES[(n - 1) % ISLES.length], pi: 2, best: 0, rs: 2, bossDone: false, boss: null, exit: null, spawnT: 4, goal: '' });
+  Object.assign(TR, { name: ISLES[(n - 1) % ISLES.length], pi: 2, api: 2, best: 0, rs: 2, bossDone: false, boss: null, exit: null, spawnT: 4, goal: '' });
   waveDelay = -1; pending = 999; trailLevel();
   arenaTheme(n, true);
   player.pos.set(TR.px[2], TR.ph[2], TR.pz[2]); player.vel.set(0, 0, 0); player.kb.set(0, 0, 0); player.fallT = 0; player.yaw = 0; player.pitch = 0;
   trailSpawnBoss();
+  if (coop && coop.host) { coop.kind = 'trail'; coopSendIsle(); }
   toast(`${TR.name}<small>Island ${n} · fight your way to the far shore</small>`, 2.8);
 }
 function trailWake(e) {
   e.awake = true;
   if (e.type === 'boss') {
+    if (coop && coop.host) coopEmit('boss', {});
     $('boss').hidden = false; $('bossName').textContent = e.name; TR.goal = `Defeat ${e.name}`;
     toast(`${e.name}<small>holds the far shore</small>`, 2.4); sfx('gate'); shake = Math.max(shake, 0.25);
   }
 }
 function trailHorde(cnt, dir, surge) {
   let alive = 0; for (const e of enemies) if (e.alive) alive++;
-  cnt = Math.min(cnt, (surge ? 42 : 30) - alive); if (cnt <= 0) return;
-  if (dir < 0 && TR.pi < 24) dir = 1; // nothing behind you yet: they come from ahead
-  const k = clamp(Math.round(TR.pi + dir * randi(surge ? 12 : 18, surge ? 16 : 26)), 2, TR.M - 20);
-  if (Math.abs(k - TR.pi) < 8) return;
+  const duo = coopAllyHere() ? 1.35 : 1;
+  cnt = Math.min(Math.round(cnt * duo), Math.round((surge ? 42 : 30) * duo) - alive); if (cnt <= 0) return;
+  // with a friend, the front of the party meets the horde and the back gets the ambush
+  const lead = Math.max(TR.pi, TR.api), rear = Math.min(TR.pi, TR.api);
+  if (dir < 0 && rear < 24) dir = 1; // nothing behind you yet: they come from ahead
+  const base = dir > 0 ? lead : rear, k = clamp(Math.round(base + dir * randi(surge ? 12 : 18, surge ? 16 : 26)), 2, TR.M - 20);
+  if (Math.abs(k - base) < 8) return;
   const lv = trailLevel(), bru = Math.min(0.4, 0.14 + 0.03 * TR.n), eli = lv >= 3 ? Math.min(0.25, 0.03 + 0.012 * lv) : 0;
   for (let a = 0; a < cnt; a++) {
     const kk = clamp(k + randi(0, 5) * dir, 1, TR.M - 1), [nx, nz] = trailNormal(kk), off = rand(-1, 1) * (TR.hw[kk] - 0.8);
@@ -4550,10 +4556,12 @@ function trailHorde(cnt, dir, surge) {
     e.ti = kk;
   }
 }
-function trailCampfire(c) {
+function trailCampfire(c, quiet) {
   c.lit = true; TR.rs = c.i;
+  if (coop && coop.host) coopEmit('camp', { k: TR.cps.indexOf(c) });
   player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.3);
   toast('Campfire lit<small>You will wake here · and the horde heard you</small>', 2.4); sfx('level');
+  if (quiet) return;
   const n = 5 + 2 * TR.n; trailHorde(n, 1, true); trailHorde(n, -1, true);
 }
 function trailBossDown(e) {
@@ -4569,6 +4577,7 @@ function trailBossDown(e) {
   });
 }
 function trailSail() {
+  if (coop && !coop.host) { if (now - (TR.exit.req || -9) > 2) { TR.exit.req = now; coopEmit('descend', {}); } return; }
   TR.exit.used = true; $('fade').style.opacity = 1; sfx('gate');
   player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.5);
   setTimeout(() => { if (mode !== 'trail') return; enterTrail(TR.n + 1); $('fade').style.opacity = 0; }, 750);
@@ -4635,12 +4644,14 @@ function updateIsland(dt) {
   seaMat.color.copy(seaBase).lerp(thCur.fog, 0.35);
   TR.sea.position.y = SEA_Y + Math.sin(now * 0.8) * 0.08;
   if (player.fallT <= 0 && TR.pi > TR.best) { TR.best = TR.pi; trailLevel(); }
+  const mir = coopMirror(), A = coopAllyHere();
+  TR.api = A ? trailNear(A.x, A.z).i : TR.pi;
   TR.cps.forEach((c, k) => {
     const l = LIGHTS[k], fl = 0.85 + Math.sin(now * 11 + k) * 0.1 + rand(-0.05, 0.05);
     l.position.set(c.x, c.y + 1.2, c.z); l.color.setHex(0xff9040); l.distance = 16; l.intensity = (c.lit ? 1.8 : 0.3) * fl;
     c.f.scale.set(c.lit ? 1 : 0.4, (c.lit ? 1 : 0.3) * (1 + Math.sin(now * 14 + k) * 0.2), c.lit ? 1 : 0.4);
     if (c.lit && Math.random() < 0.5) FX.emit(c.x + rand(-0.15, 0.15), c.y + 0.6, c.z + rand(-0.15, 0.15), rand(-0.2, 0.2), rand(1.2, 2.2), rand(-0.2, 0.2), 0.6, 0xffa040, -0.6, 0.5);
-    if (!c.lit && started && player.alive && player.fallT <= 0 && Math.abs(TR.pi - c.i) < 3) trailCampfire(c);
+    if (!c.lit && started && !mir && ((player.alive && player.fallT <= 0 && Math.abs(TR.pi - c.i) < 3) || (A && Math.abs(TR.api - c.i) < 3))) trailCampfire(c);
   });
   const X = TR.exit, lx = LIGHTS[3];
   if (X && !X.used) {
@@ -4650,15 +4661,17 @@ function updateIsland(dt) {
   } else lx.intensity = 0;
   LIGHTS[4].intensity = 0;
   // the horde keeps coming until you reach the boss's plateau
-  if (started && player.alive && player.fallT <= 0 && !TR.bossDone && TR.pi < TR.M - 22) {
+  if (started && !mir && (player.alive || A) && player.fallT <= 0 && !TR.bossDone && Math.max(TR.pi, TR.api) < TR.M - 22) {
     TR.spawnT -= dt;
     if (TR.spawnT <= 0) { TR.spawnT = Math.max(2.6, 5.2 - 0.4 * TR.n) * rand(0.8, 1.2); trailHorde(randi(4, 6) + TR.n, Math.random() < 0.25 ? -1 : 1); }
   }
   // stragglers left far behind wander off
-  for (let i = enemies.length - 1; i >= 0; i--) {
+  const gone = [];
+  for (let i = enemies.length - 1; i >= 0 && !mir; i--) {
     const e = enemies[i];
-    if (e.alive && e.type !== 'boss' && e.ti != null && e.ti < TR.pi - 40) { scene.remove(e.parts.g); e.bar.remove(); enemies.splice(i, 1); }
+    if (e.alive && e.type !== 'boss' && e.ti != null && e.ti < Math.min(TR.pi, TR.api) - 40) { scene.remove(e.parts.g); e.bar.remove(); enemies.splice(i, 1); gone.push(e.id); DG.dead.add(e.id); }
   }
+  if (gone.length && coop && coop.host) coopEmit('gone', { ids: gone.slice(0, 60) });
   if (Math.random() < 0.25) FX.emit(player.pos.x + rand(-14, 14), player.pos.y + rand(-1, 3), player.pos.z + rand(-14, 14), rand(0.3, 0.8), rand(-0.05, 0.1), rand(-0.1, 0.1), 3, 0xe8f0f0, 0, 0);
 }
 function drawTrailMap(sc) {
@@ -4785,7 +4798,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 26;
+const NET_VER = 27;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
@@ -4865,14 +4878,15 @@ const num = (v, lo, hi) => { v = +v; return Number.isFinite(v) ? clamp(v, lo, hi
 // is your friend in the same place as you: the same dungeon floor, or the arena
 function coopSame(pr) {
   if (!coop || !pr || !started) return false;
-  return mode === 'dungeon' ? pr.md !== 'arena' && pr.sd != null && pr.sd === coop.seed : pr.md === 'arena';
+  if (mode === 'trail') return pr.md === 'trail' && pr.tn === TR.n;
+  return mode === 'dungeon' ? pr.md === 'dungeon' && pr.sd != null && pr.sd === coop.seed : pr.md === 'arena';
 }
 function coopAllyHere() {
   const a = coop && coop.ally; if (!a || !a.av || !a.pr || !a.pr.al || !coopSame(a.pr)) return null;
   return { x: a.av.position.x, z: a.av.position.z, alive: true, tile: mode === 'dungeon' ? tIdx(a.av.position.x) + tIdx(a.av.position.z) * DG.N : -1 };
 }
 // the guest mirrors the host's monsters instead of running its own
-const coopMirror = () => !!(coop && !coop.host && started && (mode === 'dungeon' || coop.kind === 'arena'));
+const coopMirror = () => !!(coop && !coop.host && started && (mode === 'dungeon' || (mode === 'arena' && coop.kind === 'arena') || (mode === 'trail' && coop.kind === 'trail')));
 async function coopOpen(host) {
   const room = await coopReady;
   let code = host ? newCode() : $('coopCode').value.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6);
@@ -4902,12 +4916,15 @@ async function coopOpen(host) {
   on('kill', (d) => { if (!c.host) { const e = enemyById(d.i); if (e && e.alive) killEnemy(e); } });
   on('hurt', (d) => { if (coopMirror()) hurtPlayer(num(d.d, 0, 5000), enemyById(d.i)); });
   on('slam', (d) => { if (started) slamAt(num(d.x, -1e4, 1e4) / 10, num(d.z, -1e4, 1e4) / 10, num(d.d, 0, 5000)); });
-  on('boss', () => { if (!c.host && mode === 'dungeon') bossStart(); });
+  on('boss', () => { if (!c.host && mode === 'dungeon') bossStart(); else if (!c.host && mode === 'trail' && TR.boss && TR.boss.awake === false) trailWake(TR.boss); });
+  on('isle', (d) => { if (!c.host) coopIsle(d); });
+  on('gone', (d) => { if (!c.host && Array.isArray(d.ids)) for (const id of d.ids) { DG.dead.add(id); const e = enemyById(id); if (e) { scene.remove(e.parts.g); e.bar.remove(); enemies.splice(enemies.indexOf(e), 1); } } });
+  on('camp', (d) => { if (!c.host && mode === 'trail' && TR.cps) { const cp = TR.cps[d.k | 0]; if (cp && !cp.lit) trailCampfire(cp, true); } });
   on('floor', (d) => { if (!c.host) coopFloor(d); });
-  on('sync', () => { if (c.host && started) { if (mode === 'dungeon') coopSendFloor(); else coopSendWave(true); } });
+  on('sync', () => { if (c.host && started) { if (mode === 'dungeon') coopSendFloor(); else if (mode === 'trail') coopSendIsle(); else coopSendWave(true); } });
   on('wave', (d) => { if (!c.host) coopWave(d); });
   on('bolt', (d) => { if (!c.host && started && Array.isArray(d.p) && Array.isArray(d.v)) spawnHex(num(d.p[0], -1e5, 1e5) / 10, num(d.p[1], -1e3, 1e3) / 10, num(d.p[2], -1e5, 1e5) / 10, num(d.v[0], -100, 100) / 100, num(d.v[1], -100, 100) / 100, num(d.v[2], -100, 100) / 100, num(d.d, 0, 5000), !!d.a); });
-  on('descend', () => { if (c.host && DG.stairs && !DG.stairs.used) descend(); });
+  on('descend', () => { if (c.host && mode === 'trail') { if (TR.exit && !TR.exit.used) trailSail(); } else if (c.host && DG.stairs && !DG.stairs.used) descend(); });
   r.presence({ ashen: 1, h: host ? 1 : 0 }).catch(() => {});
   coopStatus(host ? `Your code is <b>${code.toUpperCase()}</b>. Send it to your friend, then pick a class.` : `Joined <b>${code.toUpperCase()}</b>. Pick a class.`);
 }
@@ -4941,18 +4958,19 @@ function coopPeers(ch) {
     if (userApi && p.by) userApi.profiles([p.by]).then(ps => { if (c.ally && ps && ps[p.by] && ps[p.by].name) { c.ally.name = ps[p.by].name; $('allyName').textContent = c.ally.name; if (c.ally.tag) c.ally.tag.textContent = c.ally.name; } }).catch(() => {});
     if (started) toast('Your friend joined', 1.8);
     if (!started) coopStatus(c.host ? `Your code is <b>${c.code.toUpperCase()}</b>. Your friend is here. Pick a class to start.` : `Joined <b>${c.code.toUpperCase()}</b>. The host is here. Pick a class.`);
-    if (c.host && started) setTimeout(() => mode === 'dungeon' ? coopSendFloor() : coopSendWave(true), 300);
+    if (c.host && started) setTimeout(() => mode === 'dungeon' ? coopSendFloor() : mode === 'trail' ? coopSendIsle() : coopSendWave(true), 300);
   }
   c.ally.pr = p.presence;
   // a snapshot from the floor you just left would move the wrong monsters
   if (!c.host) c.snap = null;
   if (!c.host && Array.isArray(p.presence.en) && coopSame(p.presence)) {
     c.snap = new Map(); for (const a of p.presence.en.slice(0, 80)) if (Array.isArray(a)) c.snap.set(a[0], a); c.snapT = now; c.snapFull = p.presence.en.length >= 60;
-    if (mode === 'arena' && c.kind === 'arena') for (const [id, a] of c.snap) {
+    if ((mode === 'arena' && c.kind === 'arena') || (mode === 'trail' && c.kind === 'trail')) for (const [id, a] of c.snap) {
       if (typeof id !== 'number' || DG.dead.has(id) || enemyById(id)) continue;
       const code = a[7] | 0, type = TCODES[code & 15] || 'ghoul';
       const e = spawnEnemy(type, Math.round(num(a[8], 1, 999)), { x: num(a[1], -1e5, 1e5) / 10, z: num(a[2], -1e5, 1e5) / 10 }, !!(code & 16));
       e.id = id; e.awake = true; if (type === 'boss' && c.bossName) e.name = c.bossName;
+      if (type === 'boss' && mode === 'trail') { e.name = TBOSS[(TR.n - 1) % TBOSS.length]; e.awake = !!c.bossAwake; TR.boss = e; }
     }
   }
 }
@@ -4965,6 +4983,30 @@ function coopDropAlly(c) {
 function coopSendFloor() {
   if (!coop || !coop.host || mode !== 'dungeon' || coop.seed == null) return;
   coopEmit('floor', { dep: DG.depth, sd: coop.seed, dead: [...DG.dead].slice(0, 400), boss: DG.bossStarted ? 1 : 0, st: DG.stairs ? 1 : 0 });
+}
+function coopSendIsle(rs) {
+  if (!coop || !coop.host || mode !== 'trail') return;
+  coopEmit('isle', { n: TR.n, lit: TR.cps.map(c => c.lit ? 1 : 0), rs: rs ? 1 : 0, bd: TR.bossDone ? 1 : 0, ba: TR.boss && TR.boss.awake !== false ? 1 : 0, ri: TR.rs });
+}
+// guest: the host is on an island (a new one, a late join, or the party fell and woke at the campfire)
+function coopIsle(d) {
+  const c = coop; if (!c) return;
+  if (!started) { c.pendingIsle = d; return; }
+  const n = Math.round(num(d.n, 1, 999)), first = c.kind !== 'trail' || mode !== 'trail' || TR.n !== n;
+  c.kind = 'trail'; c.gotFloor = true; c.bossAwake = !!d.ba;
+  if (first) {
+    enterTrail(n); $('fade').style.opacity = 0;
+    const H = c.ally && c.ally.pr; if (H && H.md === 'trail' && H.tn === n) { player.pos.set(num(H.x, -1e4, 1e4) + 1, 0, num(H.z, -1e4, 1e4) + 1); trailClamp(player.pos, 0.5); player.pos.y = heightAt(player.pos.x, player.pos.z); }
+  }
+  if (Array.isArray(d.lit)) d.lit.forEach((l, k) => { const cp = TR.cps[k]; if (l && cp && !cp.lit) { cp.lit = true; TR.rs = cp.i; } });
+  if (d.rs) {
+    for (const e of enemies) { scene.remove(e.parts.g); e.bar.remove(); } enemies.length = 0; c.snap = null; TR.boss = null; $('boss').hidden = true;
+    const k = Math.max(2, Math.round(num(d.ri, 2, TR.M - 1))); player.pos.set(TR.px[k] + 1, TR.ph[k], TR.pz[k]); trailClamp(player.pos, 0.5);
+    toast(`The party fell<small>You wake by the ${k > 2 ? 'campfire' : 'shore'}</small>`, 2.4);
+  }
+  if (d.bd && !TR.bossDone) trailBossDown(null);
+  if (d.ba && TR.boss && TR.boss.awake === false) trailWake(TR.boss);
+  if (!player.alive) coopRise(null);
 }
 function coopSendWave(sync) {
   if (!coop || !coop.host || mode !== 'arena') return;
@@ -4991,6 +5033,7 @@ function coopWave(d) {
 }
 function coopGuestStart() {
   toast('Joining your friend<small>You will appear beside the host in a moment</small>', 3);
+  if (coop.pendingIsle) { const d = coop.pendingIsle; coop.pendingIsle = null; coopIsle(d); return; }
   if (coop.pendingWave) { const d = coop.pendingWave; coop.pendingWave = null; coopWave(d); return; }
   if (coop.pendingFloor) { const d = coop.pendingFloor; coop.pendingFloor = null; coopFloor(d); }
   else coopEmit('sync', {});
@@ -5030,7 +5073,7 @@ function updateEnemiesGuest(dt) {
     }
     const s = snap && snap.get(e.id);
     if (s) {
-      e.awake = true; e.missT = 0; e.seenSnap = true;
+      if (!(mode === 'trail' && e.type === 'boss')) e.awake = true; e.missT = 0; e.seenSnap = true;
       const tx = num(s[1], -1e5, 1e5) / 10, tz = num(s[2], -1e5, 1e5) / 10, k = 1 - Math.exp(-dt * 12);
       e.moving = Math.hypot(tx - e.pos.x, tz - e.pos.z) > 0.06;
       e.pos.x += (tx - e.pos.x) * k; e.pos.z += (tz - e.pos.z) * k; e.pos.y = heightAt(e.pos.x, e.pos.z);
@@ -5129,7 +5172,7 @@ function coopTick(dt) {
   if (c.pT <= 0 && started) {
     c.pT = 1 / 15;
     const w = gear.weapon, me = { ashen: 1, cls: playerClass, h: c.host ? 1 : 0, x: Math.round(player.pos.x * 100) / 100, z: Math.round(player.pos.z * 100) / 100, yaw: Math.round(player.yaw * 100) / 100,
-      hp: Math.round(player.hp), mhp: Math.round(stats.maxHp), al: player.alive ? 1 : 0, w: [w.base, w.combo || 0, w.rarity, w.element || ''], sw: c.acts, lv: player.level, dep: mode === 'dungeon' ? DG.depth : 0, sd: mode === 'dungeon' ? c.seed : null, md: mode, wv: wave, vl: buffs.veil ? 1 : 0 };
+      hp: Math.round(player.hp), mhp: Math.round(stats.maxHp), al: player.alive ? 1 : 0, w: [w.base, w.combo || 0, w.rarity, w.element || ''], sw: c.acts, lv: player.level, dep: mode === 'dungeon' ? DG.depth : 0, sd: mode === 'dungeon' ? c.seed : null, md: mode, wv: wave, vl: buffs.veil ? 1 : 0, tn: mode === 'trail' ? TR.n : 0 };
     if (c.host) me.en = enemySnap();
     c.room.presence(me).catch(() => {});
   }
@@ -5171,7 +5214,7 @@ function coopTick(dt) {
     $('allyFill').style.width = (100 * clamp(num(pr.hp, 0, 1e6) / Math.max(1, num(pr.mhp, 1, 1e6)), 0, 1)).toFixed(0) + '%';
   }
   // down in co-op: get back up beside your friend after a few seconds
-  if (!player.alive && c.deadT <= 0 && !c.host && mode === 'arena') { const A = coopAllyHere(); if (A) coopRise(A); }
+  if (!player.alive && c.deadT <= 0 && !c.host && (mode === 'arena' || mode === 'trail')) { const A = coopAllyHere(); if (A) coopRise(A); }
   if (!player.alive && c.deadT > 0) {
     c.deadT -= dt;
     $('deadTxt').textContent = c.deadT > 0 ? `You'll get back up beside your friend in ${Math.ceil(c.deadT)}…` : 'Waiting for your friend…';
@@ -5180,6 +5223,8 @@ function coopTick(dt) {
       if (A) coopRise(A);
       else if (mode === 'arena' && c.host) { arenaRestartWave(); coopRise(null); toast('The party fell<small>The wave starts over</small>', 2.4); }
       else if (mode === 'arena') { if (!c.ally) coopRise(null); }
+      else if (mode === 'trail' && c.host) { for (const e of enemies) { scene.remove(e.parts.g); e.bar.remove(); } enemies.length = 0; $('boss').hidden = true; TR.boss = null; trailRevive(); coopRise(null); coopSendIsle(true); }
+      else if (mode === 'trail') { if (!c.ally) { trailRevive(); coopRise(null); } }
       else if (c.host || !c.ally) { enterDungeon(mode === 'dungeon' ? DG.depth : 1); coopRise(null); toast('The party fell<small>The floor shifts and you rise again</small>', 2.4); }
     }
   }
@@ -5539,7 +5584,8 @@ function updateEnemies(dt) {
       }
       // monsters follow the path's bends instead of walking off the cliff toward you
       const ti = e.ti == null ? trailNear(e.pos.x, e.pos.z).i : e.ti;
-      if (Math.abs(ti - TR.pi) > 4) { const k = clamp(Math.round(ti + Math.sign(TR.pi - ti) * 3), 0, TR.M); mx = TR.px[k] - e.pos.x; mz = TR.pz[k] - e.pos.z; md = Math.hypot(mx, mz) || 1; }
+      const goal = tAlly ? TR.api : TR.pi;
+      if (Math.abs(ti - goal) > 4) { const k = clamp(Math.round(ti + Math.sign(goal - ti) * 3), 0, TR.M); mx = TR.px[k] - e.pos.x; mz = TR.pz[k] - e.pos.z; md = Math.hypot(mx, mz) || 1; }
     }
     const face = Math.atan2(md === d ? dx : mx, md === d ? dz : mz);
     P.g.rotation.y = face;

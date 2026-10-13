@@ -6,7 +6,7 @@ A first-person action RPG that runs in the browser. Pick a class, crawl the dung
 
 ## Co-op
 
-Both players open the link above. One picks **Co-op**, chooses **Dungeon** or **Arena**, clicks **Host a run** and shares the 4-letter code; the other picks **Co-op**, types the code and hits **Join**. The host's browser runs the monsters; the two browsers find each other through public Nostr relays (Trystero) and then connect directly, so there is no server to run.
+Both players open the link above. One picks **Co-op**, chooses **Dungeon**, **Arena** or **Island**, clicks **Host a run** and shares the 4-letter code; the other picks **Co-op**, types the code and hits **Join**. The host's browser runs the monsters; the two browsers find each other through public Nostr relays (Trystero) and then connect directly, so there is no server to run.
 
 ## Working on it
 
