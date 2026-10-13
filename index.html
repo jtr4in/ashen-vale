@@ -281,6 +281,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   <div class="slot"><span>Gloves</span><span id="gG"></span></div>
   <div class="slot"><span>Bracelet</span><span id="gB"></span></div>
   <div class="slot"><span>Ring</span><span id="gR"></span></div>
+  <div class="slot"><span>Left hand</span><span id="gO"></span></div>
   <div class="stats"><kbd>C</kbd> stats, gear &amp; skills · hold <kbd>V</kbd> to inspect</div>
   <div class="stats" id="gStats"></div>
 </div>
@@ -298,6 +299,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
     <div class="skill empty" id="slotE"><div class="glyph"></div><div class="cd"></div><span class="cdn"></span><span class="key">E</span><span class="lv"></span><span class="lbl">Empty</span></div>
     <div class="skill empty" id="slotR"><div class="glyph"></div><div class="cd"></div><span class="cdn"></span><span class="key">R</span><span class="lv"></span><span class="lbl">Empty</span></div>
     <div class="skill" id="skillSlot"><div class="glyph" id="surgeGlyph"></div><div class="cd" id="surgeCd"></div><span class="cdn" id="surgeCdn"></span><span class="key">RMB</span><span class="lv" id="sigLv"></span><span class="lbl" id="skillName">Shockwave</span></div>
+    <div class="skill empty" id="ohSlot"><div class="glyph" id="ohGlyph"></div><div class="cd" id="ohCd"></div><span class="cdn" id="ohCdn"></span><span class="key">Shift</span><span class="lbl" id="ohName">Empty</span></div>
     <div class="skill"><div class="glyph" style="background:radial-gradient(#fff,#8aa)"></div><div class="cd" id="dashCd"></div><span class="key">Spc</span><span class="lbl">Dash</span></div>
   </div>
 </div>
@@ -316,6 +318,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
     <button id="tSurge" type="button">Surge</button>
     <button id="tAtk" class="big" type="button">Attack</button>
     <button id="tDash" type="button">Dash</button>
+    <button id="tOff" type="button">Hand</button>
   </div>
   <div class="btns" style="right:auto;left:150px;bottom:calc(30px + env(safe-area-inset-bottom, 0px));grid-template-columns:auto">
     <button id="tEquip" type="button" hidden>Equip</button>
@@ -332,7 +335,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 24</div>
+      <div id="coopDiag">Version 25</div>
     </div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
@@ -692,7 +695,28 @@ const BASES = {
 };
 const WEAPON_BASES = Object.keys(BASES);
 const SLOTS = ['weapon', 'gloves', 'bracelet', 'ring'];
-const SLOT_NAME = { weapon: 'Weapon', gloves: 'Gloves', bracelet: 'Bracelet', ring: 'Ring', shield: 'Shield' };
+const SLOT_NAME = { weapon: 'Weapon', gloves: 'Gloves', bracelet: 'Bracelet', ring: 'Ring', shield: 'Shield', torch: 'Torch', trinket: 'Trinket' };
+// Left hand: a torch in the dungeon, a trinket out in the vale. Whatever you hold gives you a Shift ability.
+const TORCHES = {
+  plain: { name: 'Torch', col: 0xffa040, abil: 'Flare', cd: 30, desc: 'Your torch blazes, lighting the halls far ahead for 15 seconds' },
+  sun: { name: 'Sunbrand', col: 0xffe27a, abil: 'Sunburst', cd: 20, desc: 'A blinding flash stuns every monster within 9 m and sears it for 150% weapon damage' },
+  pyre: { name: 'Pyre Torch', col: 0xff5a1a, abil: 'Hurl Flame', cd: 12, desc: 'Throw a ball of fire that bursts for 250% weapon damage and leaves the ground burning' },
+  ghost: { name: 'Ghostlight', col: 0x7affc8, abil: 'Spirit Sight', cd: 32, desc: 'Reveals the map around you and marks every monster within 25 m to take 30% more damage' },
+  frost: { name: 'Frostwick', col: 0x7ac8ff, abil: 'Cold Flame', cd: 18, desc: 'Freezes every monster within 8 m for 3 seconds' },
+  blood: { name: 'Bloodwick', col: 0xff2a3a, abil: 'Blood Flame', cd: 30, desc: 'Heal 30% of your health over 4 seconds and steal 10% of the damage you deal for 8 seconds' },
+  void: { name: 'Voidcandle', col: 0xb070ff, abil: 'Veil', cd: 26, desc: 'Monsters lose sight of you for 5 seconds, and your hits in the veil always crit' },
+};
+const TRINKETS = {
+  horn: { name: 'War Horn', col: 0xd8a860, abil: 'Rally', cd: 28, desc: '35% more damage and 25% faster attacks for 8 seconds' },
+  glass: { name: 'Hourglass', col: 0xe8d8a0, abil: 'Slow Time', cd: 24, desc: 'Every monster within 15 m is slowed for 6 seconds' },
+  bone: { name: 'Bone Charm', col: 0xe8e0c8, abil: 'Bone Ward', cd: 22, desc: 'Block every hit for 4 seconds' },
+  coin: { name: 'Lucky Coin', col: 0xffd84a, abil: 'Fortune', cd: 24, desc: '+40% critical chance for 10 seconds' },
+  stone: { name: 'Thunder Stone', col: 0x6ab0ff, abil: 'Thunderclap', cd: 14, desc: 'Lightning leaps between up to 8 monsters for 150% weapon damage each' },
+  idol: { name: 'Ember Idol', col: 0xff6a2a, abil: 'Fire Ring', cd: 18, desc: 'A ring of fire bursts out around you, burning everything within 7 m' },
+  smoke: { name: 'Smoke Bomb', col: 0x9a9aa8, abil: 'Vanish', cd: 18, desc: 'Leap back out of a cloud of smoke and stay unseen for 3 seconds' },
+};
+const OH_ADJ = ['Sooty', '', 'Fine', 'Ancient', 'Mythic'];
+const ohDef = (it) => it ? (it.slot === 'torch' ? TORCHES : TRINKETS)[it.kind] : null;
 const ELEMS = ['fire', 'frost', 'lightning', 'void'];
 // Gloves, bracelets and rings carry no raw stats. They carry modifiers, and every modifier
 // adds a visible piece to your arm. Weapon modifiers change what your hits do; player modifiers change you.
@@ -1008,6 +1032,11 @@ function genItem(level, rarity, slot, opts = {}) {
     it.sub = SUB[it.base][it.combo];
     it.name = rarity === 4 ? UNIQUE[it.base][it.element]
       : (rarity === 0 ? 'Worn ' : '') + elName(it.element) + it.sub + (rarity >= 2 ? ' ' + pick(SUFFIX) : '');
+  } else if (slot === 'torch' || slot === 'trinket') {
+    const L = slot === 'torch' ? TORCHES : TRINKETS;
+    it.kind = opts.kind || pick(Object.keys(L).filter(k => k !== 'plain'));
+    it.element = null; it.col = L[it.kind].col;
+    it.name = (OH_ADJ[rarity] ? OH_ADJ[rarity] + ' ' : '') + L[it.kind].name;
   } else if (slot === 'gloves' || slot === 'bracelet' || slot === 'ring') {
     it.mods = opts.mods || rollMods(slot, rarity);
     it.element = null; it.col = it.mods.length ? MODS[it.mods[0].id].col : 0xd8c8a0;
@@ -1033,7 +1062,7 @@ const player = {
 const gear = {
   weapon: genItem(1, 0, 'weapon', { base: 'sword', element: null, combo: 0, name: 'Rusty Shortsword' }),
   gloves: genItem(1, 0, 'gloves', { name: 'Worn Wraps', mods: [] }),
-  bracelet: null, ring: null, shield: null,
+  bracelet: null, ring: null, shield: null, torch: null, trinket: null,
 };
 gear.weapon.stats.min = 6; gear.weapon.stats.max = 10;
 
@@ -1063,10 +1092,12 @@ function computeStats(g = gear) {
     if (buffs.frenzy) { st.aps *= 1 + buffs.frenzy.aps; if (buffs.frenzy.dmg) { st.min *= 1 + buffs.frenzy.dmg; st.max *= 1 + buffs.frenzy.dmg; st.elem *= 1 + buffs.frenzy.dmg; } }
     if (buffs.bloodlust && buffs.bloodlust.aps) st.aps *= 1 + buffs.bloodlust.aps;
     if (buffs.ambush) st.crit = 100;
+    if (buffs.rally) { const k = 1 + buffs.rally.dmg; st.min *= k; st.max *= k; st.elem *= k; st.aps *= 1.25; }
+    if (buffs.fortune) st.crit += buffs.fortune.crit;
     if (buffs.ironskin) st.armor = Math.min(85, st.armor + buffs.ironskin.armor);
     if (buffs.aura) st.armor = Math.min(85, st.armor + buffs.aura.armor);
     if (buffs.bulwark) st.armor = Math.min(85, st.armor + buffs.bulwark.armor);
-    st.leech = (buffs.bloodlust ? buffs.bloodlust.leech : 0) + (buffs.frenzy && buffs.frenzy.leech ? buffs.frenzy.leech : 0) + (mods.leech || 0) / 100;
+    st.leech = (buffs.bloodlust ? buffs.bloodlust.leech : 0) + (buffs.frenzy && buffs.frenzy.leech ? buffs.frenzy.leech : 0) + (mods.leech || 0) / 100 + (buffs.bloodflame ? buffs.bloodflame.leech : 0);
   }
   st.dps = ((st.min + st.max) / 2 * (1 + st.crit / 100 * (st.critMult - 1)) + st.elem + st.proc * st.procDmg) * st.aps;
   return st;
@@ -1455,7 +1486,10 @@ function rebuildViewmodel() {
   leftHand.add(leftArmObj);
   shieldObj = null;
   if (torchObj) { leftHand.remove(torchObj); torchObj = null; }
-  if (mode === 'dungeon' && !gear.shield) { torchObj = buildTorch(); torchObj.scale.setScalar(VM_SCALE); torchObj.position.set(0, 0.02, 0); leftHand.add(torchObj); }
+  if (mode === 'dungeon' && !gear.shield) { torchObj = buildTorch(ohCol()); torchObj.scale.setScalar(VM_SCALE); torchObj.position.set(0, 0.02, 0); leftHand.add(torchObj); }
+  else if (mode !== 'dungeon' && gear.trinket) { torchObj = buildTrinket(gear.trinket.kind, gear.trinket.col); torchObj.scale.setScalar(VM_SCALE * 1.3); torchObj.position.set(0, 0.0, -0.02); leftHand.add(torchObj); }
+  vmTorch.color.setHex(ohCol()); setTorchLight();
+  if (typeof renderOffhand === 'function') renderOffhand();
   if (gear.shield) { shieldObj = buildShield(gear.shield); shieldObj.scale.setScalar(VM_SCALE * 0.72); shieldObj.position.set(0.02, 0.05, -0.08); leftHand.add(shieldObj); }
   const c = new T.Color(weaponObj.userData.color);
   vmGlow.color.copy(c);
@@ -1636,6 +1670,8 @@ function dropItem(it, at, quiet) {
   if (it.slot === 'weapon') { model = buildWeapon(it); model.scale.setScalar(1.25); model.rotation.z = Math.PI / 2.2; }
   else if (it.slot === 'gloves') { model = buildArm(it); model.scale.setScalar(1.6); }
   else if (it.slot === 'shield') { model = buildShield(it); model.scale.setScalar(1.7); }
+  else if (it.slot === 'torch') { model = buildTorch(it.col); model.scale.setScalar(2.2); model.rotation.z = Math.PI / 2.4; model.position.x = 0.4; }
+  else if (it.slot === 'trinket') { model = buildTrinket(it.kind, it.col); model.scale.setScalar(2.6); }
   else {
     model = new T.Group();
     const big = it.slot === 'bracelet';
@@ -1662,6 +1698,7 @@ function dropItem(it, at, quiet) {
 }
 // Upgrade = more damage per second, or about the same damage with more health or block.
 function isUpgrade(it) {
+  if (it.slot === 'torch' || it.slot === 'trinket') { const c = gear[it.slot]; return !c || it.rarity > c.rarity || (it.slot === 'torch' && !c); }
   const a = computeStats(), b = computeStats(Object.assign({}, gear, { [it.slot]: it }));
   return b.dps > a.dps * 1.01 || (b.dps >= a.dps * 0.98 && (b.maxHp > a.maxHp + 0.5 || b.block > a.block));
 }
@@ -1707,6 +1744,9 @@ function statLines(it) {
     L.push(`${s.reach.toFixed(1)} m reach`);
     if (s.hp) L.push(`+${s.hp} health`);
     if (s.block) { L.push(`${s.block}% chance to block a hit`); L.push(`${s.armor}% less damage taken`); }
+  } else if (it.slot === 'torch' || it.slot === 'trinket') {
+    const D = ohDef(it);
+    L.push(`<b>Shift: ${D.abil}</b>`); L.push(D.desc + (it.rarity ? ` (+${15 * it.rarity}% stronger)` : '')); L.push(`${ohCdFor(it).toFixed(0)}s cooldown`);
   } else if (it.mods) {
     if (!it.mods.length) L.push('No modifiers');
     for (const m of it.mods) L.push(`<span class="mod" style="--mc:#${new T.Color(MODS[m.id].col).getHexString()}"><i>${MODS[m.id].kind}</i>${MODS[m.id].text(m.v)}</span>`);
@@ -1750,6 +1790,15 @@ function verdicts(it, cur, a, b) {
     if (it.element) out.push(row('same', '◆', `${ENAME[it.element]} hits`));
     return out;
   }
+  if (it.slot === 'torch' || it.slot === 'trinket') {
+    const D = ohDef(it), C = it.slot === 'torch' ? ohDef(cur) || TORCHES.plain : ohDef(cur);
+    out.push(row('same', '◆', `<span style="color:#${new T.Color(D.col).getHexString()}">Shift: ${D.abil}</span>`));
+    out.push(`<div class="same" style="font-size:13px;color:var(--muted)">${D.desc}</div>`);
+    if (C && C.abil === D.abil && cur) { if (it.rarity > cur.rarity) out.push(row('up', '▲', 'Stronger, shorter cooldown')); else if (it.rarity < cur.rarity) out.push(row('down', '▼', 'Weaker, longer cooldown')); }
+    else if (C) out.push(row('same', '⇄', `Instead of ${C.abil}`));
+    else out.push(row('up', '▲', 'Unlocks your Shift ability'));
+    return out;
+  }
   const had = {}; for (const m of (cur && cur.mods) || []) had[m.id] = m.v;
   const hex = (id) => '#' + new T.Color(MODS[id].col).getHexString();
   for (const m of it.mods || []) {
@@ -1777,7 +1826,7 @@ function showCard(l) {
     <div class="kind">${RARITY[it.rarity]} ${kind}</div>
     <div class="verd">${verdicts(it, cur, a, b).join('')}</div>
     ${it.slot === 'weapon' && comboOf(it) !== comboOf(gear.weapon) ? `<div class="ncomb">New combo: ${comboOf(it).name}<br><span>${comboOf(it).desc}</span></div>` : ''}
-    <div class="vs">Replaces <span class="rar${cur ? cur.rarity : 0}">${cur ? cur.name : 'empty slot'}</span> · <kbd>C</kbd> for numbers</div>
+    <div class="vs">Replaces <span class="rar${cur ? cur.rarity : 0}">${cur ? cur.name : it.slot === 'torch' ? 'your plain torch' : it.slot === 'trinket' ? 'your empty left hand' : 'empty slot'}</span> · <kbd>C</kbd> for numbers</div>
     <div class="hint"><kbd>F</kbd> Equip</div>`;
   card.hidden = false;
   if (isTouch) $('tEquip').hidden = false;
@@ -1818,10 +1867,13 @@ function skillRows() {
   return h;
 }
 function gearRows() {
-  return SLOTS.map((k) => {
+  return [...SLOTS, mode === 'dungeon' ? 'torch' : 'trinket'].map((k) => {
+    if (k === 'torch' && !gear.torch) return `<div class="sl"><div class="sk">Left hand · Torch</div><div class="sn">Torch</div><div class="sd"><b>Shift: Flare</b><br>${TORCHES.plain.desc}<br>Other torches drop in the dungeon</div></div>`;
+    if (k === 'trinket' && !gear.trinket) return `<div class="sl"><div class="sk">Left hand · Trinket</div><div class="sn empty">Empty</div><div class="sd">Pick up a trinket in the vale to unlock a Shift ability</div></div>`;
     const it = gear[k];
     if (!it) return `<div class="sl"><div class="sk">${SLOT_NAME[k]}</div><div class="sn empty">Empty</div><div class="sd">${k === 'shield' ? 'A shield appears in your left hand' : k === 'ring' ? 'A ring appears on your right hand' : 'A bracelet appears on your right wrist'}</div></div>`;
     const fx = fxLine(it);
+    if (k === 'torch' || k === 'trinket') return `<div class="sl"><div class="sk">Left hand · ${SLOT_NAME[k]}</div><div class="sn rar${it.rarity}">${it.name}</div><div class="sd">${statLines(it).join('<br>')}</div></div>`;
     return `<div class="sl"><div class="sk">${SLOT_NAME[k]}${it.slot === 'weapon' ? ' · ' + SUB[it.base][it.combo || 0] : ''} · item level ${it.level}</div><div class="sn rar${it.rarity}">${it.name}</div><div class="sd">${statLines(it).join(it.slot === 'weapon' ? ' · ' : '<br>')}${fx ? `<br><i>${fx}</i>` : ''}</div></div>`;
   }).join('');
 }
@@ -1831,6 +1883,7 @@ function pulse(id) { const el = $(id); el.classList.remove('pulse'); void el.off
 function updateGearHud() {
   const set = (id, it) => { const el = $(id); el.textContent = it ? it.name : 'None'; el.className = it ? 'rar' + it.rarity : ''; };
   set('gW', gear.weapon); set('gG', gear.gloves); set('gB', gear.bracelet); set('gR', gear.ring);
+  const oh = curOff(); $('gO').textContent = oh ? oh.name : mode === 'dungeon' ? 'Torch' : 'Empty'; $('gO').className = oh ? 'rar' + oh.rarity : '';
   if (!$('sheet').hidden) renderSheet();
   refreshLootLabels();
 }
@@ -1912,6 +1965,7 @@ document.addEventListener('keydown', (e) => {
   if (!started) return;
   keys.add(e.code);
   if (e.code === 'Space') { e.preventDefault(); if (!choosing) tryDash(); }
+  if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !choosing && !paused) tryOffhand();
   // with the stats panel open, 1/2/3 switch its tabs instead of picking a skill
   if (!$('sheet').hidden && /^Digit[123]$/.test(e.code)) { sheetTab = +e.code.slice(5) - 1; renderSheet(); keys.delete(e.code); return; }
   if (choosing) {
@@ -2037,7 +2091,7 @@ if (isTouch) {
   canvas.addEventListener('touchstart', (e) => { const t = e.changedTouches[0]; lookTouch = { id: t.identifier, x: t.clientX, y: t.clientY }; }, { passive: true });
   const hold = (id, on, off) => { const b = $(id); b.addEventListener('touchstart', (e) => { e.preventDefault(); on(); }, { passive: false }); if (off) b.addEventListener('touchend', off); };
   hold('tAtk', () => { attackHeld = true; }, () => { attackHeld = false; });
-  hold('tSurge', trySurge); hold('tDash', tryDash); hold('tEquip', useNear); hold('tGear', toggleSheet); hold('tQ', () => trySkillSlot('Q')); hold('tE', () => trySkillSlot('E')); hold('tR', () => trySkillSlot('R'));
+  hold('tSurge', trySurge); hold('tDash', tryDash); hold('tOff', tryOffhand); hold('tEquip', useNear); hold('tGear', toggleSheet); hold('tQ', () => trySkillSlot('Q')); hold('tE', () => trySkillSlot('E')); hold('tR', () => trySkillSlot('R'));
 }
 
 /* ---------------- combat ---------------- */
@@ -2960,6 +3014,82 @@ function trySurge() {
   player.surgeCd = sigCd(S);
   sfx('swing', { heavy: true });
 }
+const curOff = () => mode === 'dungeon' ? gear.torch : gear.trinket;
+const curOffDef = () => mode === 'dungeon' ? ohDef(gear.torch) || TORCHES.plain : ohDef(gear.trinket);
+const ohCol = () => { const D = curOffDef(); return D ? D.col : 0xffb040; };
+function ohCdFor(it) { const D = it ? ohDef(it) : curOffDef(); return D ? D.cd * (1 - 0.08 * ((it && it.rarity) || 0)) : 1; }
+function setTorchLight() {
+  if (mode !== 'dungeon') return;
+  const TH = dTheme(DG.depth || 1);
+  torchLight.color.setHex(ohCol()).lerp(new T.Color(TH.fire), 0.3);
+}
+function renderOffhand() {
+  const D = curOffDef(), el = $('ohSlot');
+  el.classList.toggle('empty', !D);
+  $('ohName').textContent = D ? D.abil : 'Empty';
+  $('ohGlyph').style.background = D ? `radial-gradient(circle at 50% 40%, #fff 0 12%, #${new T.Color(D.col).getHexString()} 30%, transparent 72%)` : 'none';
+  el.title = D ? `${D.abil}: ${D.desc}` : 'Pick up a trinket to unlock a Shift ability';
+}
+function tryOffhand() {
+  const it = curOff(), D = curOffDef();
+  if (!D || !player.alive) { if (!D) toast('Nothing in your left hand<small>Trinkets drop in the vale and unlock a Shift ability</small>', 1.8); return; }
+  if (player.ohCd > 0) return;
+  player.ohCd = ohCdFor(it);
+  const k = 1 + 0.15 * ((it && it.rarity) || 0), col = D.col, c = player.pos.clone(), near = (r) => enemies.filter(e => e.alive && Math.hypot(e.pos.x - c.x, e.pos.z - c.z) < r + e.def.radius);
+  const flash = (n = 40) => { for (let i = 0; i < n; i++) { const a = rand(0, Math.PI * 2); FX.emit(c.x + Math.cos(a) * 0.6, c.y + rand(0.6, 1.8), c.z + Math.sin(a) * 0.6, Math.cos(a) * rand(3, 8), rand(0, 3), Math.sin(a) * rand(3, 8), 0.6, i % 2 ? 0xffffff : col, 2, 2); } };
+  pulse('ohSlot'); equipAnim = Math.max(equipAnim, 0.5);
+  switch (D.abil) {
+    case 'Flare':
+      addBuff('flare', 15 * k, { label: 'Flare' }); flash(60); sfx('fire');
+      if (DG.grid) { const N = DG.N, pi = tIdx(c.x), pj = tIdx(c.z); for (let j = pj - 6; j <= pj + 6; j++) for (let i = pi - 6; i <= pi + 6; i++) if (i >= 0 && j >= 0 && i < N && j < N) DG.seen[i + j * N] = 1; }
+      break;
+    case 'Sunburst':
+      groundRing(c, col, 0.5, 9, 0.5, 0.95); flash(90); sfx('lightning'); shake = Math.max(shake, 0.2);
+      $('hurt').style.boxShadow = 'inset 0 0 300px rgba(255,240,180,.8)'; setTimeout(() => $('hurt').style.boxShadow = 'inset 0 0 160px rgba(180,10,0,0)', 140);
+      for (const e of near(9)) { strike(e, 1.5 * k, null, 0); if (e.alive) e.stunT = Math.max(e.stunT, e.type === 'boss' ? 0.8 : 2.5); }
+      break;
+    case 'Hurl Flame': {
+      const dir = fwd(), ball = new T.Mesh(new T.IcosahedronGeometry(0.35, 1), new T.MeshBasicMaterial({ color: col }));
+      const p = camPos().addScaledVector(dir, 0.8); p.y -= 0.3; let done = false; sfx('fire');
+      const boom = () => { if (done) return; done = true; const at = p.clone(); at.y = heightAt(at.x, at.z); shockwave(at, 3.6, 2.5 * k, 0.4, col); burst(at.clone().setY(at.y + 0.6), col, 50, 9, 0.7, 6); firePatch(at.x, at.z); for (const e of enemies) if (e.alive && Math.hypot(e.pos.x - at.x, e.pos.z - at.z) < 3.6) { e.burnT = 4; e.burnDps = Math.max(e.burnDps, avgHit() * 0.5 * k); } sfx('hit', { heavy: 1 }); };
+      addTemp(ball, 0.6, (dt) => {
+        if (done) return; p.addScaledVector(dir, dt * 30); ball.position.copy(p);
+        FX.emit(p.x, p.y, p.z, rand(-1, 1), rand(0, 1), rand(-1, 1), 0.4, pick([col, 0xffb040, 0x3a2a20]), 0, 3);
+        if (solidAt(p.x, p.z) || p.y < heightAt(p.x, p.z) + 0.2 || enemies.some(e => e.alive && Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < 0.9 * e.def.scale)) boom();
+      }, boom);
+      break;
+    }
+    case 'Spirit Sight':
+      flash(70); sfx('frost'); groundRing(c, col, 0.5, 25, 0.8, 0.5);
+      if (DG.grid) { const N = DG.N, pi = tIdx(c.x), pj = tIdx(c.z); for (let j = pj - 10; j <= pj + 10; j++) for (let i = pi - 10; i <= pi + 10; i++) if (i >= 0 && j >= 0 && i < N && j < N) DG.seen[i + j * N] = 1; }
+      for (const e of near(25)) markEnemy(e, 0.3 * k, col);
+      break;
+    case 'Cold Flame': frostNova(k, 8, 3); break;
+    case 'Blood Flame': {
+      flash(50); sfx('fire'); const per = stats.maxHp * 0.3 * k / 4;
+      addTemp(null, 4, (dt) => { if (player.alive) player.hp = Math.min(stats.maxHp, player.hp + per * dt); });
+      addBuff('bloodflame', 8, { label: 'Blood Flame', leech: 0.1 * k });
+      break;
+    }
+    case 'Veil': addBuff('veil', 5 * k, { label: 'Veil' }); addBuff('ambush', 5 * k, { label: '' }); flash(40); sfx('swing'); for (const e of enemies) e.atkT = -1; break;
+    case 'Rally': addBuff('rally', 8, { label: 'Rally', dmg: 0.35 * k }); flash(50); sfx('level'); shake = Math.max(shake, 0.1); break;
+    case 'Slow Time': groundRing(c, col, 0.5, 15, 0.6, 0.6); flash(40); sfx('frost'); for (const e of near(15)) e.slowT = Math.max(e.slowT, 6 * k); break;
+    case 'Bone Ward': addBuff('wall', 4 * k, { n: 0, label: 'Bone Ward' }); flash(30); sfx('block'); break;
+    case 'Fortune': addBuff('fortune', 10, { label: 'Fortune', crit: Math.round(40 * k) }); flash(40); sfx('loot'); break;
+    case 'Thunderclap': chainLightning(1.5 * k, 8); sfx('lightning'); break;
+    case 'Fire Ring':
+      shockwave(c, 7, 1.2 * k, 0.3, col); sfx('fire');
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; firePatch(c.x + Math.cos(a) * 4, c.z + Math.sin(a) * 4); }
+      for (const e of near(7)) { e.burnT = 4; e.burnDps = Math.max(e.burnDps, avgHit() * 0.5 * k); }
+      break;
+    case 'Vanish':
+      burst(c.clone().setY(c.y + 1), 0x8a8a96, 60, 5, 1.2, -1); burst(c.clone().setY(c.y + 0.5), 0x5a5a66, 40, 3, 1.4, -0.5);
+      player.dashDir.copy(fwd()).negate(); player.dashT = 0.32; player.invuln = 0.5; fovKick = 10;
+      addBuff('veil', 3 * k, { label: 'Vanish' }); for (const e of enemies) e.atkT = -1; sfx('swing');
+      break;
+  }
+  stats = computeStats();
+}
 function tryDash() {
   if (!player.alive || player.dashCd > 0) return;
   const f = fwd(), r = right();
@@ -3495,6 +3625,9 @@ function killEnemy(e) {
   }
   if (isBoss) { if (Math.random() < 0.4) dropItem(genItem(e.level + 1, rollRarity(true, wave)), e.pos); $('boss').hidden = true; if (mode === 'dungeon') dungeonBossDown(e); }
   if (Math.random() < 0.22) dropOrb(e.pos);
+  // torches turn up in the dungeon, trinkets out in the vale
+  const ohChance = isBoss ? 0.45 : e.elite ? 0.3 : e.type === 'brute' ? 0.06 : 0.03;
+  if (Math.random() < ohChance) dropItem(genItem(e.level, Math.max(1, rollRarity(isBoss, wave)), mode === 'dungeon' ? 'torch' : 'trinket'), e.pos);
 }
 function gainXp(x) {
   player.xp += x;
@@ -3775,7 +3908,7 @@ function resetRun() {
   wave = 0; kills = 0; waveDelay = -1; killsSinceDrop = 10; pending = 0;
   Object.assign(player, { level: 1, xp: 0, alive: true, dashT: 0, dashCd: 0, surgeCd: 0, invuln: 0, regenDelay: 0, lungeT: 0, hopT: 1, yaw: 0, pitch: 0 });
   player.pos.set(0, 0, 8); player.vel.set(0, 0, 0);
-  gear.gloves = genItem(1, 0, 'gloves', { name: 'Worn Wraps', mods: [] }); gear.bracelet = gear.ring = gear.shield = null;
+  gear.gloves = genItem(1, 0, 'gloves', { name: 'Worn Wraps', mods: [] }); gear.bracelet = gear.ring = gear.shield = gear.torch = gear.trinket = null; player.ohCd = 0;
   $('lvl').textContent = 1; $('deadOv').hidden = true; $('boss').hidden = true;
   if (!$('sheet').hidden) toggleSheet();
 }
@@ -3877,11 +4010,23 @@ function setMode(m) {
   }
   rebuildViewmodel();
 }
-function buildTorch() {
+function buildTrinket(kind, col) {
+  const g = new T.Group(), m = (geo, c, x, y, z, glow) => { const o = new T.Mesh(geo, glow ? new T.MeshBasicMaterial({ color: c }) : phong(c, { shininess: 60, specular: 0x887766 })); o.position.set(x, y, z); g.add(o); return o; };
+  if (kind === 'horn') { const h = m(new T.ConeGeometry(0.05, 0.3, 8, 1, true), 0xe8d8b0, 0, 0.14, 0); h.rotation.z = 0.5; m(new T.TorusGeometry(0.045, 0.012, 5, 10), 0x8a6a3a, -0.03, 0.1, 0).rotation.y = Math.PI / 2; }
+  else if (kind === 'glass') { m(new T.ConeGeometry(0.05, 0.09, 8), 0xe8f4ff, 0, 0.16, 0).rotation.x = Math.PI; m(new T.ConeGeometry(0.05, 0.09, 8), 0xe8f4ff, 0, 0.07, 0); m(new T.ConeGeometry(0.03, 0.04, 8), 0xe8c060, 0, 0.045, 0, true); for (const y of [0.02, 0.21]) m(new T.CylinderGeometry(0.065, 0.065, 0.015, 8), 0x6a4a2a, 0, y, 0); }
+  else if (kind === 'bone') { m(new T.IcosahedronGeometry(0.07, 0), 0xe8e0c8, 0, 0.12, 0); m(new T.SphereGeometry(0.015, 5, 4), 0x200000, -0.025, 0.13, 0.06, true); m(new T.SphereGeometry(0.015, 5, 4), 0x200000, 0.025, 0.13, 0.06, true); m(new T.CylinderGeometry(0.012, 0.012, 0.14, 5), 0xe8e0c8, 0, 0.03, 0).rotation.z = 1.2; }
+  else if (kind === 'coin') { m(new T.CylinderGeometry(0.06, 0.06, 0.012, 16), 0xffd84a, 0, 0.1, 0).rotation.x = Math.PI / 2; }
+  else if (kind === 'stone') { m(new T.DodecahedronGeometry(0.07, 0), 0x3a4a6a, 0, 0.1, 0); m(new T.OctahedronGeometry(0.035), col, 0, 0.1, 0.05, true); }
+  else if (kind === 'idol') { m(new T.BoxGeometry(0.07, 0.14, 0.05), 0x5a3a2a, 0, 0.1, 0); m(new T.SphereGeometry(0.03, 6, 5), 0x5a3a2a, 0, 0.2, 0); for (const x of [-0.012, 0.012]) m(new T.SphereGeometry(0.008, 4, 3), col, x, 0.205, 0.026, true); }
+  else { m(new T.SphereGeometry(0.065, 8, 6), 0x3a3a44, 0, 0.1, 0); m(new T.CylinderGeometry(0.008, 0.008, 0.06, 4), 0xa08060, 0, 0.18, 0); m(new T.SphereGeometry(0.012, 4, 3), 0xffa040, 0, 0.215, 0, true); }
+  g.userData.flame = null; g.userData.tipY = 0.2;
+  return g;
+}
+function buildTorch(col = 0xffb040) {
   const g = new T.Group();
   const h = new T.Mesh(new T.CylinderGeometry(0.02, 0.026, 0.42, 6), phong(0x4a3020, { shininess: 4 })); h.position.y = 0.12; g.add(h);
   const wrap = new T.Mesh(new T.CylinderGeometry(0.04, 0.032, 0.09, 6), phong(0x2a1c12, { shininess: 2 })); wrap.position.y = 0.34; g.add(wrap);
-  const fl = new T.Mesh(new T.ConeGeometry(0.035, 0.1, 6), new T.MeshBasicMaterial({ color: 0xffb040 })); fl.position.y = 0.42; g.add(fl);
+  const fl = new T.Mesh(new T.ConeGeometry(0.035, 0.1, 6), new T.MeshBasicMaterial({ color: col })); fl.position.y = 0.42; g.add(fl);
   g.userData.tipY = 0.42; g.userData.flame = fl;
   return g;
 }
@@ -4014,7 +4159,7 @@ function buildDungeon(depth) {
   const TH = dTheme(depth);
   wallMat.color.setHex(TH.wall); ceilMat.color.setHex(TH.ceil); boneMat.color.setHex(TH.bone);
   scene.fog.color.setHex(TH.fog); scene.background = new T.Color(TH.fog); hemi.color.setHex(TH.hemi); hemi.groundColor.setHex(TH.ground);
-  torchLight.color.setHex(0xffa050).lerp(new T.Color(TH.fire), 0.55);
+  torchLight.color.setHex(ohCol()).lerp(new T.Color(TH.fire), 0.3);
   const m = new T.Matrix4(), q = new T.Quaternion(), sc = new T.Vector3(), p = new T.Vector3(), col = new T.Color();
   // walls: only those bordering open floor
   const wl = [];
@@ -4214,7 +4359,8 @@ function updateDungeon(dt) {
   // player torch and the five nearest wall sconces carry real light
   const fl = 0.85 + Math.sin(now * 9) * 0.06 + Math.sin(now * 23.7) * 0.05 + rand(-0.04, 0.04);
   torchLight.position.copy(camera.position).addScaledVector(right(), -0.35); torchLight.position.y -= 0.1;
-  torchLight.intensity = 2.1 * fl;
+  torchLight.intensity = 2.1 * fl * (buffs.flare ? 2.4 : 1); torchLight.distance = buffs.flare ? 52 : 24;
+  if (scene.fog && scene.fog.far !== undefined) scene.fog.far += ((buffs.flare ? 52 : 28) - scene.fog.far) * Math.min(1, dt * 2);
   vmTorch.intensity = torchObj ? 1.1 * fl : 0;
   if (torchObj) { torchObj.getWorldPosition(vmTorch.position); vmTorch.position.y += 0.3; }
   const near = DG.sconces.map(s => [s, (s.x - player.pos.x) ** 2 + (s.z - player.pos.z) ** 2]).sort((a, b) => a[1] - b[1]);
@@ -4277,7 +4423,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 24;
+const NET_VER = 25;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
@@ -4618,7 +4764,7 @@ function coopTick(dt) {
   if (c.pT <= 0 && started) {
     c.pT = 1 / 15;
     const w = gear.weapon, me = { ashen: 1, cls: playerClass, h: c.host ? 1 : 0, x: Math.round(player.pos.x * 100) / 100, z: Math.round(player.pos.z * 100) / 100, yaw: Math.round(player.yaw * 100) / 100,
-      hp: Math.round(player.hp), mhp: Math.round(stats.maxHp), al: player.alive ? 1 : 0, w: [w.base, w.combo || 0, w.rarity, w.element || ''], sw: c.acts, lv: player.level, dep: mode === 'dungeon' ? DG.depth : 0, sd: mode === 'dungeon' ? c.seed : null, md: mode, wv: wave };
+      hp: Math.round(player.hp), mhp: Math.round(stats.maxHp), al: player.alive ? 1 : 0, w: [w.base, w.combo || 0, w.rarity, w.element || ''], sw: c.acts, lv: player.level, dep: mode === 'dungeon' ? DG.depth : 0, sd: mode === 'dungeon' ? c.seed : null, md: mode, wv: wave, vl: buffs.veil ? 1 : 0 };
     if (c.host) me.en = enemySnap();
     c.room.presence(me).catch(() => {});
   }
@@ -4776,6 +4922,7 @@ function updatePlayer(dt) {
   bob += dt * moving * 1.6;
 
   player.dashCd = Math.max(0, player.dashCd - dt);
+  player.ohCd = Math.max(0, (player.ohCd || 0) - dt);
   const hasteK = 1 + ((stats.mods && stats.mods.haste) || 0) / 100;
   player.surgeCd = Math.max(0, player.surgeCd - dt * hasteK);
   updateMods(dt);
@@ -4950,7 +5097,8 @@ function updateEnemies(dt) {
       tAlly = e.tgtAlly ? da < dp * 1.25 : da < dp * 0.8; e.tgtAlly = tAlly;
       if (tAlly) { tx = A.x; tz = A.z; }
     }
-    const tAlive = tAlly || player.alive, F = tAlly ? DG.flow2 : DG.flow;
+    const hidden = tAlly ? !!(coop && coop.ally && coop.ally.pr && coop.ally.pr.vl) : !!buffs.veil;
+    const tAlive = (tAlly || player.alive) && !hidden, F = tAlly ? DG.flow2 : DG.flow;
     const dx = tx - e.pos.x, dz = tz - e.pos.z, d = Math.hypot(dx, dz);
     let mx = dx, mz = dz, md = d;
     if (mode === 'dungeon') {
@@ -4965,7 +5113,8 @@ function updateEnemies(dt) {
     const face = Math.atan2(md === d ? dx : mx, md === d ? dz : mz);
     P.g.rotation.y = face;
     let moving = false;
-    if (e.stunT > 0) {
+    if (hidden) { e.atkT = -1; P.arms.forEach(a => a.rotation.x = lerp(a.rotation.x, 0, dt * 6)); P.g.rotation.y += Math.sin(now * 2 + e.phase) * 0.6; e.stunT = Math.max(0, e.stunT - dt); }
+    else if (e.stunT > 0) {
       e.stunT -= dt; e.atkT = -1;
       P.arms.forEach(a => a.rotation.x = lerp(a.rotation.x, 0.3, dt * 8));
       if (Math.random() < 0.25) { const a = now * 6 + rand(0, 0.5); FX.emit(e.pos.x + Math.cos(a) * 0.4 * e.def.scale, e.pos.y + 2.1 * e.def.scale, e.pos.z + Math.sin(a) * 0.4 * e.def.scale, 0, 0.3, 0, 0.3, 0xffe680, 0, 0); }
@@ -5139,12 +5288,13 @@ function updateOverlays(dt) {
     el.querySelector('.cdn').textContent = sl.cd > 0 ? Math.ceil(sl.cd) : '';
   }
   { let changed = false, html = '';
-    for (const n in buffs) { const b = buffs[n]; if (now >= b.until) { delete buffs[n]; changed = true; } else html += `<span>${b.label} ${Math.ceil(b.until - now)}s</span>`; }
+    for (const n in buffs) { const b = buffs[n]; if (now >= b.until) { delete buffs[n]; changed = true; } else if (b.label) html += `<span>${b.label} ${Math.ceil(b.until - now)}s</span>`; }
     if (changed) { stats = computeStats(); updateGearHud(); }
     if ($('buffs').innerHTML !== html) $('buffs').innerHTML = html; }
   $('surgeCd').style.height = (100 * player.surgeCd / sigCd()) + '%';
   $('surgeCdn').textContent = player.surgeCd > 0 ? Math.ceil(player.surgeCd) : '';
   $('dashCd').style.height = (100 * player.dashCd / 1.1) + '%';
+  { const D = curOffDef(); $('ohCd').style.height = D ? (100 * (player.ohCd || 0) / ohCdFor(curOff())) + '%' : '0%'; $('ohCdn').textContent = D && player.ohCd > 0.05 ? Math.ceil(player.ohCd) : ''; }
   if (mode === 'dungeon') { $('waveTxt').textContent = `Floor ${DG.depth}`; $('metaTxt').textContent = DG.goal; }
   else { $('waveTxt').textContent = `Wave ${Math.max(1, wave)}`; $('metaTxt').textContent = `${kills} slain · ${enemies.filter(e => e.alive).length} remaining`; }
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $('toast').style.opacity = 0; }
