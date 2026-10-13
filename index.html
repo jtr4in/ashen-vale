@@ -4122,57 +4122,56 @@ const coopReady = (async () => {
   return roomApi;
 })();
 function coopStatus(html) { $('coopStat').innerHTML = html; }
-// Off claude.ai (e.g. GitHub Pages) the two browsers connect directly through PeerJS. This adapter offers the same calls
-// as a claude.ai room (emit, on, presence, onPeers, leave), so the rest of co-op does not care which one it is using.
-const PEERJS_URL = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
-let peerLib = null;
-function loadPeerLib() {
-  if (!peerLib) peerLib = new Promise((res, rej) => {
-    if (window.Peer) return res(window.Peer);
-    const sc = document.createElement('script'); sc.src = PEERJS_URL;
-    sc.onload = () => window.Peer ? res(window.Peer) : rej({ type: 'load' });
-    sc.onerror = () => { peerLib = null; rej({ type: 'load' }); };
-    document.head.appendChild(sc);
-  });
-  return peerLib;
+// Off claude.ai (e.g. GitHub Pages) the two browsers find each other through Trystero, which passes the handshake
+// over several public Nostr relays at once (so one relay being down does not matter) and then talks peer to peer.
+// This adapter offers the same calls as a claude.ai room (emit, on, presence, onPeers, leave), so the rest of co-op
+// does not care which one it is using.
+const NET_URL = 'https://cdn.jsdelivr.net/npm/trystero@0.25.4/+esm';
+let netLib = null;
+function loadNetLib() {
+  if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
+  return netLib;
 }
-function peerJoin(host, code) {
-  return loadPeerLib().then((Peer) => new Promise((resolve, reject) => {
-    const id = 'ashenvale-' + code, opts = window.__PEER_OPTS || {};
-    const peer = host ? new Peer(id, opts) : new Peer(opts);
-    const H = {}, peerFns = [];
-    let conn = null, mine = {}, theirs = null, done = false;
+function netJoin(host, code) {
+  return loadNetLib().then((T) => new Promise((resolve, reject) => {
+    const cfg = Object.assign({ appId: 'ashen-vale-coop-1', relayConfig: { redundancy: 8, warnOnRelayFailure: false } }, window.__NET_OPTS || {});
+    let room;
+    try { room = T.joinRoom(cfg, 'ashenvale-' + code); } catch (e) { reject({ type: 'net' }); return; }
+    const ev = room.makeAction('e'), pr = room.makeAction('p');
+    const H = {}, peerFns = [], role = host ? 'h' : 'g';
+    let ally = null, mine = {}, theirs = null, done = false;
     const list = () => {
-      const me = { peer: peer.id || 'me', by: null, isMe: true, sameTab: true, presence: mine };
-      return conn && conn.open && theirs ? [me, { peer: conn.peer, by: null, isMe: false, sameTab: false, presence: theirs }] : [me];
+      const me = { peer: T.selfId || 'me', by: null, isMe: true, sameTab: true, presence: mine };
+      return ally && theirs ? [me, { peer: ally, by: null, isMe: false, sameTab: false, presence: theirs }] : [me];
     };
     const fire = () => { const ps = list(); for (const f of peerFns) try { f({ peers: ps, joined: [], left: [], updated: [] }); } catch (e) { console.error(e); } };
+    const sendP = (to) => pr.send({ r: role, p: mine }, { target: to }).catch(() => {});
     const api = {
-      emit: (k, d) => { if (conn && conn.open) conn.send({ t: 'e', k, d }); return Promise.resolve(); },
+      emit: (k, d) => ally ? ev.send({ k, d }, { target: ally }).then(() => {}, () => {}) : Promise.resolve(),
       on: (k, fn) => { (H[k] = H[k] || []).push(fn); return () => { H[k] = (H[k] || []).filter(x => x !== fn); }; },
-      presence: (patch) => { mine = Object.assign({}, mine, patch); if (conn && conn.open) conn.send({ t: 'p', d: mine }); return Promise.resolve(); },
+      presence: (patch) => { mine = Object.assign({}, mine, patch); if (ally) sendP(ally); return Promise.resolve(); },
       onPeers: (fn) => { peerFns.push(fn); setTimeout(fire, 0); return () => {}; },
-      leave: () => { try { peer.destroy(); } catch (e) {} return Promise.resolve(); },
+      leave: () => { try { room.leave(); } catch (e) {} return Promise.resolve(); },
     };
-    const wire = (c) => {
-      c.on('open', () => { conn = c; c.send({ t: 'p', d: mine }); fire(); if (!done) { done = true; resolve(api); } });
-      c.on('data', (m) => {
-        if (!m || typeof m !== 'object') return;
-        if (m.t === 'p') { theirs = m.d && typeof m.d === 'object' ? m.d : {}; fire(); }
-        else if (m.t === 'e' && typeof m.k === 'string') for (const f of H[m.k] || []) try { f({ topic: m.k, data: m.d, peer: c.peer, by: null, isMe: false, sameTab: false }); } catch (e) { console.error(e); }
-      });
-      c.on('close', () => { if (conn === c) { conn = null; theirs = null; fire(); } });
-      c.on('error', () => {});
+    room.onPeerJoin = (id) => sendP(id);
+    room.onPeerLeave = (id) => { if (id === ally) { ally = null; theirs = null; fire(); } };
+    // the host takes the first guest that turns up; a guest takes the host. Anyone else is ignored.
+    pr.onMessage = (m, ctx) => {
+      const id = ctx && ctx.peerId;
+      if (!m || typeof m !== 'object' || !id) return;
+      if (!ally) { if (m.r !== (host ? 'g' : 'h')) return; ally = id; sendP(id); }
+      if (id !== ally) return;
+      theirs = m.p && typeof m.p === 'object' ? m.p : {};
+      fire();
+      if (!done) { done = true; resolve(api); }
     };
-    peer.on('open', () => {
-      if (host) { done = true; resolve(api); }
-      else wire(peer.connect(id, { reliable: true, serialization: 'json' }));
-    });
-    // the host takes one friend; a second one is turned away
-    if (host) peer.on('connection', (c) => { if (conn && conn.open) { c.on('open', () => c.close()); return; } wire(c); });
-    peer.on('error', (e) => { if (!done) { done = true; try { peer.destroy(); } catch (x) {} reject(e); } });
-    peer.on('disconnected', () => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) {} });
-    setTimeout(() => { if (!done) { done = true; try { peer.destroy(); } catch (x) {} reject({ type: 'timeout' }); } }, 15000);
+    ev.onMessage = (m, ctx) => {
+      const id = ctx && ctx.peerId;
+      if (id !== ally || !m || typeof m !== 'object' || typeof m.k !== 'string') return;
+      for (const f of H[m.k] || []) try { f({ topic: m.k, data: m.d, peer: id, by: null, isMe: false, sameTab: false }); } catch (e) { console.error(e); }
+    };
+    if (host) { done = true; resolve(api); }
+    else setTimeout(() => { if (!done) { done = true; try { room.leave(); } catch (x) {} reject({ type: 'peer-unavailable' }); } }, 25000);
   }));
 }
 const newCode = () => Array.from({ length: 4 }, () => 'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 31)]).join('');
@@ -4190,13 +4189,13 @@ async function coopOpen(host) {
   if (!host && code.length < 3) { coopStatus('Type the code your friend sees.'); return; }
   coopStatus(host ? 'Opening a game…' : 'Looking for your friend\'s game…');
   let r = null;
-  for (let tries = 0; !r && tries < 3; tries++) {
-    try { r = room ? await room.join('ashen-' + code) : await peerJoin(host, code); }
+  if (!host && !room) setTimeout(() => { if (!coop && /Looking/.test($('coopStat').textContent)) coopStatus('Still looking. Keep this open, it can take up to 20 seconds…'); }, 6000);
+  for (let tries = 0; !r && tries < 1; tries++) {
+    try { r = room ? await room.join('ashen-' + code) : await netJoin(host, code); }
     catch (e) {
       const t = e && (e.code || e.type);
-      if (host && t === 'unavailable-id') { code = newCode(); continue; }
       coopStatus(t === 'not_permitted' ? 'You need edit or contributor access to this page to play together. The owner can change that from Share.'
-        : t === 'peer-unavailable' ? 'No game found with that code. Check it with your friend, and make sure they hosted first.'
+        : t === 'peer-unavailable' ? 'No game found with that code. Both of you need the same link (the GitHub one), and the host has to keep their game open on the co-op screen or in the run.'
         : t === 'load' ? 'Could not load the connection code. Check your internet and try again.'
         : 'Could not reach the matchmaking server. Try again in a moment.');
       return;
