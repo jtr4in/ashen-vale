@@ -157,7 +157,8 @@ body { background: var(--ink); color: var(--parch); font-family: var(--body); ov
 .mbtn.danger { border-color: var(--blood-hi); color: #ffb0a0; }
 .mconfirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; color: var(--parch); }
 .mconfirm .mbtn { font-size: 16px; padding: 4px 14px; }
-.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+.modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
+@media (max-width: 640px) { .modes { grid-template-columns: repeat(2, 1fr); } }
 #coopBox { width: 100%; display: grid; gap: 6px; padding: 8px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.4); }
 #coopBox .crow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 #coopBox .cor { color: var(--muted); font-size: 13px; }
@@ -330,12 +331,12 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   <div class="box">
     <h1>Ashen Vale</h1>
     <p>Choose a class. You'll find only your class's weapons, in three sub-types that each fight with their own combo, and you'll learn skills from your class's pool as you level.</p>
-    <div class="modes" id="modes"><button class="mode on" type="button" data-m="dungeon"><b>Dungeon</b><span>Crawl a dark maze, kill the boss, descend</span></button><button class="mode" type="button" data-m="arena"><b>Arena</b><span>Endless waves in the open vale</span></button><button class="mode" type="button" data-m="coop"><b>Co-op</b><span>Dungeon or arena with a friend</span></button></div>
+    <div class="modes" id="modes"><button class="mode on" type="button" data-m="dungeon"><b>Dungeon</b><span>Crawl a dark maze, kill the boss, descend</span></button><button class="mode" type="button" data-m="arena"><b>Arena</b><span>Endless waves in the open vale</span></button><button class="mode" type="button" data-m="trail"><b>Island Trail</b><span>Fight down a narrow cliff path to the far shore</span></button><button class="mode" type="button" data-m="coop"><b>Co-op</b><span>Dungeon or arena with a friend</span></button></div>
     <div id="coopBox" hidden>
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 25</div>
+      <div id="coopDiag">Version 26</div>
     </div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
@@ -401,6 +402,7 @@ const EFX = {
 };
 const ARENA = 56;
 let mode = 'arena', selMode = 'dungeon', coopKind = 'dungeon';
+const TR = { group: null, n: 1, M: 0, pi: 0, best: 0, name: '', goal: '' }; // Island Trail state
 
 /* ---------------- renderer, scenes ---------------- */
 const view = $('view');
@@ -457,6 +459,7 @@ const SOFT = softTexture();
 RNG = mulberry32(90210); // the vale is the same for everyone, so a friend's monsters walk around the same trees
 function heightAt(x, z) {
   if (mode === 'dungeon') return 0;
+  if (mode === 'trail') return trailHeight(x, z);
   const r = Math.hypot(x, z);
   const amp = 0.25 + clamp((r - 22) / 30, 0, 1) * 2.2;
   let h = (Math.sin(x * 0.055) * Math.cos(z * 0.047) + 0.45 * Math.sin(x * 0.13 + z * 0.09)) * amp;
@@ -1057,7 +1060,7 @@ function genItem(level, rarity, slot, opts = {}) {
 const player = {
   pos: new T.Vector3(0, 0, 8), vel: new T.Vector3(), yaw: 0, pitch: 0,
   hp: 100, level: 1, xp: 0, dashT: 0, dashCd: 0, dashDir: new T.Vector3(),
-  surgeCd: 0, invuln: 0, regenDelay: 0, alive: true, lungeT: 0, lungeDir: new T.Vector3(),
+  surgeCd: 0, invuln: 0, regenDelay: 0, alive: true, lungeT: 0, lungeDir: new T.Vector3(), kb: new T.Vector3(), fallT: 0,
 };
 const gear = {
   weapon: genItem(1, 0, 'weapon', { base: 'sword', element: null, combo: 0, name: 'Rusty Shortsword' }),
@@ -1562,19 +1565,42 @@ const ETYPES = {
   ghoul: { hp: 28, dmg: 6, speed: 4.2, scale: 1, color: 0x6f7a58, radius: 0.55, xp: 12, range: 1.7, windup: 0.5 },
   brute: { hp: 85, dmg: 14, speed: 2.7, scale: 1.55, color: 0x7a5038, radius: 0.9, xp: 30, range: 2.4, windup: 0.75 },
   boss: { hp: 900, dmg: 24, speed: 3.0, scale: 2.6, color: 0x5a1a16, radius: 1.5, xp: 250, range: 3.6, windup: 0.85 },
+  // imps pounce from a distance, cultists hang back and throw hexes, bloaters burst, wraiths blink to your side
+  imp: { hp: 16, dmg: 5, speed: 5.6, scale: 0.72, color: 0xa8402a, radius: 0.42, xp: 9, range: 1.4, windup: 0.3 },
+  caster: { hp: 24, dmg: 9, speed: 3.4, scale: 1.05, color: 0x4a3a6a, radius: 0.5, xp: 16, range: 14, windup: 0.75 },
+  bloater: { hp: 60, dmg: 11, speed: 2.3, scale: 1.25, color: 0x7a8a3a, radius: 0.8, xp: 20, range: 2.2, windup: 1.0 },
+  wraith: { hp: 32, dmg: 8, speed: 4.4, scale: 1.05, color: 0x8ab0d0, radius: 0.5, xp: 18, range: 1.8, windup: 0.45 },
 };
+const TCODES = ['ghoul', 'brute', 'boss', 'imp', 'caster', 'bloater', 'wraith'];
+// Which monster turns up: brutes at the given chance, the newer kinds as the level climbs, ghouls the rest of the time.
+function rollType(lv, bru, r = Math.random) {
+  const x = r();
+  if (x < bru) return 'brute';
+  let a = bru;
+  for (const [t, from, ch] of [['imp', 2, 0.14], ['caster', 3, 0.11], ['bloater', 4, 0.08], ['wraith', 5, 0.08]]) if (lv >= from && x < (a += ch)) return t;
+  return 'ghoul';
+}
 const BOSS_NAMES = ['Bloodclaw, the Hippogriff', 'Gorehorn the Flayer', 'Mother of Ash', 'Kurgath, Pit Lord'];
 
 function buildEnemyMesh(type, skin) {
   const g = new T.Group();
-  const big = type !== 'ghoul';
+  const big = type === 'brute' || type === 'boss' || type === 'bloater';
   const add = (parent, geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
   const torso = new T.Group(); torso.position.y = 0.95; g.add(torso);
   add(torso, new T.BoxGeometry(big ? 0.85 : 0.6, 0.75, big ? 0.55 : 0.4), skin, 0, 0.2, 0);
   const head = add(torso, new T.DodecahedronGeometry(big ? 0.27 : 0.23, 0), skin, 0, 0.8, big ? 0.08 : 0.16);
   add(head, new T.BoxGeometry(0.07, 0.04, 0.04), eyeMat, -0.09, 0.03, 0.2);
   add(head, new T.BoxGeometry(0.07, 0.04, 0.04), eyeMat, 0.09, 0.03, 0.2);
-  if (type === 'ghoul') torso.rotation.x = 0.35;
+  if (type === 'ghoul' || type === 'imp') torso.rotation.x = type === 'imp' ? 0.55 : 0.35;
+  if (type === 'imp') for (const s of [-1, 1]) { const h = add(head, new T.ConeGeometry(0.05, 0.22, 5), phong(0x2a1a14), s * 0.12, 0.2, 0); h.rotation.z = -s * 0.4; }
+  if (type === 'caster') {
+    const robe = add(g, new T.ConeGeometry(0.5, 1.15, 8, 1, true), skin, 0, 0.55, 0); robe.material = phong(0x2a2038, { side: T.DoubleSide });
+    const hood = add(head, new T.ConeGeometry(0.3, 0.45, 7), phong(0x2a2038), 0, 0.12, -0.04); hood.rotation.x = -0.2;
+  }
+  if (type === 'bloater') {
+    const belly = add(torso, new T.SphereGeometry(0.62, 10, 8), skin, 0, 0.12, 0.08); belly.scale.set(1, 0.95, 1.05);
+    for (let k = 0; k < 5; k++) { const p = add(belly, new T.SphereGeometry(0.1, 6, 4), new T.MeshBasicMaterial({ color: 0xc8e040 }), Math.cos(k * 1.3) * 0.5, Math.sin(k * 2.1) * 0.35, 0.36); p.scale.z = 0.5; }
+  }
   if (type === 'boss') {
     const horn = new T.ConeGeometry(0.07, 0.4, 5);
     const h1 = add(head, horn, phong(0xd8ccb0), -0.16, 0.22, 0); h1.rotation.z = 0.5;
@@ -1587,11 +1613,12 @@ function buildEnemyMesh(type, skin) {
     if (big) add(a, new T.DodecahedronGeometry(0.2, 0), skin, 0, -0.85, 0.02);
     else { const cl = add(a, new T.ConeGeometry(0.05, 0.22, 4), phong(0xe8dcc0), 0, -0.85, 0.05); cl.rotation.x = Math.PI; }
     arms.push(a);
-    const l = new T.Group(); l.position.set(s * (big ? 0.24 : 0.17), 0.78, 0); g.add(l);
+    const l = new T.Group(); l.position.set(s * (big ? 0.24 : 0.17), 0.78, 0); g.add(l); l.visible = type !== 'wraith';
     add(l, new T.BoxGeometry(big ? 0.26 : 0.17, 0.8, big ? 0.26 : 0.17), skin, 0, -0.4, 0);
     legs.push(l);
   }
   const wings = [];
+  if (type === 'wraith') { const tail = add(g, new T.ConeGeometry(0.34, 1.1, 7, 1, true), skin, 0, 0.6, 0); tail.rotation.x = Math.PI; }
   if (type === 'boss') {
     const shape = new T.Shape();
     shape.moveTo(0, 0); shape.lineTo(1.6, 0.5); shape.lineTo(1.4, -0.2); shape.lineTo(1.1, -0.5); shape.lineTo(0.7, -0.4); shape.lineTo(0.3, -0.6); shape.lineTo(0, -0.3);
@@ -1611,6 +1638,7 @@ function spawnEnemy(type, wave, at, elite = false) {
   // elites are bigger, gilded, and much harder to put down
   const def = elite ? Object.assign({}, ETYPES[type], { scale: ETYPES[type].scale * 1.22, radius: ETYPES[type].radius * 1.2, xp: ETYPES[type].xp * 3, range: ETYPES[type].range * 1.1, color: type === 'brute' ? 0x8a6a2a : 0x8a8a3a }) : ETYPES[type];
   const skin = phong(def.color, { shininess: elite ? 40 : 8, emissive: type === 'boss' ? 0x2a0400 : elite ? 0x3a2600 : 0x000000 });
+  if (type === 'wraith') { skin.transparent = true; skin.opacity = 0.6; }
   const parts = buildEnemyMesh(type, skin);
   let x, z;
   if (at) { x = at.x; z = at.z; } else {
@@ -1619,10 +1647,10 @@ function spawnEnemy(type, wave, at, elite = false) {
       x = player.pos.x + Math.cos(a) * r; z = player.pos.z + Math.sin(a) * r;
       if (Math.hypot(x, z) < ARENA - 4) break;
     }
-    const rr = Math.hypot(x, z); if (rr > ARENA - 4) { x *= (ARENA - 4) / rr; z *= (ARENA - 4) / rr; }
+    const rr = Math.hypot(x, z); if (mode === 'arena' && rr > ARENA - 4) { x *= (ARENA - 4) / rr; z *= (ARENA - 4) / rr; }
   }
   // The arena gets steeper every wave so it keeps up with your gear, and a friend makes it tougher still
-  const ar = mode === 'arena', duo = coop && coop.ally ? 1.5 : 1;
+  const ar = mode !== 'dungeon', duo = coop && coop.ally ? 1.5 : 1;
   const scale = (1 + 0.32 * (wave - 1)) * (ar ? Math.pow(1.07, wave - 1) * duo : 1) * (elite ? 3 : 1);
   const dmul = (1 + 0.14 * (wave - 1)) * (ar ? Math.pow(1.04, wave - 1) : 1) * (elite ? 1.4 : 1);
   const e = {
@@ -2034,7 +2062,7 @@ function setPaused(v) {
   paused = v; $('pauseOv').hidden = !v; attackHeld = false; keys.clear();
   if (v && !was) {
     $('mConfirm').hidden = true; $('soundBtn').textContent = 'Sound: ' + (muted ? 'off' : 'on');
-    $('pauseInfo').textContent = playerClass ? `${CLASSES[playerClass].name} · level ${player.level} · ${mode === 'dungeon' ? 'floor ' + DG.depth : 'wave ' + wave}${coop ? ' · co-op keeps running while you pause' : ''}` : 'The horde waits.';
+    $('pauseInfo').textContent = playerClass ? `${CLASSES[playerClass].name} · level ${player.level} · ${mode === 'dungeon' ? 'floor ' + DG.depth : mode === 'trail' ? TR.name : 'wave ' + wave}${coop ? ' · co-op keeps running while you pause' : ''}` : 'The horde waits.';
   }
 }
 $('classes').innerHTML = WEAPON_BASES.map(b => `<button class="cls" type="button" data-b="${b}"><b>${CLASSES[b].name}</b><em>${b}</em><span>${CLASSES[b].blurb}</span></button>`).join('');
@@ -2060,7 +2088,7 @@ function startAs(base) {
   toast(`${CLASSES[base].name}<small>Pick your first Q skill: press 1 or 2</small>`, 2.2);
   pendingPicks = 1;
   if (selMode === 'coop') { if (!coop.host) coopGuestStart(); else if (coopKind === 'arena') { coop.kind = 'arena'; nextWave(); } else { coop.kind = 'dungeon'; enterDungeon(1); } }
-  else if (selMode === 'dungeon') enterDungeon(1); else nextWave();
+  else if (selMode === 'dungeon') enterDungeon(1); else if (selMode === 'trail') enterTrail(1); else nextWave();
 }
 $('resumeBtn').addEventListener('click', () => { setPaused(false); requestLock(); });
 $('reviveBtn').addEventListener('click', revive);
@@ -2994,6 +3022,7 @@ function castLearned2(id, l, f, col, elc) {
       shockwave(start, 3, 1.2 + 0.25 * l, 0.6, col);
       player.pos.addScaledVector(f, 6 + l);
       if (mode === 'dungeon') { const fl = nearestFloor(player.pos.x, player.pos.z); if (solidAt(player.pos.x, player.pos.z)) player.pos.set(fl.x, 0, fl.z); }
+      else if (mode === 'trail') trailClamp(player.pos, 0.4);
       else { const rr = Math.hypot(player.pos.x, player.pos.z); if (rr > ARENA - 2) { player.pos.x *= (ARENA - 2) / rr; player.pos.z *= (ARENA - 2) / rr; } }
       player.invuln = 0.3; fovKick = 10;
       burst(player.pos.clone().setY(player.pos.y + 1), col, 30, 4, 0.5, -1); sfx('void');
@@ -3140,6 +3169,7 @@ function rollHit(mult = 1, critBonus = 0) {
 function damageEnemy(e, amount, cls, crit, kbDir, kb = 0) {
   if (!e.alive) return;
   if (mode === 'dungeon' && !e.awake && e.type !== 'boss') wakeEnemy(e);
+  if (mode === 'trail' && e.awake === false) trailWake(e);
   if (e.markUntil > now) amount *= 1 + e.markK;
   if (coopMirror()) { coopGuestHit(e, amount, cls, crit, kbDir, kb); return; }
   e.hp -= amount;
@@ -3354,7 +3384,7 @@ function beamFx(len, col, w) {
 function meteor(mult, R, at) {
   const tgt = at ? null : nearestInFront(16, 0.6);
   const c = at ? at.clone() : tgt ? tgt.pos.clone() : fr(9);
-  const rr = Math.hypot(c.x, c.z); if (rr > ARENA - 2) c.multiplyScalar((ARENA - 2) / rr);
+  const rr = Math.hypot(c.x, c.z); if (mode === 'arena' && rr > ARENA - 2) c.multiplyScalar((ARENA - 2) / rr);
   c.y = heightAt(c.x, c.z);
   groundRing(c, 0xff5a20, R, R * 0.95, 0.7, 0.5);
   const rock = new T.Mesh(new T.DodecahedronGeometry(0.9, 0), new T.MeshBasicMaterial({ color: 0xff7a2a }));
@@ -3526,7 +3556,7 @@ function chainLightning(mult = 0.7, jumps = 6) {
 function voidRift(mult = 1.8) {
   const f = fwd();
   const c = player.pos.clone().addScaledVector(f, 8);
-  const rr = Math.hypot(c.x, c.z); if (rr > ARENA - 2) c.multiplyScalar((ARENA - 2) / rr);
+  const rr = Math.hypot(c.x, c.z); if (mode === 'arena' && rr > ARENA - 2) c.multiplyScalar((ARENA - 2) / rr);
   c.y = heightAt(c.x, c.z) + 1.3;
   const g = new T.Group();
   const core = new T.Mesh(new T.IcosahedronGeometry(0.7, 1), new T.MeshBasicMaterial({ color: 0x14001e }));
@@ -3609,6 +3639,7 @@ function killEnemy(e) {
   if (coop && coop.host && e.id != null) coopEmit('kill', { i: e.id });
   if (stats.mods && stats.mods.killheal && player.alive) { player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * stats.mods.killheal / 100); burst(player.pos.clone().setY(player.pos.y + 1), 0xe8e0d0, 10, 2, 0.5, -1); }
   e.alive = false; e.deadT = 0.7; e.bar.remove();
+  if (e.type === 'bloater') bloaterBurst(e);
   stats && gainXp(e.def.xp * (1 + 0.2 * (e.level - 1)));
   kills++;
   const p = tmpV.copy(e.pos); p.y += 1;
@@ -3623,7 +3654,7 @@ function killEnemy(e) {
     if (killsSinceDrop >= 14) r = Math.max(r, 1);
     if (!(r === 0 && Math.random() < 0.6)) { dropItem(genItem(e.level + (isBoss ? 1 : 0), r), e.pos); killsSinceDrop = 0; }
   }
-  if (isBoss) { if (Math.random() < 0.4) dropItem(genItem(e.level + 1, rollRarity(true, wave)), e.pos); $('boss').hidden = true; if (mode === 'dungeon') dungeonBossDown(e); }
+  if (isBoss) { if (Math.random() < 0.4) dropItem(genItem(e.level + 1, rollRarity(true, wave)), e.pos); $('boss').hidden = true; if (mode === 'dungeon') dungeonBossDown(e); else if (mode === 'trail') trailBossDown(e); }
   if (Math.random() < 0.22) dropOrb(e.pos);
   // torches turn up in the dungeon, trinkets out in the vale
   const ohChance = isBoss ? 0.45 : e.elite ? 0.3 : e.type === 'brute' ? 0.06 : 0.03;
@@ -3672,6 +3703,8 @@ function hurtPlayer(d, src) {
   }
   d *= 1 - stats.armor / 100;
   player.hp -= d; player.regenDelay = 4;
+  // on the cliff path a brute or boss blow shoves you toward the edge
+  if (mode === 'trail' && src && src.pos && (src.type === 'brute' || src.type === 'boss')) player.kb.copy(tmpV2.subVectors(player.pos, src.pos).setY(0).normalize()).multiplyScalar(src.type === 'boss' ? 11 : 7);
   if (stats.mods && stats.mods.thorns && src && src.alive && src.pos) { damageEnemy(src, avgHit() * stats.mods.thorns / 100, '', false); burst(src.pos.clone().setY(src.pos.y + 1), 0x9ab06a, 10, 4, 0.3, 4); }
   popNumber(camPos().addScaledVector(fwd(), 1.4).setY(camera.position.y - 0.25), '-' + Math.round(d), 'hurt', 0.7);
   $('hurt').style.boxShadow = 'inset 0 0 160px rgba(180,10,0,.75)';
@@ -3679,7 +3712,7 @@ function hurtPlayer(d, src) {
   shake = Math.max(shake, 0.12); sfx('hurt');
   if (player.hp <= 0) {
     player.hp = 0; player.alive = false; attackHeld = false;
-    $('deadTxt').textContent = mode === 'dungeon' ? `Slain on floor ${DG.depth} at level ${player.level}. Your gear is kept, and the floor will shift.` : `Slain on wave ${wave} at level ${player.level}. Your gear is kept.`;
+    $('deadTxt').textContent = mode === 'trail' ? `Slain on ${TR.name} at level ${player.level}. Your gear is kept, and you wake at the last campfire.` : mode === 'dungeon' ? `Slain on floor ${DG.depth} at level ${player.level}. Your gear is kept, and the floor will shift.` : `Slain on wave ${wave} at level ${player.level}. Your gear is kept.`;
     $('reviveBtn').hidden = !!coop;
     if (coop) coop.deadT = 8;
     $('deadOv').hidden = false;
@@ -3692,6 +3725,7 @@ function revive() {
   player.alive = true; player.hp = stats.maxHp; player.pos.set(0, 0, 8);
   $('deadOv').hidden = true; $('boss').hidden = true;
   if (mode === 'dungeon') { enterDungeon(DG.depth); requestLock(); return; }
+  if (mode === 'trail') { trailRevive(); requestLock(); return; }
   wave = Math.max(0, wave - 1); waveDelay = 0; nextWave(); requestLock();
 }
 
@@ -3860,7 +3894,7 @@ function nextWave(rs) {
     if (run !== runId || mode !== 'arena') return;
     if (!player.alive && !coopAllyHere()) { setTimeout(spawnSome, 1000); return; }
     const k = Math.min(3 + Math.floor(wave / 6), n - i);
-    for (let j = 0; j < k; j++, i++) spawnEnemy(wave >= 2 && Math.random() < 0.2 + wave * 0.035 ? 'brute' : 'ghoul', wave, null, wave >= 3 && Math.random() < Math.min(0.3, 0.04 + wave * 0.015));
+    for (let j = 0; j < k; j++, i++) spawnEnemy(rollType(wave, wave >= 2 ? 0.2 + wave * 0.035 : 0), wave, null, wave >= 3 && Math.random() < Math.min(0.3, 0.04 + wave * 0.015));
     if (i < n) setTimeout(spawnSome, 1300);
   };
   spawnSome();
@@ -3893,6 +3927,7 @@ function clearWorld() {
   for (const w of waves) scene.remove(w.m); waves.length = 0;
   for (const a of arcs) scene.remove(a.line); arcs.length = 0;
   for (const sl of slams) scene.remove(sl.ring, sl.disc); slams.length = 0;
+  for (const b of hexes) scene.remove(b.m); hexes.length = 0;
   for (const n of nums) n.el.remove(); nums.length = 0;
   showCard(null); showChoices(false); $('card').hidden = true; $('boss').hidden = true;
 }
@@ -3981,7 +4016,7 @@ function arenaTheme(w, instant) {
   themeTick(instant ? 1 : 0);
 }
 function themeTick(dt) {
-  if (mode !== 'arena') return;
+  if (mode === 'dungeon') return;
   const k = dt >= 1 ? 1 : 1 - Math.exp(-dt * 1.1);
   for (const key of TH_KEYS) thCur[key].lerp(thTo[key], k);
   thI.hi += (thI.hiTo - thI.hi) * k; thI.si += (thI.siTo - thI.si) * k;
@@ -3991,10 +4026,12 @@ function themeTick(dt) {
   hemi.color.copy(thCur.hemi); hemi.groundColor.copy(thCur.hg); hemi.intensity = thI.hi; sun.color.copy(thCur.sun); sun.intensity = thI.si;
 }
 function setMode(m) {
-  if (mode === m && (m === 'arena' || DG.group)) return;
+  if (mode === m && (m !== 'dungeon' || DG.group)) return;
   mode = m;
   const dn = m === 'dungeon';
-  for (const o of arenaObjs) o.visible = !dn;
+  // the island keeps the vale's sky and clouds but none of its ground
+  for (const o of arenaObjs) o.visible = m === 'arena' || (m === 'trail' && (o === sky || o.material === AMAT.cloud));
+  if (m !== 'trail' && TR.group) { scene.remove(TR.group); TR.group = null; }
   document.body.classList.toggle('dungeon', dn);
   if (dn) {
     scene.fog = new T.Fog(0x030203, 4, 28); scene.background = new T.Color(0x030203);
@@ -4257,7 +4294,7 @@ function enterDungeon(depth, seed) {
     if (enemies.length >= Math.min(100, 36 + depth * 9)) break;
     const n = randi(2, 3) + Math.floor(depth / 3);
     for (let a = 0; a < n; a++) {
-      const e = spawnEnemy(RNG() < 0.12 + depth * 0.05 ? 'brute' : 'ghoul', wave, { x: tCen(i) + rand(-1.2, 1.2), z: tCen(j) + rand(-1.2, 1.2) });
+      const e = spawnEnemy(rollType(wave + 2, 0.12 + depth * 0.05, RNG), wave, { x: tCen(i) + rand(-1.2, 1.2), z: tCen(j) + rand(-1.2, 1.2) });
       e.awake = false; e.spawnT = 0; e.parts.g.scale.setScalar(e.def.scale); e.parts.g.rotation.y = rand(0, 6);
     }
   }
@@ -4308,6 +4345,331 @@ function descend() {
   DG.stairs.used = true; $('fade').style.opacity = 1; sfx('gate');
   player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.5);
   setTimeout(() => { if (mode !== 'dungeon') return; enterDungeon(DG.depth + 1); $('fade').style.opacity = 0; }, 750);
+}
+/* ---------------- island trail mode ---------------- */
+// A long, narrow ridge path across an island with sheer cliffs into the sea on both sides. Hordes pour
+// down the path at you, campfires mark the way, and a boss holds the far shore.
+const ISLES = ['Gull Rock', "Widow's Reach", 'The Saltspine', 'Cinder Key', 'Mourning Isle', 'The Last Shoal'];
+const TBOSS = ['The Tidecaller', 'Old Barnacle', 'The Drowned King', 'Gravewake', 'Mother of Gulls', 'The Salt Wyrm'];
+const SEA_Y = -2.5, TSTEP = 2;
+const seaBase = new T.Color(0x2f6f8f);
+const seaMat = new T.MeshPhongMaterial({ color: 0x2f6f8f, shininess: 70, specular: 0x7a9ab0, transparent: true, opacity: 0.94 });
+const smooth01 = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const NR = { i: 0, j: 0, t: 0, d: 0, hw: 2, h: 0, cx: 0, cz: 0 };
+// nearest point on the path; the path always heads toward -z, so only a few segments need checking
+function trailNear(x, z, span = 12) {
+  const M = TR.M, px = TR.px, pz = TR.pz;
+  const i0 = clamp(Math.round(-z / TSTEP), 0, M);
+  let best = 1e18;
+  for (let j = Math.max(0, i0 - span), j1 = Math.min(M, i0 + span); j < j1; j++) {
+    const ax = px[j], az = pz[j], bx = px[j + 1] - ax, bz = pz[j + 1] - az;
+    const t = clamp(((x - ax) * bx + (z - az) * bz) / (bx * bx + bz * bz), 0, 1);
+    const cx = ax + bx * t, cz = az + bz * t, d2 = (x - cx) * (x - cx) + (z - cz) * (z - cz);
+    if (d2 < best) { best = d2; NR.j = j; NR.t = t; NR.cx = cx; NR.cz = cz; }
+  }
+  const j = NR.j, t = NR.t;
+  NR.i = j + t; NR.d = Math.sqrt(best); NR.hw = lerp(TR.hw[j], TR.hw[j + 1], t); NR.h = lerp(TR.ph[j], TR.ph[j + 1], t);
+  return NR;
+}
+function trailHeightN(n, x, z) {
+  const e = n.d - n.hw;
+  if (e <= 0.15) return n.h;
+  const k = (e - 0.15) / TR.cw[n.j];
+  const bumpy = (Math.sin(x * 0.41 + z * 0.13) * Math.cos(z * 0.37 - x * 0.11) + 0.5 * Math.sin(x * 1.1 - z * 0.9)) * Math.min(1, e / 2);
+  return Math.max(SEA_Y - 4, n.h - Math.min(e, 0.7) * 1.1 - (n.h - SEA_Y + 3) * Math.pow(Math.min(k, 1), 1.25) + bumpy * 1.1 - Math.max(0, k - 1) * 4);
+}
+function trailHeight(x, z) { return TR.M ? trailHeightN(trailNear(x, z), x, z) : 0; }
+function trailNormal(k) {
+  const a = Math.max(0, k - 1), b = Math.min(TR.M, k + 1);
+  const tx = TR.px[b] - TR.px[a], tz = TR.pz[b] - TR.pz[a], l = Math.hypot(tx, tz) || 1;
+  return [-tz / l, tx / l];
+}
+function trailClamp(p, pad) {
+  const n = trailNear(p.x, p.z), lim = Math.max(0.3, n.hw - pad);
+  if (n.d > lim) { const k = lim / n.d; p.x = n.cx + (p.x - n.cx) * k; p.z = n.cz + (p.z - n.cz) * k; }
+}
+function genTrail(n) {
+  const R0 = RNG; RNG = mulberry32(n * 7919 + 13);
+  try {
+  const L = Math.min(380 + 60 * n, 680), M = Math.round(L / TSTEP);
+  const p1 = rand(0, 6), p2 = rand(0, 6), p3 = rand(0, 6), p4 = rand(0, 6), p5 = rand(0, 6);
+  const A1 = rand(16, 24), A2 = rand(5, 8);
+  const fx = (s) => A1 * Math.sin(s * 0.011 + p1) + A2 * Math.sin(s * 0.034 + p2), x0 = fx(0);
+  Object.assign(TR, { M, L, px: new Float32Array(M + 1), pz: new Float32Array(M + 1), ph: new Float32Array(M + 1), hw: new Float32Array(M + 1), cw: new Float32Array(M + 1) });
+  const cpI = [0.27, 0.52, 0.76].map(f => Math.round(f * M)), plat = L - 34;
+  for (let i = 0; i <= M; i++) {
+    const s = i * TSTEP, sh = clamp(s, 16, plat);
+    TR.px[i] = fx(s) - x0; TR.pz[i] = -s;
+    TR.ph[i] = 8 + Math.sin(sh * 0.012 + p3) * 3 + Math.sin(sh * 0.05 + p4) * 1.1 + 7 * sh / L;
+    // narrow almost everywhere: wider at the landing, around each campfire and on the boss's plateau
+    let w = 2.3 + 3.7 * (1 - smooth01((s - 14) / 12));
+    for (const c of cpI) w = Math.max(w, 2.3 + 4.2 * (1 - smooth01((Math.abs(s - c * TSTEP) - 4) / 8)));
+    TR.hw[i] = Math.max(w, 2.3 + 8.7 * smooth01((s - (plat - 12)) / 12));
+    TR.cw[i] = 5 + 7 * (0.5 + 0.5 * Math.sin(s * 0.017 + p5)) + (s < 20 || s > plat ? 6 : 0);
+  }
+  const g = new T.Group(); TR.group = g;
+  let minX = 1e9, maxX = -1e9; for (let i = 0; i <= M; i++) { minX = Math.min(minX, TR.px[i]); maxX = Math.max(maxX, TR.px[i]); }
+  // cliffs and shoulders
+  {
+    const W = maxX - minX + 64, D = L + 64, sx = Math.round(W / 2.5), sz = Math.round(D / 2.5);
+    const geo = new T.PlaneGeometry(W, D, sx, sz); geo.rotateX(-Math.PI / 2); geo.translate((minX + maxX) / 2, 0, -L / 2);
+    const pos = geo.attributes.position, cols = new Float32Array(pos.count * 3), c = new T.Color();
+    const grassA = new T.Color(0x6d8a3a), grassB = new T.Color(0x93a44a), rock = new T.Color(0x7c776c), rockD = new T.Color(0x5e5a52), sand = new T.Color(0xc8b48a), dirt = new T.Color(0x8a7353);
+    for (let v = 0; v < pos.count; v++) {
+      const x = pos.getX(v), z = pos.getZ(v), nn = trailNear(x, z), y = trailHeightN(nn, x, z), e = nn.d - nn.hw;
+      pos.setY(v, y);
+      const nz = (Math.sin(x * 0.31) * Math.cos(z * 0.27) + Math.sin(x * 0.9 + z * 0.7) * 0.4) * 0.5 + 0.5;
+      if (e < 0.4) c.copy(dirt);
+      else if (y > nn.h - 1.6) c.copy(grassA).lerp(grassB, nz);
+      else c.copy(rock).lerp(rockD, nz);
+      if (y < SEA_Y + 0.9) c.lerp(sand, clamp((SEA_Y + 0.9 - y) / 1.2, 0, 1));
+      cols[v * 3] = c.r; cols[v * 3 + 1] = c.g; cols[v * 3 + 2] = c.b;
+    }
+    geo.setAttribute('color', new T.BufferAttribute(cols, 3)); geo.computeVertexNormals();
+    g.add(new T.Mesh(geo, AMAT.ground));
+  }
+  // the path itself: a packed dirt ribbon exactly as wide as you can walk
+  {
+    const N = M + 1, P = new Float32Array(N * 6), C = new Float32Array(N * 6), idx = [], c = new T.Color(), d1 = new T.Color(0x9a8260), d2 = new T.Color(0x7a6448);
+    for (let i = 0; i < N; i++) {
+      const [nx, nz] = trailNormal(i), w = TR.hw[i], y = TR.ph[i] + 0.05;
+      P.set([TR.px[i] - nx * w, y, TR.pz[i] - nz * w, TR.px[i] + nx * w, y, TR.pz[i] + nz * w], i * 6);
+      for (let s = 0; s < 2; s++) { c.copy(d1).lerp(d2, rand(0, 1)); C.set([c.r, c.g, c.b], i * 6 + s * 3); }
+      if (i < M) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    }
+    const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(P, 3)); geo.setAttribute('color', new T.BufferAttribute(C, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+    const rib = new T.Mesh(geo, AMAT.ground); g.add(rib);
+  }
+  const m = new T.Matrix4(), q = new T.Quaternion(), sc = new T.Vector3(), p = new T.Vector3(), col = new T.Color();
+  // stones along the lip, so the edge reads at a glance
+  {
+    const pts = [];
+    for (let i = 0; i <= M; i++) for (const side of [-1, 1]) if (RNG() < 0.75) pts.push([i, side]);
+    const im = new T.InstancedMesh(new T.DodecahedronGeometry(1, 0), AMAT.rock, pts.length);
+    pts.forEach(([i, side], k) => {
+      const [nx, nz] = trailNormal(i), w = TR.hw[i] + 0.2, s = rand(0.22, 0.5);
+      p.set(TR.px[i] + nx * w * side + rand(-0.4, 0.4), TR.ph[i] - 0.05, TR.pz[i] + nz * w * side + rand(-0.4, 0.4));
+      q.setFromEuler(new T.Euler(rand(0, 3), rand(0, 3), rand(0, 3))); sc.set(s * rand(0.9, 1.5), s * rand(0.6, 1), s);
+      m.compose(p, q, sc); im.setMatrixAt(k, m); col.setHSL(0.08, 0.06, rand(0.36, 0.5)); im.setColorAt(k, col);
+    });
+    g.add(im);
+  }
+  // wind-bent pines and grass on the shoulders below the lip
+  {
+    const spots = [];
+    for (let i = 4; i < M - 4; i++) if (RNG() < 0.2) {
+      const side = RNG() < 0.5 ? -1 : 1, [nx, nz] = trailNormal(i), e = rand(1.4, 3.6), w = TR.hw[i] + e;
+      const x = TR.px[i] + nx * w * side, z = TR.pz[i] + nz * w * side, y = trailHeight(x, z);
+      if (y > TR.ph[i] - 2.6) spots.push([x, y, z]);
+    }
+    const trunks = new T.InstancedMesh(new T.CylinderGeometry(0.18, 0.3, 1, 6), new T.MeshLambertMaterial({ color: 0x5a3f2a }), spots.length);
+    const leaves = new T.InstancedMesh(new T.ConeGeometry(1, 1, 7), AMAT.leaf, spots.length * 2);
+    spots.forEach(([x, y, z], i) => {
+      const h = rand(3.5, 7); p.set(x, y + h * 0.3, z); q.identity(); sc.set(1, h * 0.6, 1); m.compose(p, q, sc); trunks.setMatrixAt(i, m);
+      const hue = rand(0.2, 0.32);
+      for (let j = 0; j < 2; j++) {
+        const lw = h * (j ? 0.3 : 0.42); p.set(x, y + h * (j ? 0.95 : 0.65), z); sc.set(lw, h * 0.55, lw);
+        q.setFromEuler(new T.Euler(rand(-0.15, 0.15), rand(0, 3), rand(-0.15, 0.15))); m.compose(p, q, sc); leaves.setMatrixAt(i * 2 + j, m);
+        col.setHSL(hue, 0.45, rand(0.25, 0.35)); leaves.setColorAt(i * 2 + j, col);
+      }
+    });
+    g.add(trunks, leaves);
+    const gn = isTouch ? 700 : 1600, blade = new T.ConeGeometry(0.07, 0.6, 3); blade.translate(0, 0.3, 0);
+    const grass = new T.InstancedMesh(blade, AMAT.grass, gn); let k = 0;
+    for (let a = 0; a < gn * 3 && k < gn; a++) {
+      const i = randi(1, M - 1), side = RNG() < 0.5 ? -1 : 1, [nx, nz] = trailNormal(i), w = TR.hw[i] + rand(0.3, 2.8);
+      const x = TR.px[i] + nx * w * side, z = TR.pz[i] + nz * w * side, y = trailHeight(x, z);
+      if (y < TR.ph[i] - 1.6) continue;
+      p.set(x, y - 0.05, z); q.setFromEuler(new T.Euler(rand(-0.3, 0.3), rand(0, 3), rand(-0.3, 0.3))); const s = rand(0.7, 1.7); sc.set(s, s * rand(0.8, 1.4), s);
+      m.compose(p, q, sc); grass.setMatrixAt(k, m); col.setHSL(rand(0.17, 0.25), 0.5, rand(0.3, 0.45)); grass.setColorAt(k, col); k++;
+    }
+    grass.count = k; g.add(grass);
+  }
+  // the sea, a scatter of sea stacks, and the next island on the horizon
+  {
+    const sea = new T.Mesh(new T.PlaneGeometry(2400, 2400), seaMat); sea.rotation.x = -Math.PI / 2; sea.position.set(0, SEA_Y, -L / 2); g.add(sea); TR.sea = sea;
+    const im = new T.InstancedMesh(new T.DodecahedronGeometry(1, 0), AMAT.rock, 15);
+    for (let k = 0; k < 14; k++) {
+      const z = rand(-L - 40, 40), side = RNG() < 0.5 ? -1 : 1, x = (side < 0 ? minX : maxX) + side * rand(70, 170), s = rand(10, 32);
+      p.set(x, SEA_Y - s * 0.25, z); q.setFromEuler(new T.Euler(rand(0, 3), rand(0, 3), rand(0, 3))); sc.set(s * rand(0.8, 1.3), s * rand(0.5, 1.1), s * rand(0.8, 1.3));
+      m.compose(p, q, sc); im.setMatrixAt(k, m); col.setHSL(0.08, 0.06, rand(0.32, 0.46)); im.setColorAt(k, col);
+    }
+    p.set(TR.px[M] + rand(-40, 40), SEA_Y - 10, -L - 210); q.identity(); sc.set(90, 34, 50); m.compose(p, q, sc); im.setMatrixAt(14, m); col.setHSL(0.25, 0.25, 0.32); im.setColorAt(14, col);
+    g.add(im);
+  }
+  // campfires: light one and you wake there if you fall in battle
+  TR.cps = cpI.map((i, k) => {
+    const side = k % 2 ? 1 : -1, [nx, nz] = trailNormal(i), w = TR.hw[i] - 1.4;
+    const x = TR.px[i] + nx * w * side, z = TR.pz[i] + nz * w * side, y = TR.ph[i];
+    const fg = new T.Group(); fg.position.set(x, y, z);
+    for (let a = 0; a < 7; a++) { const st = new T.Mesh(new T.DodecahedronGeometry(0.16, 0), AMAT.rock); const t = a / 7 * TAU; st.position.set(Math.cos(t) * 0.55, 0.06, Math.sin(t) * 0.55); fg.add(st); }
+    for (let a = 0; a < 3; a++) { const lg = new T.Mesh(new T.CylinderGeometry(0.06, 0.07, 0.9, 5), new T.MeshLambertMaterial({ color: 0x4a3020 })); lg.rotation.set(Math.PI / 2 - 0.4, a * 2.1, 0); lg.position.y = 0.2; fg.add(lg); }
+    const f = new T.Mesh(new T.ConeGeometry(0.28, 0.8, 7), new T.MeshBasicMaterial({ color: 0xffa040 })); f.position.y = 0.5; fg.add(f);
+    g.add(fg);
+    return { i, x, y, z, f, lit: false };
+  });
+  scene.add(g);
+  } finally { RNG = R0; }
+}
+function trailLevel() { wave = 1 + (TR.n - 1) * 3 + Math.floor(3 * TR.best / Math.max(1, TR.M)); return wave; }
+function trailSpawnBoss() {
+  if (TR.bossDone) return;
+  const k = TR.M - 6, b = spawnEnemy('boss', 1 + (TR.n - 1) * 3 + 3, { x: TR.px[k], z: TR.pz[k] });
+  b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.parts.g.rotation.y = 0; b.name = TBOSS[(TR.n - 1) % TBOSS.length]; TR.boss = b;
+}
+function enterTrail(n) {
+  runId++;
+  const carry = tomes.length > 0; clearWorld(); if (carry) pendingPicks++;
+  setMode('trail');
+  if (TR.group) { scene.remove(TR.group); TR.group = null; }
+  TR.n = n; genTrail(n);
+  Object.assign(TR, { name: ISLES[(n - 1) % ISLES.length], pi: 2, best: 0, rs: 2, bossDone: false, boss: null, exit: null, spawnT: 4, goal: '' });
+  waveDelay = -1; pending = 999; trailLevel();
+  arenaTheme(n, true);
+  player.pos.set(TR.px[2], TR.ph[2], TR.pz[2]); player.vel.set(0, 0, 0); player.kb.set(0, 0, 0); player.fallT = 0; player.yaw = 0; player.pitch = 0;
+  trailSpawnBoss();
+  toast(`${TR.name}<small>Island ${n} · fight your way to the far shore</small>`, 2.8);
+}
+function trailWake(e) {
+  e.awake = true;
+  if (e.type === 'boss') {
+    $('boss').hidden = false; $('bossName').textContent = e.name; TR.goal = `Defeat ${e.name}`;
+    toast(`${e.name}<small>holds the far shore</small>`, 2.4); sfx('gate'); shake = Math.max(shake, 0.25);
+  }
+}
+function trailHorde(cnt, dir, surge) {
+  let alive = 0; for (const e of enemies) if (e.alive) alive++;
+  cnt = Math.min(cnt, (surge ? 42 : 30) - alive); if (cnt <= 0) return;
+  if (dir < 0 && TR.pi < 24) dir = 1; // nothing behind you yet: they come from ahead
+  const k = clamp(Math.round(TR.pi + dir * randi(surge ? 12 : 18, surge ? 16 : 26)), 2, TR.M - 20);
+  if (Math.abs(k - TR.pi) < 8) return;
+  const lv = trailLevel(), bru = Math.min(0.4, 0.14 + 0.03 * TR.n), eli = lv >= 3 ? Math.min(0.25, 0.03 + 0.012 * lv) : 0;
+  for (let a = 0; a < cnt; a++) {
+    const kk = clamp(k + randi(0, 5) * dir, 1, TR.M - 1), [nx, nz] = trailNormal(kk), off = rand(-1, 1) * (TR.hw[kk] - 0.8);
+    const e = spawnEnemy(rollType(lv + 1, bru), lv, { x: TR.px[kk] + nx * off, z: TR.pz[kk] + nz * off }, Math.random() < eli);
+    e.ti = kk;
+  }
+}
+function trailCampfire(c) {
+  c.lit = true; TR.rs = c.i;
+  player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.3);
+  toast('Campfire lit<small>You will wake here · and the horde heard you</small>', 2.4); sfx('level');
+  const n = 5 + 2 * TR.n; trailHorde(n, 1, true); trailHorde(n, -1, true);
+}
+function trailBossDown(e) {
+  TR.bossDone = true; TR.boss = null; TR.goal = 'Step into the light to sail on';
+  addTemp(null, 1.4, null, () => {
+    if (mode !== 'trail' || !TR.group) return;
+    const k = TR.M - 6, x = TR.px[k], z = TR.pz[k], y = TR.ph[k], st = new T.Group();
+    const disc = new T.Mesh(new T.CircleGeometry(1.4, 24), new T.MeshBasicMaterial({ color: 0xfff0c0, transparent: true, opacity: 0.5, blending: T.AdditiveBlending, depthWrite: false })); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.08; st.add(disc);
+    const rim = new T.Mesh(new T.TorusGeometry(1.45, 0.08, 6, 30), new T.MeshBasicMaterial({ color: 0xffd66a })); rim.rotation.x = Math.PI / 2; rim.position.y = 0.1; st.add(rim);
+    const beam = new T.Mesh(beamGeo, new T.MeshBasicMaterial({ color: 0xffd66a, transparent: true, opacity: 0.25, blending: T.AdditiveBlending, depthWrite: false })); beam.scale.set(4, 14, 4); st.add(beam);
+    st.position.set(x, y, z); TR.group.add(st); TR.exit = { x, y, z, g: st, used: false };
+    toast('The far shore is yours<small>Step into the light to sail to the next island</small>', 2.6); sfx('level');
+  });
+}
+function trailSail() {
+  TR.exit.used = true; $('fade').style.opacity = 1; sfx('gate');
+  player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.5);
+  setTimeout(() => { if (mode !== 'trail') return; enterTrail(TR.n + 1); $('fade').style.opacity = 0; }, 750);
+}
+// You only go over the edge when something throws you: a dash, or a brute's blow. Walking just stops at the lip.
+function trailPlayerEdge() {
+  const n = trailNear(player.pos.x, player.pos.z), lim = n.hw - 0.35;
+  TR.pi = n.i;
+  if (n.d <= lim) return false;
+  if (player.dashT > 0 || player.kb.lengthSq() > 16) {
+    if (n.d > n.hw + 0.2) { trailFallStart(n); return true; }
+    return false;
+  }
+  const k = lim / n.d; player.pos.x = n.cx + (player.pos.x - n.cx) * k; player.pos.z = n.cz + (player.pos.z - n.cz) * k;
+  return false;
+}
+function trailFallStart(n) {
+  TR.fallAt = n.i; player.fallT = 1.3; player.fallV = 1; player.splashed = false;
+  const ox = player.pos.x - n.cx, oz = player.pos.z - n.cz, l = Math.hypot(ox, oz) || 1;
+  player.vel.multiplyScalar(0.4).add(tmpV2.set(ox / l * 3, 0, oz / l * 3)); player.kb.set(0, 0, 0); player.dashT = 0; player.invuln = 99;
+  attackHeld = false; sfx('swing', { heavy: true });
+}
+function trailFallTick(dt) {
+  player.fallT -= dt; player.fallV += 26 * dt;
+  player.pos.addScaledVector(player.vel, dt); player.pos.y -= player.fallV * dt;
+  player.pitch = lerp(player.pitch, -0.9, Math.min(1, dt * 3));
+  if (!player.splashed && player.pos.y < SEA_Y) { player.splashed = true; burst(player.pos.clone().setY(SEA_Y + 0.2), 0xe8f4ff, 40, 7, 0.8, 9); sfx('hit', { heavy: true }); }
+  if (player.fallT < 0.55) $('fade').style.opacity = 1;
+  if (player.fallT <= 0) trailRecover();
+}
+function trailRecover() {
+  player.fallT = 0; player.kb.set(0, 0, 0); player.vel.set(0, 0, 0); player.pitch = 0;
+  const k = clamp(Math.floor(TR.fallAt) - 1, 2, TR.M - 1), k2 = Math.min(TR.M, k + 2);
+  player.pos.set(TR.px[k], TR.ph[k], TR.pz[k]); player.yaw = Math.atan2(-(TR.px[k2] - TR.px[k]), -(TR.pz[k2] - TR.pz[k]));
+  player.invuln = 1.6; player.hp = Math.max(1, player.hp - stats.maxHp * 0.25); player.regenDelay = 4;
+  $('fade').style.opacity = 0;
+  toast('You fell<small>You claw back up to the path, battered: -25% life</small>', 2);
+}
+function trailRevive() {
+  player.fallT = 0; player.kb.set(0, 0, 0); player.pitch = 0; $('fade').style.opacity = 0;
+  const k = Math.max(2, TR.rs || 2), k2 = Math.min(TR.M, k + 2);
+  player.pos.set(TR.px[k], TR.ph[k], TR.pz[k]); player.yaw = Math.atan2(-(TR.px[k2] - TR.px[k]), -(TR.pz[k2] - TR.pz[k])); player.invuln = 2;
+  TR.pi = k; TR.spawnT = 4; TR.goal = TR.bossDone ? 'Step into the light to sail on' : '';
+  trailSpawnBoss();
+  toast(`${TR.name}<small>You wake by the ${k > 2 ? 'campfire' : 'shore'}</small>`, 2.2);
+}
+// Monsters stop at the lip too, unless you hit them hard enough to send them over.
+function trailEnemyEdge(e) {
+  const n = trailNear(e.pos.x, e.pos.z, 8); e.ti = n.i;
+  const lim = Math.max(0.4, n.hw - Math.min(0.6, e.def.radius * 0.6));
+  if (n.d <= lim) return false;
+  const ox = e.pos.x, oz = e.pos.z, k = lim / n.d;
+  e.pos.x = n.cx + (e.pos.x - n.cx) * k; e.pos.z = n.cz + (e.pos.z - n.cz) * k;
+  if (e.type !== 'boss' && e.kb.lengthSq() > 20 && n.d > n.hw) {
+    e.pos.y = n.h; killEnemy(e); e.fell = true; e.deadT = 1.4;
+    e.parts.g.position.set(ox, n.h, oz);
+    popNumber(tmpV2.set(ox, n.h + 2.2, oz), 'Over the edge!', 'crit', 1.1);
+    return true;
+  }
+  return false;
+}
+function updateIsland(dt) {
+  if (!TR.group) return;
+  seaMat.color.copy(seaBase).lerp(thCur.fog, 0.35);
+  TR.sea.position.y = SEA_Y + Math.sin(now * 0.8) * 0.08;
+  if (player.fallT <= 0 && TR.pi > TR.best) { TR.best = TR.pi; trailLevel(); }
+  TR.cps.forEach((c, k) => {
+    const l = LIGHTS[k], fl = 0.85 + Math.sin(now * 11 + k) * 0.1 + rand(-0.05, 0.05);
+    l.position.set(c.x, c.y + 1.2, c.z); l.color.setHex(0xff9040); l.distance = 16; l.intensity = (c.lit ? 1.8 : 0.3) * fl;
+    c.f.scale.set(c.lit ? 1 : 0.4, (c.lit ? 1 : 0.3) * (1 + Math.sin(now * 14 + k) * 0.2), c.lit ? 1 : 0.4);
+    if (c.lit && Math.random() < 0.5) FX.emit(c.x + rand(-0.15, 0.15), c.y + 0.6, c.z + rand(-0.15, 0.15), rand(-0.2, 0.2), rand(1.2, 2.2), rand(-0.2, 0.2), 0.6, 0xffa040, -0.6, 0.5);
+    if (!c.lit && started && player.alive && player.fallT <= 0 && Math.abs(TR.pi - c.i) < 3) trailCampfire(c);
+  });
+  const X = TR.exit, lx = LIGHTS[3];
+  if (X && !X.used) {
+    X.g.children[1].rotation.z += dt; lx.position.set(X.x, X.y + 2, X.z); lx.color.setHex(0xffd66a); lx.distance = 18; lx.intensity = 1.6;
+    if (Math.random() < 0.5) FX.emit(X.x + rand(-1.2, 1.2), X.y + 0.1, X.z + rand(-1.2, 1.2), 0, rand(1, 2.5), 0, 1, 0xffd66a, 0, 0);
+    if (player.alive && player.fallT <= 0 && Math.hypot(player.pos.x - X.x, player.pos.z - X.z) < 1.5) trailSail();
+  } else lx.intensity = 0;
+  LIGHTS[4].intensity = 0;
+  // the horde keeps coming until you reach the boss's plateau
+  if (started && player.alive && player.fallT <= 0 && !TR.bossDone && TR.pi < TR.M - 22) {
+    TR.spawnT -= dt;
+    if (TR.spawnT <= 0) { TR.spawnT = Math.max(2.6, 5.2 - 0.4 * TR.n) * rand(0.8, 1.2); trailHorde(randi(4, 6) + TR.n, Math.random() < 0.25 ? -1 : 1); }
+  }
+  // stragglers left far behind wander off
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const e = enemies[i];
+    if (e.alive && e.type !== 'boss' && e.ti != null && e.ti < TR.pi - 40) { scene.remove(e.parts.g); e.bar.remove(); enemies.splice(i, 1); }
+  }
+  if (Math.random() < 0.25) FX.emit(player.pos.x + rand(-14, 14), player.pos.y + rand(-1, 3), player.pos.z + rand(-14, 14), rand(0.3, 0.8), rand(-0.05, 0.1), rand(-0.1, 0.1), 3, 0xe8f0f0, 0, 0);
+}
+function drawTrailMap(sc) {
+  if (!TR.M) return;
+  const a = Math.max(0, Math.floor(TR.pi) - 50), b = Math.min(TR.M, Math.floor(TR.pi) + 50);
+  mm.strokeStyle = 'rgba(190,160,110,.55)'; mm.lineCap = mm.lineJoin = 'round'; mm.lineWidth = 4.6 * sc;
+  mm.beginPath();
+  for (let i = a; i <= b; i++) { const x = (TR.px[i] - player.pos.x) * sc, z = (TR.pz[i] - player.pos.z) * sc; if (i === a) mm.moveTo(x, z); else mm.lineTo(x, z); }
+  mm.stroke();
+  for (const c of TR.cps) { mm.fillStyle = c.lit ? '#ffb040' : 'rgba(255,176,64,.45)'; mm.beginPath(); mm.arc((c.x - player.pos.x) * sc, (c.z - player.pos.z) * sc, 3.5, 0, TAU); mm.fill(); }
+  if (TR.exit) { mm.fillStyle = '#ffd66a'; mm.beginPath(); mm.arc((TR.exit.x - player.pos.x) * sc, (TR.exit.z - player.pos.z) * sc, 4, 0, TAU); mm.fill(); }
 }
 let droneNodes = null;
 function drone(on) {
@@ -4423,7 +4785,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 25;
+const NET_VER = 26;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
@@ -4544,6 +4906,7 @@ async function coopOpen(host) {
   on('floor', (d) => { if (!c.host) coopFloor(d); });
   on('sync', () => { if (c.host && started) { if (mode === 'dungeon') coopSendFloor(); else coopSendWave(true); } });
   on('wave', (d) => { if (!c.host) coopWave(d); });
+  on('bolt', (d) => { if (!c.host && started && Array.isArray(d.p) && Array.isArray(d.v)) spawnHex(num(d.p[0], -1e5, 1e5) / 10, num(d.p[1], -1e3, 1e3) / 10, num(d.p[2], -1e5, 1e5) / 10, num(d.v[0], -100, 100) / 100, num(d.v[1], -100, 100) / 100, num(d.v[2], -100, 100) / 100, num(d.d, 0, 5000), !!d.a); });
   on('descend', () => { if (c.host && DG.stairs && !DG.stairs.used) descend(); });
   r.presence({ ashen: 1, h: host ? 1 : 0 }).catch(() => {});
   coopStatus(host ? `Your code is <b>${code.toUpperCase()}</b>. Send it to your friend, then pick a class.` : `Joined <b>${code.toUpperCase()}</b>. Pick a class.`);
@@ -4587,8 +4950,8 @@ function coopPeers(ch) {
     c.snap = new Map(); for (const a of p.presence.en.slice(0, 80)) if (Array.isArray(a)) c.snap.set(a[0], a); c.snapT = now; c.snapFull = p.presence.en.length >= 60;
     if (mode === 'arena' && c.kind === 'arena') for (const [id, a] of c.snap) {
       if (typeof id !== 'number' || DG.dead.has(id) || enemyById(id)) continue;
-      const code = a[7] | 0, type = ['ghoul', 'brute', 'boss'][code & 3] || 'ghoul';
-      const e = spawnEnemy(type, Math.round(num(a[8], 1, 999)), { x: num(a[1], -1e5, 1e5) / 10, z: num(a[2], -1e5, 1e5) / 10 }, !!(code & 4));
+      const code = a[7] | 0, type = TCODES[code & 15] || 'ghoul';
+      const e = spawnEnemy(type, Math.round(num(a[8], 1, 999)), { x: num(a[1], -1e5, 1e5) / 10, z: num(a[2], -1e5, 1e5) / 10 }, !!(code & 16));
       e.id = id; e.awake = true; if (type === 'boss' && c.bossName) e.name = c.bossName;
     }
   }
@@ -4699,6 +5062,8 @@ function updateEnemiesGuest(dt) {
     if (stun && Math.random() < 0.25) { const a = now * 6; FX.emit(e.pos.x + Math.cos(a) * 0.4 * e.def.scale, e.pos.y + 2.1 * e.def.scale, e.pos.z + Math.sin(a) * 0.4 * e.def.scale, 0, 0.3, 0, 0.3, 0xffe680, 0, 0); }
     if (e.type === 'boss') P.wings.forEach((w, j) => w.rotation.y = (j ? -1 : 1) * (0.4 + Math.sin(now * 4) * 0.35));
     P.g.position.copy(e.pos); P.g.position.y += e.airShow || 0; P.g.rotation.x = -(e.airShow || 0) * 0.25;
+    if (e.type === 'wraith') P.g.position.y += 0.35 + Math.sin(now * 2.4 + e.id) * 0.12;
+    if (e.type === 'bloater') P.torso.scale.setScalar(atk ? 1 + 0.25 * (1 + Math.sin(now * 18)) : 1);
     e.phase += dt * (e.moving ? e.speed * 2.2 / e.def.scale : 0);
     P.legs[0].rotation.x = Math.sin(e.phase) * 0.6 * (e.moving ? 1 : 0);
     P.legs[1].rotation.x = -Math.sin(e.phase) * 0.6 * (e.moving ? 1 : 0);
@@ -4729,7 +5094,7 @@ function enemySnap() {
     if (!e.alive || (mode === 'dungeon' && !e.awake)) continue;
     out.push([e.id, Math.round(e.pos.x * 10), Math.round(e.pos.z * 10), Math.round(e.parts.g.rotation.y * 100), Math.round(1000 * Math.max(0, e.hp) / e.maxHp),
       (e.atkT >= 0 ? 1 : 0) | (e.stunT > 0 ? 2 : 0) | (e.slowT > 0 ? 4 : 0) | (e.burnT > 0 ? 8 : 0), Math.round((e.airY || 0) * 10),
-      ({ ghoul: 0, brute: 1, boss: 2 }[e.type] || 0) | (e.elite ? 4 : 0), e.level]);
+      Math.max(0, TCODES.indexOf(e.type)) | (e.elite ? 16 : 0), e.level]);
     if (out.length >= 60) break;
   }
   return out;
@@ -4850,6 +5215,60 @@ function slamAt(x, z, dmg) {
   slams.push({ ring, disc, p, t: 0, dur: 1.15, dmg });
 }
 
+
+/* ---------------- monster tricks ---------------- */
+const hexes = [];
+const hexGeo = new T.IcosahedronGeometry(0.2, 1), hexMat = new T.MeshBasicMaterial({ color: 0xd070ff });
+function losClear(x0, z0, x1, z1) {
+  if (mode !== 'dungeon') return true;
+  const d = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(d / 1.2);
+  for (let k = 1; k < n; k++) if (solidAt(x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n)) return false;
+  return true;
+}
+function spawnHex(x, y, z, dx, dy, dz, dmg, hurts) {
+  const m = new T.Mesh(hexGeo, hexMat); m.position.set(x, y, z); scene.add(m);
+  hexes.push({ m, v: new T.Vector3(dx, dy, dz).normalize().multiplyScalar(13), dmg, hurts, t: 0 });
+  sfx('swing');
+}
+// A cultist's hex: slow enough to sidestep. Whoever it is aimed at decides whether it lands.
+function enemyHex(e, tx, tz, tAlly) {
+  const x = e.pos.x, y = e.pos.y + 1.55 * e.def.scale, z = e.pos.z, ty = heightAt(tx, tz) + 1.2;
+  const dx = tx - x, dy = ty - y, dz = tz - z, dmg = Math.round(e.dmg * rand(0.85, 1.15));
+  spawnHex(x, y, z, dx, dy, dz, dmg, !tAlly);
+  if (coop && coop.host) { const l = Math.hypot(dx, dy, dz) || 1; coopEmit('bolt', { p: [Math.round(x * 10), Math.round(y * 10), Math.round(z * 10)], v: [Math.round(dx / l * 100), Math.round(dy / l * 100), Math.round(dz / l * 100)], d: dmg, a: tAlly ? 1 : 0 }); }
+}
+function updateHexes(dt) {
+  for (let i = hexes.length - 1; i >= 0; i--) {
+    const b = hexes[i], p = b.m.position; b.t += dt;
+    p.addScaledVector(b.v, dt);
+    if (Math.random() < 0.8) FX.emit(p.x, p.y, p.z, rand(-0.3, 0.3), rand(-0.3, 0.3), rand(-0.3, 0.3), 0.35, 0xb050ff, 0, 0);
+    let done = b.t > 2.4 || solidAt(p.x, p.z) || p.y < heightAt(p.x, p.z);
+    if (!done && b.hurts && player.alive && Math.hypot(p.x - player.pos.x, p.z - player.pos.z) < 0.75 && Math.abs(p.y - (player.pos.y + 1.1)) < 1.2) { hurtPlayer(b.dmg, null); done = true; }
+    if (done) { burst(p.clone(), 0xb050ff, 14, 3, 0.4, 2); scene.remove(b.m); hexes.splice(i, 1); }
+  }
+}
+// A bloater bursts when it dies or reaches you: it hurts you and every monster caught in the cloud.
+function bloaterBurst(e) {
+  const R = 3.6 * (e.elite ? 1.2 : 1), p = e.pos.clone().setY(e.pos.y + 1);
+  burst(p, 0x9ab030, 50, 7, 0.7, 3); burst(p, 0x4a5a18, 24, 4, 1.0, -1);
+  sfx('hit', { heavy: true }); if (Math.hypot(player.pos.x - e.pos.x, player.pos.z - e.pos.z) < 18) shake = Math.max(shake, 0.18);
+  if (coopMirror()) return;
+  const dmg = Math.round(e.dmg * 2.2);
+  if (player.alive && Math.hypot(player.pos.x - e.pos.x, player.pos.z - e.pos.z) < R) hurtPlayer(dmg, null);
+  const A = coopAllyHere(); if (A && Math.hypot(A.x - e.pos.x, A.z - e.pos.z) < R) coopEmit('hurt', { d: dmg, i: e.id });
+  for (const o of enemies) if (o !== e && o.alive && o.pos.distanceTo(e.pos) < R) damageEnemy(o, o.type === 'boss' ? o.maxHp * 0.04 : o.maxHp * 0.45 + 10, '', false, tmpV2.subVectors(o.pos, e.pos).setY(0).normalize().clone(), 10);
+}
+// A wraith fades out and reappears beside you.
+function wraithBlink(e, tx, tz) {
+  e.blinkCd = rand(4.5, 6.5);
+  const a = rand(0, TAU), x = tx + Math.cos(a) * 2.4, z = tz + Math.sin(a) * 2.4;
+  if (solidAt(x, z)) return;
+  burst(e.pos.clone().setY(e.pos.y + 1), 0xbcd8f0, 20, 3, 0.5, -1);
+  e.pos.x = x; e.pos.z = z; if (mode === 'trail') trailClamp(e.pos, 0.5);
+  burst(e.pos.clone().setY(heightAt(e.pos.x, e.pos.z) + 1), 0xbcd8f0, 20, 3, 0.5, -1);
+  e.atkCd = Math.min(e.atkCd, 0.35);
+}
+
 /* ---------------- main loop ---------------- */
 const clock = new T.Clock();
 let now = 0, bob = 0;
@@ -4892,6 +5311,7 @@ function frame() {
 }
 
 function updatePlayer(dt) {
+  if (player.fallT > 0) { trailFallTick(dt); return; }
   const f = fwd(), r = right();
   const mv = new T.Vector3();
   if (keys.has('KeyW') || keys.has('ArrowUp')) mv.add(f);
@@ -4905,6 +5325,7 @@ function updatePlayer(dt) {
   if (player.dashT > 0) { player.dashT -= dt; player.pos.addScaledVector(player.dashDir, 26 * dt); for (let i = 0; i < 3; i++) FX.emit(player.pos.x + rand(-.5, .5), player.pos.y + rand(0.2, 1.4), player.pos.z + rand(-.5, .5), 0, 0.5, 0, 0.35, 0x9fb4c8, 0, 0); }
   if (player.lungeT > 0) { player.lungeT -= dt; player.pos.addScaledVector(player.lungeDir, (player.lungeSpeed || 15) * dt); if (player.lungeT <= 0) player.lungeSpeed = 0; }
   player.pos.addScaledVector(player.vel, dt);
+  if (player.kb.lengthSq() > 0.01) { player.pos.addScaledVector(player.kb, dt); player.kb.multiplyScalar(Math.exp(-dt * 6)); }
   // collisions
   if (mode === 'arena') for (const c of colliders) {
     const dx = player.pos.x - c.x, dz = player.pos.z - c.z, d = Math.hypot(dx, dz), m = c.r + 0.4;
@@ -4916,6 +5337,7 @@ function updatePlayer(dt) {
     if (d < m && d > 0.0001) { player.pos.x = e.pos.x + dx / d * m; player.pos.z = e.pos.z + dz / d * m; }
   }
   if (mode === 'dungeon') collideTiles(player.pos, 0.4);
+  else if (mode === 'trail') { if (trailPlayerEdge()) return; }
   else { const rr = Math.hypot(player.pos.x, player.pos.z); if (rr > ARENA) { player.pos.x *= ARENA / rr; player.pos.z *= ARENA / rr; } }
   player.pos.y = heightAt(player.pos.x, player.pos.z);
   const moving = player.vel.length();
@@ -5070,7 +5492,8 @@ function updateEnemies(dt) {
     if (!e.alive) {
       e.deadT -= dt;
       P.g.rotation.x = lerp(P.g.rotation.x, -1.5, dt * 6);
-      P.g.position.y -= dt * 0.8;
+      P.g.position.y -= dt * (e.fell ? 18 : 0.8);
+      if (e.fell) { P.g.position.x += e.kb.x * dt; P.g.position.z += e.kb.z * dt; }
       if (e.deadT <= 0) { scene.remove(P.g); enemies.splice(i, 1); pending--; }
       continue;
     }
@@ -5106,9 +5529,17 @@ function updateEnemies(dt) {
         if (e.type !== 'boss' && d < 15 && pathTiles(e.pos, F) <= 4) wakeEnemy(e);
         else { P.g.position.copy(e.pos); P.g.rotation.y += Math.sin(now * 0.7 + e.phase) * 0.002; P.torso.rotation.x = 0.35 + Math.sin(now * 1.3 + e.phase) * 0.05; e.hitT -= dt; continue; }
       }
-      P.torso.rotation.x = 0;
+      P.torso.rotation.x = e.type === 'imp' ? 0.55 : 0;
       const ft = flowTarget(e.pos, F);
       if (ft) { mx = ft.x - e.pos.x; mz = ft.z - e.pos.z; md = Math.hypot(mx, mz) || 1; }
+    } else if (mode === 'trail') {
+      if (e.awake === false) {
+        if (d < (e.type === 'boss' ? 28 : 22) && tAlive) trailWake(e);
+        else { P.g.position.copy(e.pos); P.g.rotation.y += Math.sin(now * 0.7 + e.phase) * 0.002; e.hitT -= dt; continue; }
+      }
+      // monsters follow the path's bends instead of walking off the cliff toward you
+      const ti = e.ti == null ? trailNear(e.pos.x, e.pos.z).i : e.ti;
+      if (Math.abs(ti - TR.pi) > 4) { const k = clamp(Math.round(ti + Math.sign(TR.pi - ti) * 3), 0, TR.M); mx = TR.px[k] - e.pos.x; mz = TR.pz[k] - e.pos.z; md = Math.hypot(mx, mz) || 1; }
     }
     const face = Math.atan2(md === d ? dx : mx, md === d ? dz : mz);
     P.g.rotation.y = face;
@@ -5123,17 +5554,30 @@ function updateEnemies(dt) {
       const w = e.def.windup;
       const k = clamp(e.atkT / w, 0, 1);
       P.arms.forEach(a => a.rotation.x = -2.6 * easeOut(k));
+      if (e.type === 'bloater') { P.torso.scale.setScalar(1 + 0.45 * k); e.skin.emissive.setRGB(0.5 + 0.5 * Math.sin(now * 30), 0.6, 0); }
       if (e.atkT >= w) {
         P.arms.forEach(a => a.rotation.x = 0.4);
-        if (d < e.def.range + 0.6 && tAlive) { if (tAlly) coopEmit('hurt', { d: Math.round(e.dmg * rand(0.85, 1.15)), i: e.id }); else hurtPlayer(e.dmg * rand(0.85, 1.15), e); }
-        e.atkT = -1; e.atkCd = rand(0.9, 1.4);
+        if (e.type === 'caster') { if (tAlive) enemyHex(e, tx, tz, tAlly); }
+        else if (e.type === 'bloater') { e.atkT = -1; killEnemy(e); continue; }
+        else if (d < e.def.range + 0.6 && tAlive) { if (tAlly) coopEmit('hurt', { d: Math.round(e.dmg * rand(0.85, 1.15)), i: e.id }); else hurtPlayer(e.dmg * rand(0.85, 1.15), e); }
+        e.atkT = -1; e.atkCd = e.type === 'caster' ? rand(1.8, 2.8) : rand(0.9, 1.4);
       }
     } else {
       e.atkCd -= dt;
-      if (d > e.def.range * 0.85) {
-        const sp = e.speed * slow * dt;
+      if (e.type === 'bloater') P.torso.scale.setScalar(1);
+      const sp = e.speed * slow * dt;
+      if (e.type === 'caster') {
+        // keeps its distance and needs a clear line to throw
+        const los = losClear(e.pos.x, e.pos.z, tx, tz);
+        if (d > e.def.range * 0.75 || !los) { e.pos.x += mx / md * sp; e.pos.z += mz / md * sp; moving = true; }
+        else if (d < 6) { e.pos.x -= dx / d * sp * 0.8; e.pos.z -= dz / d * sp * 0.8; moving = true; }
+        if (d < e.def.range && los && e.atkCd <= 0 && e.spawnT <= 0 && tAlive) e.atkT = 0;
+      } else if (d > e.def.range * 0.85) {
         e.pos.x += mx / md * sp; e.pos.z += mz / md * sp; moving = true;
+        if (e.type === 'imp' && (e.leapCd = (e.leapCd || 0) - dt) <= 0 && d > 3.5 && d < 9 && tAlive && !e.airY && e.spawnT <= 0) { e.airV = 6.5; e.leapT = 0.5; e.leapCd = rand(2.5, 4); }
+        if (e.type === 'wraith' && (e.blinkCd = (e.blinkCd == null ? rand(1, 3) : e.blinkCd) - dt) <= 0 && d > 6 && d < 18 && tAlive && e.spawnT <= 0) wraithBlink(e, tx, tz);
       } else if (e.atkCd <= 0 && e.spawnT <= 0 && tAlive) e.atkT = 0;
+      if (e.leapT > 0) { e.leapT -= dt; e.pos.x += mx / md * 11 * dt; e.pos.z += mz / md * 11 * dt; }
       P.arms.forEach(a => a.rotation.x = lerp(a.rotation.x, 0, dt * 6));
     }
     if (e.type === 'boss' && tAlive && e.spawnT <= 0) {
@@ -5150,9 +5594,11 @@ function updateEnemies(dt) {
     // knockback
     e.pos.addScaledVector(e.kb, dt); e.kb.multiplyScalar(Math.exp(-dt * 8));
     if (mode === 'dungeon') collideTiles(e.pos, Math.min(e.def.radius, 1.2));
+    else if (mode === 'trail') { if (trailEnemyEdge(e)) continue; }
     else { const rr = Math.hypot(e.pos.x, e.pos.z); if (rr > ARENA) { e.pos.x *= ARENA / rr; e.pos.z *= ARENA / rr; } }
     e.pos.y = heightAt(e.pos.x, e.pos.z);
     P.g.position.copy(e.pos);
+    if (e.type === 'wraith') P.g.position.y += 0.35 + Math.sin(now * 2.4 + e.id) * 0.12;
     if (e.airV || e.airY) {
       e.airV -= 24 * dt; e.airY = (e.airY || 0) + e.airV * dt;
       if (e.airY <= 0) { e.airY = 0; e.airV = 0; burst(e.pos.clone().setY(e.pos.y + 0.2), 0x8a7a5a, 10, 3, 0.4, 6); }
@@ -5175,6 +5621,7 @@ function updateEnemies(dt) {
 }
 
 function updateWorldFx(dt) {
+  updateHexes(dt);
   // travelling waves (Shockwave, Flame Wave, epic finisher slashes)
   for (let i = waves.length - 1; i >= 0; i--) {
     const w = waves[i]; w.t += dt;
@@ -5234,6 +5681,7 @@ function updateWorldFx(dt) {
   }
   // ambient motes
   if (mode === 'dungeon') updateDungeon(dt);
+  else if (mode === 'trail') updateIsland(dt);
   else for (const m of motes) {
     if (Math.random() < 0.03) FX.emit(m.x + rand(-2, 2), heightAt(m.x, m.z) + m.y, m.z + rand(-2, 2), rand(-0.2, 0.2), rand(0, 0.2), rand(-0.2, 0.2), 2.5, 0x8a8a40, 0, 0);
   }
@@ -5296,6 +5744,7 @@ function updateOverlays(dt) {
   $('dashCd').style.height = (100 * player.dashCd / 1.1) + '%';
   { const D = curOffDef(); $('ohCd').style.height = D ? (100 * (player.ohCd || 0) / ohCdFor(curOff())) + '%' : '0%'; $('ohCdn').textContent = D && player.ohCd > 0.05 ? Math.ceil(player.ohCd) : ''; }
   if (mode === 'dungeon') { $('waveTxt').textContent = `Floor ${DG.depth}`; $('metaTxt').textContent = DG.goal; }
+  else if (mode === 'trail') { $('waveTxt').textContent = `Island ${TR.n}`; $('metaTxt').textContent = TR.goal || `${TR.name} · ${Math.floor(100 * TR.best / TR.M)}% to the far shore`; }
   else { $('waveTxt').textContent = `Wave ${Math.max(1, wave)}`; $('metaTxt').textContent = `${kills} slain · ${enemies.filter(e => e.alive).length} remaining`; }
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $('toast').style.opacity = 0; }
   // minimap
@@ -5308,9 +5757,10 @@ function updateOverlays(dt) {
     mm.translate(c, c); mm.rotate(player.yaw);
     const plot = (x, z, col, r) => { mm.fillStyle = col; mm.beginPath(); mm.arc((x - player.pos.x) * sc, (z - player.pos.z) * sc, r, 0, Math.PI * 2); mm.fill(); };
     if (mode === 'dungeon') drawDungeonMap(sc);
+    else if (mode === 'trail') drawTrailMap(sc);
     else { mm.strokeStyle = 'rgba(168,129,79,.5)'; mm.lineWidth = 2; mm.beginPath(); mm.arc(-player.pos.x * sc, -player.pos.z * sc, ARENA * sc, 0, Math.PI * 2); mm.stroke(); }
     for (const l of loots) plot(l.pos.x, l.pos.z, '#' + new T.Color(RCOL[l.it.rarity]).getHexString(), 3);
-    for (const e of enemies) if (e.alive && (mode === 'arena' || e.awake)) plot(e.pos.x, e.pos.z, e.type === 'boss' ? '#ff4030' : '#d23a2e', e.type === 'boss' ? 5 : 2.5);
+    for (const e of enemies) if (e.alive && (mode === 'dungeon' ? e.awake : e.awake !== false)) plot(e.pos.x, e.pos.z, e.type === 'boss' ? '#ff4030' : '#d23a2e', e.type === 'boss' ? 5 : 2.5);
     const AL = coopAllyHere(); if (AL) plot(AL.x, AL.z, '#6fb8ff', 4.5);
     mm.restore();
     mm.fillStyle = '#eadcc2'; mm.beginPath(); mm.moveTo(c, c - 6); mm.lineTo(c + 4, c + 4); mm.lineTo(c - 4, c + 4); mm.closePath(); mm.fill();
@@ -5323,6 +5773,6 @@ updateGearHud();
 frame();
 
 // debug hook for testing
-window.__vale = { get coop() { return coop; }, bossStart, coopAllyHere, showCard, toggleSheet, hurtPlayer, tryDash, strike, statLines, MODS, rollMods, get orbitOrbs() { return orbitOrbs.length; }, SIGS, sigState, get pendingSig() { return pendingSig; }, POSES, buffs, get playerHp() { return player.hp; }, get weaponObj() { return weaponObj; }, get hand() { return hand; }, killEnemy, DG, enterDungeon, descend, get mode() { return mode; }, resetRun, setPaused, get wave() { return wave; }, tomes, useNear, pickTome, takeTome, makeChoices, rankExtra, POOLS, RANKFX, UNLOCK, SKICON, get choicesShown() { return choicesShown; }, SKILLS, get swing() { return swing; }, SIG, trySurge, boltShot, startAs, skillSlots, xpNext, castLearned, choose, replaceSlot, get choosing() { return choosing; }, gainXp, COMBOS, sweepLoot, gear, genItem, dropItem, player, enemies, loots, spawnEnemy, get stats() { return stats; }, tryEquip, startSwing, castSkill, performAttack, equip(it) { gear[it.slot] = it; stats = computeStats(); rebuildViewmodel(); updateGearHud(); } };
+window.__vale = { get hexes() { return hexes.length; }, TR, trailNear, enterTrail, trailBossDown, get coop() { return coop; }, bossStart, coopAllyHere, showCard, toggleSheet, hurtPlayer, tryDash, strike, statLines, MODS, rollMods, get orbitOrbs() { return orbitOrbs.length; }, SIGS, sigState, get pendingSig() { return pendingSig; }, POSES, buffs, get playerHp() { return player.hp; }, get weaponObj() { return weaponObj; }, get hand() { return hand; }, killEnemy, DG, enterDungeon, descend, get mode() { return mode; }, resetRun, setPaused, get wave() { return wave; }, tomes, useNear, pickTome, takeTome, makeChoices, rankExtra, POOLS, RANKFX, UNLOCK, SKICON, get choicesShown() { return choicesShown; }, SKILLS, get swing() { return swing; }, SIG, trySurge, boltShot, startAs, skillSlots, xpNext, castLearned, choose, replaceSlot, get choosing() { return choosing; }, gainXp, COMBOS, sweepLoot, gear, genItem, dropItem, player, enemies, loots, spawnEnemy, get stats() { return stats; }, tryEquip, startSwing, castSkill, performAttack, equip(it) { gear[it.slot] = it; stats = computeStats(); rebuildViewmodel(); updateGearHud(); } };
 })();
 </script>

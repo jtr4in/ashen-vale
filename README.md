@@ -1,6 +1,6 @@
 # Ashen Vale
 
-A first-person action RPG that runs in the browser. Pick a class, crawl the dungeon or hold the arena, and build your character from weapons, modifiers and skills.
+A first-person action RPG that runs in the browser. Pick a class, crawl the dungeon, hold the arena or fight down the Island Trail, and build your character from weapons, modifiers and skills.
 
 **Play:** https://jtr4in.github.io/ashen-vale/
 
