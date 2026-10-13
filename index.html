@@ -161,6 +161,7 @@ body { background: var(--ink); color: var(--parch); font-family: var(--body); ov
 #coopBox .cor { color: var(--muted); font-size: 13px; }
 #coopCode { flex: 1; min-width: 90px; font: inherit; font-size: 16px; padding: 5px 8px; text-transform: uppercase; letter-spacing: .12em; color: var(--parch); background: rgba(0,0,0,.5); border: 1px solid var(--bronze-dim); }
 #coopStat { font-size: 14px; color: var(--muted); }
+#coopDiag { font-size: 12px; color: var(--muted); opacity: .75; }
 #coopStat b { color: #ffd98a; letter-spacing: .14em; font-size: 18px; }
 #allyHud { margin-top: 6px; display: grid; gap: 3px; font-size: 13px; color: #9fd0ff; }
 #allyHud .abar { width: 150px; height: 6px; border: 1px solid rgba(111,184,255,.6); background: rgba(0,0,0,.6); }
@@ -328,6 +329,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
     <div id="coopBox" hidden>
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
+      <div id="coopDiag">Version 23</div>
     </div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
@@ -4132,6 +4134,8 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
+const NET_VER = 23;
+function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
     const cfg = Object.assign({ appId: 'ashen-vale-coop-1', relayConfig: { redundancy: 8, warnOnRelayFailure: false } }, window.__NET_OPTS || {});
@@ -4151,10 +4155,38 @@ function netJoin(host, code) {
       on: (k, fn) => { (H[k] = H[k] || []).push(fn); return () => { H[k] = (H[k] || []).filter(x => x !== fn); }; },
       presence: (patch) => { mine = Object.assign({}, mine, patch); if (ally) sendP(ally); return Promise.resolve(); },
       onPeers: (fn) => { peerFns.push(fn); setTimeout(fire, 0); return () => {}; },
-      leave: () => { try { room.leave(); } catch (e) {} return Promise.resolve(); },
+      leave: () => { leaveRoom(); netDiag(''); return Promise.resolve(); },
     };
     room.onPeerJoin = (id) => sendP(id);
     room.onPeerLeave = (id) => { if (id === ally) { ally = null; theirs = null; fire(); } };
+    // Connection readout: how many relays answer, and whether the other player has been heard on them yet.
+    // Each side posts a small beacon on the relays every few seconds, separate from the real handshake.
+    const btopic = 'ashenvale-beacon-' + code, bsub = 'avb' + Math.random().toString(36).slice(2, 12), subbed = new WeakSet();
+    let heard = 0, heardVer = 0;
+    const beacon = async () => {
+      if (left) return;
+      let socks = [];
+      try { socks = Object.values(T.getRelaySockets()); } catch (e) {}
+      const up = socks.filter(x => x && x.readyState === 1);
+      for (const ws of up) {
+        try {
+          if (!subbed.has(ws)) {
+            subbed.add(ws); ws.send(T.subscribe(bsub, btopic));
+            ws.addEventListener('message', (e) => {
+              try { const m = JSON.parse(e.data); if (m[0] !== 'EVENT' || m[1] !== bsub) return; const c = JSON.parse(m[2].content); if (c.id !== T.selfId && c.r !== role) { heard = Date.now(); heardVer = c.v; } } catch (x) {}
+            });
+          }
+          ws.send(await T.createEvent(btopic, JSON.stringify({ r: role, id: T.selfId, v: NET_VER })));
+        } catch (e) {}
+      }
+      const other = host ? 'friend' : 'host';
+      netDiag(`relays ${up.length}/${socks.length} · ` + (ally && theirs ? `connected to your ${other}`
+        : heard && heardVer !== NET_VER ? `your ${other} is on version ${heardVer || 'old'}, reload both pages`
+        : heard && Date.now() - heard < 12000 ? `${other} found, linking browsers…` : `${other} not heard yet`));
+    };
+    let left = false;
+    const bt = setInterval(beacon, 3000); setTimeout(beacon, 1200);
+    const leaveRoom = () => { left = true; clearInterval(bt); try { room.leave(); } catch (e) {} };
     // the host takes the first guest that turns up; a guest takes the host. Anyone else is ignored.
     pr.onMessage = (m, ctx) => {
       const id = ctx && ctx.peerId;
@@ -4171,7 +4203,7 @@ function netJoin(host, code) {
       for (const f of H[m.k] || []) try { f({ topic: m.k, data: m.d, peer: id, by: null, isMe: false, sameTab: false }); } catch (e) { console.error(e); }
     };
     if (host) { done = true; resolve(api); }
-    else setTimeout(() => { if (!done) { done = true; try { room.leave(); } catch (x) {} reject({ type: 'peer-unavailable' }); } }, 25000);
+    else setTimeout(() => { if (!done) { done = true; leaveRoom(); reject({ type: heard ? 'no-link' : 'peer-unavailable' }); } }, 25000);
   }));
 }
 const newCode = () => Array.from({ length: 4 }, () => 'abcdefghjkmnpqrstuvwxyz23456789'[Math.floor(Math.random() * 31)]).join('');
@@ -4197,6 +4229,7 @@ async function coopOpen(host) {
       coopStatus(t === 'not_permitted' ? 'You need edit or contributor access to this page to play together. The owner can change that from Share.'
         : t === 'peer-unavailable' ? 'No game found with that code. Both of you need the same link (the GitHub one), and the host has to keep their game open on the co-op screen or in the run.'
         : t === 'load' ? 'Could not load the connection code. Check your internet and try again.'
+        : t === 'no-link' ? 'Found your friend\'s game, but your browsers could not link up. Tell Claude the line below this.'
         : 'Could not reach the matchmaking server. Try again in a moment.');
       return;
     }
