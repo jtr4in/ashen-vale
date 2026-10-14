@@ -279,6 +279,44 @@ button.cchar.on, button.cchar:hover, button.cchar:focus-visible { border-color: 
 .skill .glyph.ico { width: 30px; height: 30px; border-radius: 0; background: none !important; }
 .glyph.ico svg, .cico svg, .loot-label svg { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .skill .lv { font-family: var(--display); font-size: 11px; letter-spacing: .05em; }
+#treeBtn { grid-area: lv; align-self: start; justify-self: center; margin-top: -30px; pointer-events: auto; font: 600 11px/1 var(--body); padding: 4px 7px; border: 1px solid var(--bronze); background: rgba(0,0,0,.72); color: var(--parch); white-space: nowrap; cursor: pointer; }
+#treeBtn kbd { font: inherit; color: var(--muted); }
+#treeBtn.hot { border-color: #ffd98a; color: #ffd98a; box-shadow: 0 0 10px rgba(255,200,90,.6); }
+#treeOv { z-index: 6; background: rgba(10,8,6,.94); align-items: start; }
+.tbox { max-width: 1040px; width: 100%; display: grid; gap: 10px; text-align: left; color: var(--parch); margin: auto; }
+.thead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.thead h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 34px; }
+.thead .pts { font-size: 16px; color: var(--muted); } .thead .pts.hot { color: #ffd98a; }
+.thead .sp { flex: 1; } .tsub { color: var(--muted); font-size: 13px; }
+.tcols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.tcol { border: 1px solid #4a3a28; border-top: 3px solid var(--sc); background: rgba(14,10,7,.92); padding: 8px; display: grid; gap: 8px; align-content: start; }
+.tcol h3, .tpas h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 19px; display: flex; gap: 7px; align-items: baseline; }
+.tcol h3 kbd { font: 600 11px var(--body); color: var(--sc); border: 1px solid var(--sc); padding: 1px 4px; }
+.tpas h3 small { font: 13px var(--body); color: var(--muted); }
+.tpick { display: flex; flex-wrap: wrap; gap: 5px; }
+.tchip { width: 38px; height: 38px; padding: 0; border: 1px solid #5a4630; background: #120d09; display: grid; place-items: center; cursor: pointer; color: var(--parch); }
+.tchip svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tchip.on { border-color: var(--sc); box-shadow: 0 0 8px var(--sc); background: color-mix(in srgb, var(--sc) 18%, #120d09); }
+.tchip:disabled:not(.on) { opacity: .35; cursor: default; }
+.tchain { display: grid; gap: 9px; }
+.tchain > * { position: relative; }
+.tchain > * + *::before { content: ''; position: absolute; left: 50%; top: -10px; width: 2px; height: 9px; background: #5a4630; }
+.tnode { display: grid; gap: 3px; width: 100%; padding: 6px 8px; border: 1px solid #4a3a28; background: rgba(0,0,0,.45); font: 12px/1.3 var(--body); color: var(--parch); text-align: left; }
+.tnode b { font-size: 13px; } .tnode em { font-style: normal; color: var(--muted); font-size: 11px; } .tnode .why { color: #c09060; font-size: 11px; }
+.tnode .trow { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tnode.have, .tnode.open { border-color: var(--sc, #ffd98a); background: color-mix(in srgb, var(--sc, #ffd98a) 14%, rgba(0,0,0,.5)); }
+.tnode.can, .tnode.open, .tnode.swap { cursor: pointer; }
+.tnode.can, .tnode.open { box-shadow: 0 0 0 1px #ffd98a, 0 0 10px rgba(255,217,138,.45); }
+.tnode.can:hover, .tnode.open:hover, .tnode.swap:hover { background: rgba(255,217,138,.12); }
+.tnode.lock { opacity: .5; }
+.tfork { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tpips { display: inline-flex; gap: 3px; } .tpips i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.16); } .tpips i.on { background: var(--sc, #ffd98a); box-shadow: 0 0 5px var(--sc, #ffd98a); }
+.tnote { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.tpas { border: 1px solid #4a3a28; background: rgba(14,10,7,.92); padding: 8px; display: grid; gap: 8px; --sc: #ffd98a; }
+.tprow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tfoot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; } .tfoot .tsub { flex: 1; min-width: 200px; }
+@media (max-width: 820px) { .tcols, .tprow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 440px) { .tcols { grid-template-columns: 1fr; } .tfork { grid-template-columns: 1fr; } .thead h2 { font-size: 28px; } }
 #choices { position: fixed; left: 50%; bottom: calc(158px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(520px, calc(100vw - 32px)); z-index: 3; display: grid; gap: 5px; }
 #choices .chead { text-align: center; font-family: var(--display); font-size: 16px; text-shadow: 0 1px 3px #000; color: #ffd98a; }
 #choices .chead span { font-family: var(--body); font-size: 13px; color: var(--parch); margin-left: 6px; }
@@ -364,6 +402,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
     <div class="bar" id="xpbar"><i style="width:0%"></i></div>
   </div>
   <div id="lvl">1</div>
+  <button id="treeBtn" type="button" hidden>Skills</button>
   <div class="skills">
     <div class="skill" id="atkSlot"><div class="glyph" id="atkGlyph"></div><span class="key">LMB</span><span class="lbl" id="atkName">Slash</span><span class="pips" id="pips"><i></i><i></i><i></i></span></div>
     <div class="skill empty" id="slotQ"><div class="glyph"></div><div class="cd"></div><span class="cdn"></span><span class="key">Q</span><span class="lv"></span><span class="lbl">Empty</span></div>
@@ -418,7 +457,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
       <kbd>W A S D</kbd><span>Move</span>
       <kbd>Mouse</kbd><span>Look (click to lock the cursor, Esc to release)</span>
       <kbd>Left click</kbd><span>Attack. Hold it to chain a 3-hit combo. Your weapon's sub-type decides the combo</span>
-      <kbd>Q E R</kbd><span>Q is your attack skill (level 1), E is movement or defense (level 3), R is your ultimate (level 6). Each level, two choices appear above your skill bar. Press 1 or 2 to take one</span>
+      <kbd>Q E R</kbd><span>Q is your attack skill (level 1), E is movement or defense (level 3), R is your ultimate (level 6). Every level gives a skill point. Press K for the skill tree: learn a skill, rank it up, add its modifiers, then choose its form</span>
       <kbd>Right click</kbd><span>Your weapon type's signature move</span>
       <kbd>Space</kbd><span>Dash</span>
       <kbd>F</kbd><span>Take the item you're standing near</span>
@@ -429,6 +468,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   </div>
 </div>
 <div class="overlay" id="pickOv" hidden></div>
+<div class="overlay" id="treeOv" hidden></div>
 <div class="overlay" id="campOv" hidden>
   <div class="box">
     <h2>Camp</h2>
@@ -528,7 +568,7 @@ const RW = { pois: [], camps: [], parties: [], group: null, tick: 0, launch: [20
   while (RW.camps.length < 16) {
     const a = rnd() * Math.PI * 2, r = 30 + rnd() * 160, x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (RW.pois.some(p => Math.hypot(p.x - x, p.z - z) < 34) || RW.camps.some(c => Math.hypot(c.x - x, c.z - z) < 30)) continue;
-    RW.camps.push({ x, z, type: ['spider', 'brute', 'imp', 'wraith', 'caster', 'bloater', 'ghoul'][RW.camps.length % 7], live: null, cd: 0 });
+    RW.camps.push({ x, z, type: ['wolf', 'spider', 'skeleton', 'brute', 'imp', 'golem', 'wraith', 'caster', 'skelarcher', 'bloater', 'ghoul'][RW.camps.length % 11], live: null, cd: 0 });
   }
 })();
 const poiR = (p) => p.kind === 'capital' ? 20 : p.kind === 'keep' ? 13 : p.kind === 'crown' ? 12 : 11;
@@ -1096,7 +1136,7 @@ const UNLOCK = { Q: 1, E: 3, R: 6 };
 const ROLE = { Q: 'Attack', E: 'Movement', R: 'Ultimate' };
 const SLOTCOL = { Q: 0xff8a3a, E: 0x4ab0ff, R: 0xc070ff };
 const SLOTHEX = { Q: '#ff8a3a', E: '#4ab0ff', R: '#c070ff', RMB: '#ffd66a' };
-const ROMAN = ['', 'I', 'II', 'III'];
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const rankL = (r) => 1 + (r - 1) * 2; // rank I, II, III scale like levels 1, 3, 5
 // What ranks II and III add to each skill
 const RANKFX = {
@@ -1209,7 +1249,27 @@ const hexOf = (c) => '#' + new T.Color(c).getHexString();
 const iconSvg = (id, col) => `<svg viewBox="0 0 24 24" aria-hidden="true" style="color:${col || hexOf(SKILLS[id].col)}">${ICONS[SKICON[id] || id] || ICONS.blink}</svg>`;
 
 const KEYS3 = ['Q', 'E', 'R'];
-const skillSlots = { Q: null, E: null, R: null }; // {id, lvl, cd}
+const skillSlots = { Q: null, E: null, R: null }; // {id, lvl (rank 1-5), mods (0-2), form (0-2), cd}
+// The skill tree. You get one point per level. Learn a skill, rank it up, add its Enhanced and Mastery modifiers, then choose one of two forms.
+const MAX_RANK = 5;
+const passives = { might: 0, vigor: 0, fury: 0, focus: 0 };
+const PASSIVES = [
+  { id: 'might', name: 'Might', desc: (r) => `+${5 * r}% damage` },
+  { id: 'vigor', name: 'Vigor', desc: (r) => `+${8 * r}% health` },
+  { id: 'fury', name: 'Fury', desc: (r) => `+${4 * r}% attack speed` },
+  { id: 'focus', name: 'Focus', desc: (r) => `Skills and your signature recharge ${6 * r}% faster` },
+];
+const PASSIVE_LV = 5, PASSIVE_MAX = 3;
+const FORMS = {
+  Q: [{ id: 'brutal', name: 'Brutal', desc: 'Two extra ranks of power: bigger hits and more of them' }, { id: 'echo', name: 'Echoing', desc: 'An echo casts it again a moment later, two ranks weaker' }],
+  E: [{ id: 'ward', name: 'Warding', desc: 'After you use it, take 40% less damage for 3s' }, { id: 'swift', name: 'Swift', desc: '35% shorter cooldown' }],
+  R: [{ id: 'brutal', name: 'Brutal', desc: 'Two extra ranks of power: bigger hits and longer effects' }, { id: 'restore', name: 'Restoring', desc: 'Also heals 20% of your health' }],
+};
+const formId = (sl, k) => (sl && sl.form ? FORMS[k][sl.form - 1].id : null);
+const slotPow = (sl, k) => sl.lvl + (formId(sl, k) === 'brutal' ? 2 : 0);
+const slotSpent = (sl) => (sl ? sl.lvl + sl.mods + (sl.form ? 1 : 0) : 0);
+const treeSpent = () => KEYS3.reduce((a, k) => a + slotSpent(skillSlots[k]), 0) + (sigState.rank - 1) + Object.values(passives).reduce((a, b) => a + b, 0);
+const treeFree = () => Math.max(0, player.level - treeSpent());
 const buffs = {}; // name -> {until, ...}
 let itemSeq = 0;
 
@@ -1307,6 +1367,7 @@ function computeStats(g = gear) {
     rarity: g.weapon.rarity,
   };
   st.procDmg = ((st.min + st.max) / 2) * 0.6 * ep;
+  { const pm = 1 + 0.05 * passives.might; st.min *= pm; st.max *= pm; st.elem *= pm; st.procDmg *= pm; st.maxHp = Math.round(st.maxHp * (1 + 0.08 * passives.vigor)); st.aps *= 1 + 0.04 * passives.fury; }
   if (typeof buffs !== 'undefined') {
     if (buffs.warcry) { const k = 1 + buffs.warcry.dmg; st.min *= k; st.max *= k; st.elem *= k; st.aps *= 1 + buffs.warcry.aps; }
     if (buffs.frenzy) { st.aps *= 1 + buffs.frenzy.aps; if (buffs.frenzy.dmg) { st.min *= 1 + buffs.frenzy.dmg; st.max *= 1 + buffs.frenzy.dmg; st.elem *= 1 + buffs.frenzy.dmg; } }
@@ -1318,6 +1379,7 @@ function computeStats(g = gear) {
     if (buffs.aura) st.armor = Math.min(85, st.armor + buffs.aura.armor);
     if (buffs.bulwark) st.armor = Math.min(85, st.armor + buffs.bulwark.armor);
     if (buffs.mana) st.armor = Math.min(85, st.armor + buffs.mana.armor);
+    if (buffs.ward) st.armor = Math.min(85, st.armor + buffs.ward.armor);
     st.leech = (buffs.bloodlust ? buffs.bloodlust.leech : 0) + (buffs.frenzy && buffs.frenzy.leech ? buffs.frenzy.leech : 0) + (mods.leech || 0) / 100 + (buffs.bloodflame ? buffs.bloodflame.leech : 0);
   }
   st.dps = ((st.min + st.max) / 2 * (1 + st.crit / 100 * (st.critMult - 1)) + st.elem + st.proc * st.procDmg) * st.aps;
@@ -1325,7 +1387,7 @@ function computeStats(g = gear) {
 }
 let stats = computeStats();
 player.hp = stats.maxHp;
-const xpNext = (lvl) => Math.round(60 * Math.pow(lvl, 1.45));
+const xpNext = (lvl) => Math.round(80 * Math.pow(lvl, 1.55));
 
 /* ---------------- materials helpers ---------------- */
 const phong = (color, opts = {}) => new T.MeshPhongMaterial(Object.assign({ color, flatShading: true, shininess: 30 }, opts));
@@ -1851,15 +1913,31 @@ const ETYPES = {
   wraith: { hp: 32, dmg: 8, speed: 4.4, scale: 1.05, color: 0x8ab0d0, radius: 0.5, xp: 18, range: 1.8, windup: 0.45 },
   // spiders scuttle fast and bite quickly; in the dungeon they hang from threads and drop on you
   spider: { hp: 20, dmg: 6, speed: 5.0, scale: 0.9, color: 0x2a2228, radius: 0.55, xp: 12, range: 1.5, windup: 0.35 },
+  // wolves run in packs and lunge; skeletons rattle up with rusty blades or bows; golems are slow walls of stone that hit very hard
+  wolf: { hp: 17, dmg: 5, speed: 6.4, scale: 0.95, color: 0x5c5a5e, radius: 0.55, xp: 10, range: 1.5, windup: 0.28 },
+  skeleton: { hp: 30, dmg: 7, speed: 3.9, scale: 1, color: 0xd8d0b8, radius: 0.5, xp: 13, range: 1.8, windup: 0.5 },
+  skelarcher: { hp: 22, dmg: 8, speed: 3.6, scale: 1, color: 0xc8c0a6, radius: 0.5, xp: 15, range: 16, windup: 0.8, ranged: true, arrow: true },
+  golem: { hp: 130, dmg: 18, speed: 2.0, scale: 1.45, color: 0x6e685e, radius: 1.0, xp: 40, range: 2.5, windup: 1.0 },
 };
+ETYPES.caster.ranged = true;
+// Bosses come in five kinds. Each one keeps the boss stats and changes its look, pace and special attack.
+const BOSS_ORDER = ['demon', 'lich', 'alpha', 'brood', 'colossus'];
+const BOSSV = {
+  demon: { names: null },
+  lich: { names: ['Morvath the Hollow', 'The Bone Abbot'], color: 0x3a2a48, speed: 2.7, hp: 0.85, scale: 2.2, windup: 0.8, range: 3.4 },
+  alpha: { names: ['Greymaw, the Pack Father', 'Old Fang'], color: 0x6a6a72, speed: 4.7, hp: 0.9, scale: 3.4, windup: 0.6, range: 3.2 },
+  brood: { names: ['The Widow Queen', 'Mother Silk'], color: 0x2a1a2a, speed: 3.6, hp: 1, scale: 3.8, windup: 0.55, range: 3.4 },
+  colossus: { names: ['The Cairn Colossus', 'Grimstone'], color: 0x6a645a, speed: 2.2, hp: 1.35, scale: 2.3, windup: 1.1, range: 4 },
+};
+const bossVariantOf = (wave) => BOSS_ORDER[(wave * 7 + 3) % BOSS_ORDER.length];
 const webMat = new T.MeshBasicMaterial({ color: 0xd8d8d0, transparent: true, opacity: 0.5 });
-const TCODES = ['ghoul', 'brute', 'boss', 'imp', 'caster', 'bloater', 'wraith', 'spider'];
+const TCODES = ['ghoul', 'brute', 'boss', 'imp', 'caster', 'bloater', 'wraith', 'spider', 'wolf', 'skeleton', 'skelarcher', 'golem'];
 // Which monster turns up: brutes at the given chance, the newer kinds as the level climbs, ghouls the rest of the time.
 function rollType(lv, bru, r = Math.random) {
   const x = r();
   if (x < bru) return 'brute';
   let a = bru;
-  for (const [t, from, ch] of [['imp', 2, 0.14], ['caster', 3, 0.11], ['bloater', 4, 0.08], ['wraith', 5, 0.08], ['spider', 3, 0.07]]) if (lv >= from && x < (a += ch)) return t;
+  for (const [t, from, ch] of [['wolf', 1, 0.1], ['imp', 2, 0.12], ['skeleton', 2, 0.1], ['caster', 3, 0.09], ['skelarcher', 3, 0.06], ['bloater', 4, 0.07], ['wraith', 5, 0.07], ['spider', 3, 0.06], ['golem', 5, 0.05]]) if (lv >= from && x < (a += ch)) return t;
   return 'ghoul';
 }
 const BOSS_NAMES = ['Bloodclaw, the Hippogriff', 'Gorehorn the Flayer', 'Mother of Ash', 'Kurgath, Pit Lord'];
@@ -1890,8 +1968,113 @@ function buildSpider(skin) {
   g.scale.setScalar(ETYPES.spider.scale);
   return { g, torso, arms, legs, wings: [], head, legK: 0.22 };
 }
-function buildEnemyMesh(type, skin) {
+const skelEye = new T.MeshBasicMaterial({ color: 0x7af0ff }), crackMat = new T.MeshBasicMaterial({ color: 0xff7a2a }), lichOrb = new T.MeshBasicMaterial({ color: 0x7aff8a });
+const madd = (parent, geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
+// Four-legged: the neck swings like an arm when it bites, and the diagonal leg pairs step together
+function buildWolf(skin) {
+  const g = new T.Group(), dark = phong(0x2a2826);
+  const torso = new T.Group(); torso.position.y = 0.95; g.add(torso);
+  const body = madd(torso, new T.SphereGeometry(0.3, 10, 8), skin, 0, -0.22, -0.05); body.scale.set(0.85, 0.8, 1.75);
+  madd(torso, new T.SphereGeometry(0.29, 9, 7), skin, 0, -0.16, 0.3).scale.set(0.95, 1, 1);
+  const ruff = madd(torso, new T.ConeGeometry(0.3, 0.4, 7), dark, 0, -0.02, 0.34); ruff.rotation.x = -1.2;
+  const tail = madd(torso, new T.ConeGeometry(0.07, 0.6, 5), skin, 0, -0.08, -0.62); tail.rotation.x = -2.2;
+  const neck = new T.Group(); neck.position.set(0, -0.05, 0.48); torso.add(neck);
+  const head = madd(neck, new T.BoxGeometry(0.26, 0.24, 0.3), skin, 0, 0.06, 0.12);
+  madd(head, new T.BoxGeometry(0.15, 0.12, 0.24), skin, 0, -0.05, 0.22);
+  madd(head, new T.BoxGeometry(0.06, 0.05, 0.05), dark, 0, -0.01, 0.35);
+  for (const sd of [-1, 1]) {
+    madd(head, new T.ConeGeometry(0.05, 0.16, 4), skin, sd * 0.08, 0.17, -0.04);
+    madd(head, new T.SphereGeometry(0.03, 5, 4), eyeMat, sd * 0.08, 0.04, 0.15);
+    const f = madd(head, new T.ConeGeometry(0.015, 0.07, 3), phong(0xe8dcc0), sd * 0.045, -0.13, 0.28); f.rotation.x = Math.PI;
+  }
+  const legs = [], legs2 = [], lg = new T.CylinderGeometry(0.05, 0.04, 0.62, 5);
+  const leg = (x, z) => { const p = new T.Group(); p.position.set(x, 0.62, z); g.add(p); madd(p, lg, skin, 0, -0.31, 0); madd(p, new T.BoxGeometry(0.09, 0.05, 0.13), dark, 0, -0.6, 0.03); return p; };
+  legs.push(leg(-0.15, 0.32), leg(0.15, 0.32)); legs2.push(leg(0.15, -0.36), leg(-0.15, -0.36));
+  return { g, torso, arms: [neck], legs, legs2, wings: [], head, legK: 0.5, armK: 0.22 };
+}
+function buildSkeleton(skin, archer) {
+  const g = new T.Group(), rust = phong(0x6a4a30), bone = (r, h) => new T.CylinderGeometry(r, r * 0.85, h, 5);
+  const torso = new T.Group(); torso.position.y = 0.95; g.add(torso);
+  madd(torso, bone(0.045, 0.75), skin, 0, 0.2, -0.06);
+  for (let k = 0; k < 3; k++) { const r = madd(torso, new T.TorusGeometry(0.2 - k * 0.025, 0.028, 4, 12), skin, 0, 0.47 - k * 0.12, 0.02); r.rotation.x = Math.PI / 2; r.scale.set(1, 0.72, 1); }
+  madd(torso, new T.BoxGeometry(0.34, 0.12, 0.18), skin, 0, -0.08, 0);
+  madd(torso, new T.BoxGeometry(0.5, 0.06, 0.12), skin, 0, 0.58, 0);
+  const head = madd(torso, new T.SphereGeometry(0.17, 8, 7), skin, 0, 0.82, 0.04);
+  madd(head, new T.BoxGeometry(0.2, 0.07, 0.14), skin, 0, -0.14, 0.06);
+  for (const sd of [-1, 1]) { madd(head, new T.SphereGeometry(0.05, 6, 5), phong(0x0a0806), sd * 0.065, 0.02, 0.13); madd(head, new T.SphereGeometry(0.025, 5, 4), skelEye, sd * 0.065, 0.02, 0.165); }
+  const arms = [], legs = [];
+  for (const sd of [-1, 1]) {
+    const a = new T.Group(); a.position.set(sd * 0.28, 0.55, 0); torso.add(a);
+    madd(a, bone(0.035, 0.42), skin, 0, -0.2, 0); madd(a, bone(0.03, 0.4), skin, 0, -0.6, 0.02);
+    madd(a, new T.SphereGeometry(0.05, 5, 4), skin, 0, -0.83, 0.03);
+    if (sd > 0 && !archer) { const bl = madd(a, new T.BoxGeometry(0.05, 0.08, 0.75), rust, 0, -0.86, 0.36); madd(a, new T.BoxGeometry(0.2, 0.04, 0.05), rust, 0, -0.86, 0.02); bl.rotation.x = 0.1; }
+    if (sd < 0 && archer) { const bw = madd(a, new T.TorusGeometry(0.42, 0.025, 4, 14, Math.PI), phong(0x4a3420), 0, -0.86, 0.1); bw.rotation.y = Math.PI / 2; bw.rotation.x = 0; bw.rotation.z = Math.PI / 2; }
+    arms.push(a);
+    const l = new T.Group(); l.position.set(sd * 0.12, 0.8, 0); g.add(l);
+    madd(l, bone(0.04, 0.42), skin, 0, -0.2, 0); madd(l, bone(0.035, 0.4), skin, 0, -0.6, 0); madd(l, new T.BoxGeometry(0.09, 0.05, 0.16), skin, 0, -0.8, 0.04);
+    legs.push(l);
+  }
+  if (archer) { const q = madd(torso, new T.CylinderGeometry(0.07, 0.06, 0.5, 6), rust, 0.1, 0.35, -0.2); q.rotation.z = 0.4; }
+  else { const sh = madd(arms[0], new T.CylinderGeometry(0.24, 0.24, 0.05, 10), rust, -0.07, -0.65, 0.1); sh.rotation.z = Math.PI / 2; }
+  return { g, torso, arms, legs, wings: [], head };
+}
+function buildGolem(skin) {
+  const g = new T.Group();
+  const torso = new T.Group(); torso.position.y = 0.95; g.add(torso);
+  const chest = madd(torso, new T.DodecahedronGeometry(0.55, 0), skin, 0, 0.32, 0); chest.scale.set(1.25, 1, 0.85);
+  for (let k = 0; k < 4; k++) { const c = madd(chest, new T.BoxGeometry(0.05, 0.38 - k * 0.06, 0.03), crackMat, -0.2 + k * 0.14, 0.02 * k, 0.47); c.rotation.z = (k % 2 ? 1 : -1) * 0.5; }
+  madd(torso, new T.DodecahedronGeometry(0.34, 0), skin, 0, -0.18, 0);
+  const head = madd(torso, new T.BoxGeometry(0.34, 0.26, 0.3), skin, 0, 0.78, 0.14);
+  madd(head, new T.BoxGeometry(0.24, 0.05, 0.04), crackMat, 0, 0.02, 0.16);
+  const arms = [], legs = [];
+  for (const sd of [-1, 1]) {
+    const a = new T.Group(); a.position.set(sd * 0.72, 0.55, 0); torso.add(a);
+    madd(a, new T.DodecahedronGeometry(0.3, 0), skin, 0, 0, 0);
+    madd(a, new T.BoxGeometry(0.3, 0.6, 0.3), skin, 0, -0.42, 0);
+    madd(a, new T.DodecahedronGeometry(0.3, 0), skin, 0, -0.88, 0.04);
+    madd(a, new T.BoxGeometry(0.04, 0.3, 0.03), crackMat, sd * 0.16, -0.4, 0.1);
+    arms.push(a);
+    const l = new T.Group(); l.position.set(sd * 0.3, 0.75, 0); g.add(l);
+    madd(l, new T.BoxGeometry(0.34, 0.78, 0.36), skin, 0, -0.38, 0);
+    legs.push(l);
+  }
+  return { g, torso, arms, legs, wings: [], head, legK: 0.35 };
+}
+// The lich floats in a ragged robe and carries a staff with a green soul-light in it
+function buildLich(skin) {
+  const g = new T.Group(), robeM = phong(0x241a30, { side: T.DoubleSide }), boneM = phong(0xd8d0b8), gold = phong(0xc8a040, { shininess: 80 });
+  const torso = new T.Group(); torso.position.y = 0.95; g.add(torso);
+  madd(g, new T.ConeGeometry(0.55, 1.3, 9, 1, true), robeM, 0, 0.6, 0);
+  madd(torso, new T.BoxGeometry(0.62, 0.7, 0.4), skin, 0, 0.25, 0);
+  const cowl = madd(torso, new T.ConeGeometry(0.42, 0.5, 8, 1, true), robeM, 0, 0.62, -0.02); cowl.rotation.x = Math.PI;
+  const head = madd(torso, new T.SphereGeometry(0.2, 9, 7), boneM, 0, 0.82, 0.06);
+  madd(head, new T.BoxGeometry(0.22, 0.07, 0.15), boneM, 0, -0.16, 0.06);
+  for (const sd of [-1, 1]) madd(head, new T.SphereGeometry(0.035, 5, 4), lichOrb, sd * 0.075, 0.02, 0.17);
+  for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, sp = madd(head, new T.ConeGeometry(0.035, 0.18, 4), gold, Math.cos(a) * 0.15, 0.2, Math.sin(a) * 0.15); sp.rotation.z = -Math.cos(a) * 0.25; sp.rotation.x = Math.sin(a) * 0.25; }
+  madd(head, new T.TorusGeometry(0.16, 0.025, 4, 14), gold, 0, 0.13, 0).rotation.x = Math.PI / 2;
+  const arms = [];
+  for (const sd of [-1, 1]) {
+    const a = new T.Group(); a.position.set(sd * 0.42, 0.5, 0); torso.add(a);
+    madd(a, new T.ConeGeometry(0.16, 0.8, 6, 1, true), robeM, 0, -0.38, 0);
+    madd(a, new T.SphereGeometry(0.06, 5, 4), boneM, 0, -0.8, 0.02);
+    if (sd > 0) { madd(a, new T.CylinderGeometry(0.03, 0.03, 1.9, 5), phong(0x2a1c14), 0, -0.6, 0.12); madd(a, new T.IcosahedronGeometry(0.13, 0), lichOrb, 0, 0.38, 0.12); madd(a, new T.TorusGeometry(0.12, 0.02, 4, 10), gold, 0, 0.38, 0.12); }
+    arms.push(a);
+  }
+  const legs = [new T.Group(), new T.Group()]; legs.forEach(l => g.add(l));
+  return { g, torso, arms, legs, wings: [], head, float: true };
+}
+function buildBossV(variant, skin) {
+  if (variant === 'lich') return buildLich(skin);
+  if (variant === 'alpha') return buildWolf(skin);
+  if (variant === 'brood') return buildSpider(skin);
+  return buildGolem(skin);
+}
+function buildEnemyMesh(type, skin, variant) {
   if (type === 'spider') return buildSpider(skin);
+  if (type === 'wolf') return buildWolf(skin);
+  if (type === 'skeleton' || type === 'skelarcher') return buildSkeleton(skin, type === 'skelarcher');
+  if (type === 'golem') return buildGolem(skin);
+  if (type === 'boss' && variant && variant !== 'demon') return buildBossV(variant, skin);
   const g = new T.Group();
   const big = type === 'brute' || type === 'boss' || type === 'bloater';
   const add = (parent, geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
@@ -1943,12 +2126,15 @@ function buildEnemyMesh(type, skin) {
   return { g, torso, arms, legs, wings, head };
 }
 
-function spawnEnemy(type, wave, at, elite = false) {
+function spawnEnemy(type, wave, at, elite = false, variant) {
+  // bosses pick their kind from the wave, so a co-op guest builds the same one
+  if (type === 'boss') variant = variant || bossVariantOf(wave);
+  const BV = variant && BOSSV[variant], bdef = BV && variant !== 'demon' ? Object.assign({}, ETYPES.boss, { color: BV.color, speed: BV.speed, hp: ETYPES.boss.hp * BV.hp, scale: BV.scale, windup: BV.windup, range: BV.range }) : ETYPES[type];
   // elites are bigger, gilded, and much harder to put down
-  const def = elite ? Object.assign({}, ETYPES[type], { scale: ETYPES[type].scale * 1.22, radius: ETYPES[type].radius * 1.2, xp: ETYPES[type].xp * 3, range: ETYPES[type].range * 1.1, color: type === 'brute' ? 0x8a6a2a : 0x8a8a3a }) : ETYPES[type];
+  const def = elite ? Object.assign({}, bdef, { scale: bdef.scale * 1.22, radius: bdef.radius * 1.2, xp: bdef.xp * 3, range: bdef.ranged ? bdef.range : bdef.range * 1.1, color: type === 'brute' ? 0x8a6a2a : type === 'skeleton' || type === 'skelarcher' ? 0xe0c070 : 0x8a8a3a }) : bdef;
   const skin = phong(def.color, { shininess: elite ? 40 : 8, emissive: type === 'boss' ? 0x2a0400 : elite ? 0x3a2600 : 0x000000 });
   if (type === 'wraith') { skin.transparent = true; skin.opacity = 0.6; }
-  const parts = buildEnemyMesh(type, skin);
+  const parts = buildEnemyMesh(type, skin, variant);
   let x, z;
   if (at) { x = at.x; z = at.z; } else {
     for (let k = 0; k < 20; k++) {
@@ -1969,7 +2155,8 @@ function spawnEnemy(type, wave, at, elite = false) {
     dmg: def.dmg * dmul, speed: def.speed * rand(0.9, 1.1) * (ar ? 1 + Math.min(0.3, wave * 0.015) : 1) * (elite ? 1.12 : 1),
     atkCd: rand(0.3, 1), atkT: -1, stunT: 0, slowT: 0, burnT: 0, burnDps: 0, burnTick: 0, flashT: 0, hitT: 0,
     phase: rand(0, 6), alive: true, deadT: 0, spawnT: 0.6, slamCd: 4, level: wave,
-    name: type === 'boss' ? BOSS_NAMES[(Math.floor(wave / 4) - 1) % BOSS_NAMES.length] : null,
+    name: type === 'boss' ? (variant === 'demon' ? BOSS_NAMES[Math.abs(Math.floor(wave / 4) - 1) % BOSS_NAMES.length] : BV.names[wave % 2]) : null,
+    variant: variant || null, specCd: rand(5, 7),
   };
   parts.g.position.copy(e.pos);
   parts.g.scale.multiplyScalar(0.01);
@@ -2203,11 +2390,11 @@ function skillRows() {
   for (const k of KEYS3) {
     const sl = skillSlots[k];
     if (!sl) { h += r(k, `<span style="color:var(--muted)">${player.level < UNLOCK[k] ? 'Unlocks at level ' + UNLOCK[k] : 'Empty'}</span>`, '', ROLE[k] + ' skill', 0); continue; }
-    const d = SKILLS[sl.id], fx = RANKFX[sl.id] || [];
-    const ranks = fx.map((t, i) => `<div class="rk${sl.lvl >= i + 2 ? '' : ' off'}">${ROMAN[i + 2]}: ${t}</div>`).join('');
-    h += r(k, d.name, ROMAN[sl.lvl], d.desc(sl.lvl), cdFor(sl.id, k, sl.lvl).toFixed(0), `<span>${ranks}</span>`);
+    const d = SKILLS[sl.id], fx = RANKFX[sl.id] || [], fm = sl.form ? FORMS[k][sl.form - 1] : null;
+    const ranks = fx.map((t, i) => `<div class="rk${sl.mods > i ? '' : ' off'}">${i ? 'Mastery' : 'Enhanced'}: ${t}</div>`).join('') + (fm ? `<div class="rk">${fm.name}: ${fm.desc}</div>` : '');
+    h += r(k, d.name, ROMAN[sl.lvl], d.desc(slotPow(sl, k)), skillCd(sl, k).toFixed(0), `<span>${ranks}</span>`);
   }
-  h += r('RMB', S.name, ROMAN[sigState.rank], S.desc, sigCd(S).toFixed(0), sigState.rank > 1 ? `<span class="rk">+${(sigState.rank - 1) * 30}% damage</span>` : '');
+  h += r('RMB', S.name, ROMAN[sigState.rank], S.desc, sigCd(S).toFixed(0), sigState.rank > 1 ? `<span class="rk">+${Math.round((sigBoost() - 1) * 100)}% damage</span>` : '');
   return h;
 }
 function gearRows() {
@@ -2308,6 +2495,8 @@ const canvas = renderer.domElement;
 document.addEventListener('keydown', (e) => {
   if (!started) return;
   keys.add(e.code);
+  if (e.code === 'KeyK' || (e.code === 'Escape' && choosing && choosing.tree)) { keys.delete(e.code); if (choosing && choosing.tree) closeTree(); else openTree(); return; }
+  if (choosing && choosing.tree) { keys.delete(e.code); return; }
   if (e.code === 'Space') { e.preventDefault(); if (!choosing) tryDash(); }
   if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !choosing && !paused) tryOffhand();
   // with the stats panel open, 1/2/3 switch its tabs instead of picking a skill
@@ -2430,12 +2619,19 @@ function cleanChar(base, c) {
   const g = {}, cg = c.gear && typeof c.gear === 'object' ? c.gear : {};
   for (const k of GEAR_KEYS) { const it = cleanItem(cg[k]); g[k] = it && it.slot === k && (k !== 'weapon' || it.base === base) ? it : null; }
   const skills = {}, cs = c.skills && typeof c.skills === 'object' ? c.skills : {};
-  for (const k of KEYS3) { const sl = cs[k]; skills[k] = sl && POOLS[base][k].includes(sl.id) ? { id: sl.id, lvl: clamp(fin(sl.lvl, 1) | 0, 1, 3) } : null; }
+  const tv = c.tree === 1; // saves from before the skill tree keep their skills at rank 1 and get every point back
+  for (const k of KEYS3) {
+    const sl = cs[k]; if (!(sl && POOLS[base][k].includes(sl.id))) { skills[k] = null; continue; }
+    const lvl = tv ? clamp(fin(sl.lvl, 1) | 0, 1, MAX_RANK) : 1, mods = tv ? Math.min(clamp(fin(sl.mods) | 0, 0, 2), lvl >= 3 ? 2 : lvl >= 2 ? 1 : 0) : 0;
+    skills[k] = { id: sl.id, lvl, mods, form: tv && mods >= 2 ? clamp(fin(sl.form) | 0, 0, 2) : 0 };
+  }
+  const cp = tv && c.pas && typeof c.pas === 'object' ? c.pas : {}, pas = {};
+  for (const p of PASSIVES) pas[p.id] = clamp(fin(cp[p.id]) | 0, 0, PASSIVE_MAX);
   const used = KEYS3.map(k => skills[k] && skills[k].id).filter(Boolean); if (new Set(used).size !== used.length) for (const k of KEYS3) skills[k] = null;
   const b = c.best && typeof c.best === 'object' ? c.best : {};
   return {
     level: clamp(fin(c.level, 1) | 0, 1, 99), xp: clamp(fin(c.xp), 0, 1e9), gear: g, skills,
-    sig: { idx: clamp(fin(c.sig && c.sig.idx) | 0, 0, 2), rank: clamp(fin(c.sig && c.sig.rank, 1) | 0, 1, 3) },
+    sig: { idx: clamp(fin(c.sig && c.sig.idx) | 0, 0, 2), rank: tv ? clamp(fin(c.sig && c.sig.rank, 1) | 0, 1, MAX_RANK) : 1 }, pas, tree: tv ? 1 : 0,
     picks: clamp(fin(c.picks) | 0, 0, 30), sigPicks: clamp(fin(c.sigPicks) | 0, 0, 10),
     best: { dungeon: clamp(fin(b.dungeon, 1) | 0, 1, 999), trail: clamp(fin(b.trail, 1) | 0, 1, 999), arena: clamp(fin(b.arena) | 0, 0, 9999) },
     played: clamp(fin(c.played), 0, 1e13),
@@ -2473,7 +2669,7 @@ function snapChar() {
   const picks = pendingPicks + (tomes.some(t => t.o.k !== 'RMB') || (choosing && choosing.ch && choosing.ch.some(o => o.k !== 'RMB')) ? 1 : 0);
   acct.chars[playerClass] = {
     level: player.level, xp: Math.floor(player.xp), gear: g,
-    skills: Object.fromEntries(KEYS3.map(k => [k, skillSlots[k] ? { id: skillSlots[k].id, lvl: skillSlots[k].lvl } : null])),
+    skills: Object.fromEntries(KEYS3.map(k => [k, skillSlots[k] ? { id: skillSlots[k].id, lvl: skillSlots[k].lvl, mods: skillSlots[k].mods, form: skillSlots[k].form } : null])), pas: Object.assign({}, passives), tree: 1,
     sig: { idx: sigState.idx, rank: sigState.rank }, picks, sigPicks: pendingSig + (tomes.some(t => t.o.k === 'RMB') ? 1 : 0),
     best: prev ? prev.best : { dungeon: 1, trail: 1, arena: 0 }, played: Date.now(),
   };
@@ -2495,10 +2691,12 @@ function applyChar(base) {
   if (!C) return false;
   player.level = C.level; player.xp = C.xp;
   for (const k of GEAR_KEYS) { if (k === 'weapon') { if (C.gear.weapon) gear.weapon = C.gear.weapon; } else if (k === 'gloves') { gear.gloves = C.gear.gloves || genItem(1, 0, 'gloves', { name: 'Worn Wraps', mods: [] }); } else gear[k] = C.gear[k] || null; }
-  for (const k of KEYS3) skillSlots[k] = C.skills[k] ? { id: C.skills[k].id, lvl: C.skills[k].lvl, cd: 0 } : null;
-  sigState.idx = C.sig.idx; sigState.rank = C.sig.rank; pendingSig = C.sigPicks;
-  const open = KEYS3.some(k => !skillSlots[k] && player.level >= UNLOCK[k]);
-  pendingPicks = Math.max(C.picks, open ? 1 : 0);
+  for (const k of KEYS3) skillSlots[k] = C.skills[k] ? { id: C.skills[k].id, lvl: C.skills[k].lvl, mods: C.skills[k].mods || 0, form: C.skills[k].form || 0, cd: 0 } : null;
+  sigState.idx = C.sig.idx; sigState.rank = C.sig.rank; pendingSig = 0; pendingPicks = 0;
+  Object.assign(passives, C.pas || {});
+  treeNote = !C.tree;
+  // a save that spends more points than its level allows (edited, or from a save code) starts the tree over
+  if (treeSpent() > player.level) treeReset();
   return true;
 }
 const offClass = (it) => it && it.slot === 'weapon' && playerClass && it.base !== playerClass;
@@ -2747,9 +2945,11 @@ function startAs(base) {
   rebuildViewmodel(); updateGearHud(); renderSkillBar();
   started = true; $('startOv').hidden = true; audio(); if (AC && AC.resume) AC.resume();
   requestLock(); if (isTouch) $('touch').hidden = false;
-  if (!had) pendingPicks = 1;
+  if (!had) setTimeout(() => { if (started && !choosing && !skillSlots.Q && treeFree() > 0) openTree(); }, 900);
+  else if (treeNote) setTimeout(() => toast(`Skills now grow in a tree<small>Your skill points are back: ${treeFree()} to spend. ${isTouch ? 'Tap Skills' : 'Press K'}</small>`, 4), 2600);
+  treeNote = false;
   if (heroic) setTimeout(() => toast(`Heroic run<small>1 key used · tougher monsters, better drops, double rewards, a cache from every boss · ${acct.keys} key${acct.keys === 1 ? '' : 's'} left</small>`, 3), 2400);
-  toast(had ? `${CLASSES[base].name} of ${REALMS[acct.realm.pick < 0 ? selRealm : acct.realm.pick].name}<small>Welcome back · press M for the war map</small>` : `${CLASSES[base].name} of ${REALMS[acct.realm.pick < 0 ? selRealm : acct.realm.pick].name}<small>Pick your first Q skill: press 1 or 2 · M opens the war map</small>`, 2.6);
+  toast(had ? `${CLASSES[base].name} of ${REALMS[acct.realm.pick < 0 ? selRealm : acct.realm.pick].name}<small>Welcome back · press M for the war map</small>` : `${CLASSES[base].name} of ${REALMS[acct.realm.pick < 0 ? selRealm : acct.realm.pick].name}<small>Learn your first skill in the skill tree · M opens the war map</small>`, 2.6);
   const best = had ? acct.chars[base].best : null;
   if (acct.realm.pick < 0) { acct.realm.pick = selRealm; }
   realmLoad();
@@ -2930,7 +3130,7 @@ function rSpawn(type, lvl, x, z, ri, elite, o = {}) {
   if (ri != null) tintRealm(e, ri);
   return e;
 }
-const GAR_TYPES = ['ghoul', 'ghoul', 'brute', 'imp', 'caster', 'wraith', 'spider'];
+const GAR_TYPES = ['ghoul', 'skeleton', 'brute', 'imp', 'caster', 'wraith', 'spider', 'skelarcher', 'wolf', 'golem'];
 function spawnGarrison(p) {
   const base = { village: 5, keep: 8, capital: 12, crown: 10 }[p.kind], n = Math.max(2, Math.ceil(base * clamp(p.gar, 0.3, 1)));
   const tier = { village: 0, keep: 2, capital: 4, crown: 4 }[p.kind], lvl = Math.max(1, player.level + tier);
@@ -3085,7 +3285,7 @@ function realmIdle(e, dt) {
   realmCollide(e.pos, Math.min(e.def.radius, 1));
   e.pos.y = heightAt(e.pos.x, e.pos.z); P.g.position.copy(e.pos);
   if (moving) e.phase += dt * e.speed * 1.4 / e.def.scale;
-  P.legs[0].rotation.x = Math.sin(e.phase) * (P.legK || 0.6) * (moving ? 1 : 0); P.legs[1].rotation.x = -P.legs[0].rotation.x;
+  P.legs[0].rotation.x = Math.sin(e.phase) * (P.legK || 0.6) * (moving ? 1 : 0); P.legs[1].rotation.x = -P.legs[0].rotation.x; if (P.legs2) { P.legs2[0].rotation.x = P.legs[0].rotation.x; P.legs2[1].rotation.x = P.legs[1].rotation.x; }
   P.torso.rotation.x = 0; e.hitT -= dt;
 }
 // ---- the world map ----
@@ -3615,8 +3815,8 @@ const SIGS = {}; for (const b in SIG) SIGS[b] = [SIG[b].ico ? SIG[b] : Object.as
 const sigState = { idx: 0, rank: 1 };
 let pendingSig = 0;
 const skillOf = () => SIGS[gear.weapon.base][sigState.idx] || SIGS[gear.weapon.base][0];
-const sigCd = (S = skillOf(), r = sigState.rank) => S.cd * (1 - 0.12 * (r - 1));
-const sigBoost = (r = sigState.rank) => 1 + 0.3 * (r - 1);
+const sigCd = (S = skillOf(), r = sigState.rank) => S.cd * (1 - 0.06 * (r - 1));
+const sigBoost = (r = sigState.rank) => 1 + 0.15 * (r - 1);
 function sigPose(s, t) {
   const K = s.sig.k; let i = 0;
   while (i < K.length - 2 && t >= K[i + 1].t) i++;
@@ -3633,16 +3833,24 @@ function sigPose(s, t) {
   }
 }
 const avgHit = () => (stats.min + stats.max) / 2;
-function cdFor(id, k, r) { const c = SKILLS[id].cd; return (k === 'R' ? Math.max(16, c * 1.4) : c) * (1 - 0.08 * (r - 1)); }
-function skillCd(slot, k) { return cdFor(slot.id, k, slot.lvl); }
+function cdFor(id, k, r) { const c = SKILLS[id].cd; return (k === 'R' ? Math.max(16, c * 1.4) : c) * (1 - 0.05 * (r - 1)); }
+function skillCd(slot, k) { return cdFor(slot.id, k, slot.lvl) * (formId(slot, k) === 'swift' ? 0.65 : 1); }
 function trySkillSlot(k) {
   const sl = skillSlots[k];
-  if (started && !paused && player.alive && !sl) { toast(player.level < UNLOCK[k] ? `${k} unlocks at level ${UNLOCK[k]}` : `Pick a ${k} skill from the orbs`, 1.2); return; }
+  if (started && !paused && player.alive && !sl) { toast(player.level < UNLOCK[k] ? `${k} unlocks at level ${UNLOCK[k]}` : `Learn a ${k} skill in the skill tree (${isTouch ? 'tap Skills' : 'press K'})`, 1.2); return; }
   if (!started || paused || choosing || !player.alive || !sl || sl.cd > 0 || swing) return;
   const def = SKILLS[sl.id];
   sl.cd = skillCd(sl, k);
-  swing = { kind: def.pose, t: 0, dur: 0.45, hit: false, skill: true, cast: () => { const r = sl.lvl, l = rankL(r); castLearned(sl.id, l); if (r >= 2) rankExtra(sl.id, r, l, k); } };
+  swing = { kind: def.pose, t: 0, dur: 0.45, hit: false, skill: true, cast: () => { const r = 1 + sl.mods, l = slotPow(sl, k), fid = formId(sl, k); castWith(sl.id, l, r); if (r >= 2) rankExtra(sl.id, r, l, k); if (fid) formFx(fid, sl.id, l, r); } };
   pulse('slot' + k);
+}
+// r is 1 + the modifiers you own (II = Enhanced, III = Mastery); l is the power the numbers scale with
+let castR = 1;
+function castWith(id, l, r) { castR = r; castLearned(id, l); }
+function formFx(fid, id, l, r) {
+  if (fid === 'echo') later(0.7, () => { if (player.alive && started) castWith(id, Math.max(1, l - 2), r); });
+  else if (fid === 'ward') { addBuff('ward', 3, { armor: 40, label: 'Warding' }); burst(player.pos.clone().setY(player.pos.y + 1), 0xffe6a0, 18, 3, 0.5, -1); }
+  else if (fid === 'restore') { player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.2); burst(player.pos.clone().setY(player.pos.y + 1), 0x6fdc6f, 24, 3, 0.7, -1); }
 }
 function addBuff(name, dur, data) { buffs[name] = Object.assign({ until: now + dur, dur }, data); stats = computeStats(); updateGearHud(); }
 function nearestInFront(maxD, minDot) {
@@ -3658,7 +3866,7 @@ function nearestInFront(maxD, minDot) {
 const volleyShot = (m, yo) => gear.weapon.base === 'javelin' ? throwJav(m, yo, {}) : launchWave(stats.element || 'none', m, 0.55, false, yo);
 // Skills for the javelin, staff, bow and claw classes. Their rank II and III effects are built in, from l.
 function castNew(id, l, f, col, elc) {
-  const r = Math.round((l + 1) / 2), II = r >= 2, III = r >= 3;
+  const r = castR, II = r >= 2, III = r >= 3;
   switch (id) {
     case 'splitjav': {
       const n = 3 + Math.ceil(l / 2) + (II ? 2 : 0), m2 = 0.6 + 0.12 * l;
@@ -5070,11 +5278,9 @@ function gainXp(x) {
     const old = stats.maxHp;
     stats = computeStats(); player.hp = stats.maxHp;
     $('lvl').textContent = player.level;
-    const unl = KEYS3.find(k => UNLOCK[k] === player.level);
-    toast(unl ? `${unl} unlocked<small>Choose your ${ROLE[unl].toLowerCase()} skill below</small>` : player.level % 4 === 0 ? `Level ${player.level}<small>Upgrade or swap your signature move below</small>` : `Level ${player.level}<small>Upgrade or swap a skill below</small>`, 2);
+    const unl = KEYS3.find(k => UNLOCK[k] === player.level), tk = isTouch ? 'Tap Skills' : 'Press K';
+    toast(unl ? `Level ${player.level} · ${unl} unlocked<small>+1 skill point. ${tk} to learn a ${ROLE[unl].toLowerCase()} skill</small>` : player.level === PASSIVE_LV ? `Level ${player.level} · passives open<small>+1 skill point. ${tk} to open the skill tree</small>` : `Level ${player.level}<small>+1 skill point. ${tk} to spend it</small>`, 2.2);
     renderSkillBar();
-    pendingPicks++;
-    if (player.level % 4 === 0) pendingSig++;
     saveSoon();
     sfx('level');
     for (let i = 0; i < 60; i++) { const a = rand(0, Math.PI * 2); FX.emit(player.pos.x + Math.cos(a) * 1.2, player.pos.y + rand(0, 0.3), player.pos.z + Math.sin(a) * 1.2, 0, rand(2, 5), 0, rand(0.6, 1.2), 0xffd66a, 0, 0.5); }
@@ -5218,7 +5424,7 @@ function finishPick(msg) {
   if (!locked && !fallbackLook && !isTouch) requestLock();
 }
 function renderSkillBar() {
-  saveSoon();
+  saveSoon(); renderTreeBtn();
   for (const k of KEYS3) {
     const sl = skillSlots[k], el = $('slot' + k), lk = !sl && player.level < UNLOCK[k];
     el.classList.toggle('empty', !sl); el.classList.toggle('locked', lk);
@@ -5297,6 +5503,99 @@ function finishTome(t, msg) {
   toast(msg, 1.8); sfx('level'); renderSkillBar();
 }
 $('choices').addEventListener('click', (e) => { const b = e.target.closest('.ccard'); if (b) pickTome(+b.dataset.i); });
+// ---------- skill tree screen (K) ----------
+let treeNote = false;
+function treeReset() { for (const k of KEYS3) skillSlots[k] = null; sigState.rank = 1; for (const p in passives) passives[p] = 0; }
+function renderTreeBtn() {
+  const b = $('treeBtn'); if (!b) return;
+  const f = playerClass ? treeFree() : 0;
+  b.hidden = !playerClass; b.classList.toggle('hot', f > 0);
+  b.innerHTML = f > 0 ? `${isTouch ? '' : '<kbd>K</kbd> '}+${f} skill point${f > 1 ? 's' : ''}` : `${isTouch ? '' : '<kbd>K</kbd> '}Skills`;
+}
+function openTree() {
+  if (!started || !playerClass || (choosing && !choosing.tree) || document.querySelector('.overlay:not([hidden]):not(#treeOv)')) return;
+  if (!$('sheet').hidden) toggleSheet();
+  choosing = { tree: true }; attackHeld = false; keys.clear();
+  renderTree(); $('treeOv').hidden = false;
+  if (document.exitPointerLock && locked) document.exitPointerLock();
+}
+function closeTree() {
+  if (!choosing || !choosing.tree) return;
+  choosing = null; $('treeOv').hidden = true; renderSkillBar(); persist();
+  if (!locked && !fallbackLook && !isTouch && player.alive) requestLock();
+}
+const tpips = (n, m) => `<span class="tpips">${Array.from({ length: m }, (_, i) => `<i${i < n ? ' class="on"' : ''}></i>`).join('')}</span>`;
+function tnode(t, state, html, why) {
+  // state: have (owned), can (a point buys it), open (owned and can still grow), lock
+  return `<button class="tnode ${state}" type="button" data-t="${t}"${state === 'can' || state === 'open' || state === 'swap' ? '' : ' disabled'}>${html}${why ? `<small class="why">${why}</small>` : ''}</button>`;
+}
+function renderTree() {
+  const free = treeFree(), base = gear.weapon.base, P = POOLS[base];
+  let cols = '';
+  for (const k of KEYS3) {
+    const sl = skillSlots[k], lk = player.level < UNLOCK[k];
+    const chips = P[k].map(id => {
+      const on = sl && sl.id === id, taken = !on && KEYS3.some(j => j !== k && skillSlots[j] && skillSlots[j].id === id);
+      const ok = !lk && !on && !taken && (sl ? free + slotSpent(sl) >= 1 : free >= 1);
+      return `<button class="tchip${on ? ' on' : ''}" type="button" data-t="learn:${k}:${id}" title="${SKILLS[id].name}: ${SKILLS[id].desc(1)}"${ok ? '' : ' disabled'}>${iconSvg(id)}</button>`;
+    }).join('');
+    let body;
+    if (lk) body = `<div class="tnote">Unlocks at level ${UNLOCK[k]}</div>`;
+    else if (!sl) body = `<div class="tnote">${free ? 'Pick a skill above to learn it. It costs 1 point.' : 'Earn a skill point to learn one.'}</div>`;
+    else {
+      const d = SKILLS[sl.id], fx = RANKFX[sl.id] || ['A stronger effect', 'A stronger effect still'];
+      const rk = sl.lvl < MAX_RANK ? (free ? 'open' : 'have') : 'have';
+      body = tnode(`rank:${k}`, rk, `<span class="trow"><b>${d.name}</b>${tpips(sl.lvl, MAX_RANK)}</span><span>${d.desc(slotPow(sl, k))}. ${skillCd(sl, k).toFixed(1)}s cooldown</span><em>${sl.lvl < MAX_RANK ? 'Next rank: stronger, 5% shorter cooldown' : 'Max rank'}</em>`);
+      const m1 = sl.mods >= 1 ? 'have' : sl.lvl < 2 ? 'lock' : free ? 'can' : 'lock';
+      body += tnode(`mod:${k}`, m1, `<span class="trow"><b>Enhanced</b></span><span>${fx[0]}</span>`, sl.mods < 1 && sl.lvl < 2 ? 'Needs rank 2' : '');
+      const m2 = sl.mods >= 2 ? 'have' : sl.mods < 1 || sl.lvl < 3 ? 'lock' : free ? 'can' : 'lock';
+      body += tnode(`mod:${k}`, m2, `<span class="trow"><b>Mastery</b></span><span>${fx[1]}</span>`, sl.mods < 2 ? (sl.mods < 1 ? 'Needs Enhanced' : sl.lvl < 3 ? 'Needs rank 3' : '') : '');
+      body += `<div class="tfork">${FORMS[k].map((F, i) => {
+        const st = sl.form === i + 1 ? 'have' : sl.mods < 2 ? 'lock' : sl.form ? 'swap' : free ? 'can' : 'lock';
+        return tnode(`form:${k}:${i + 1}`, st, `<span class="trow"><b>${F.name}</b></span><span>${F.desc}</span>`, sl.mods < 2 ? 'Needs Mastery' : st === 'swap' ? 'Switch for free' : '');
+      }).join('')}</div>`;
+    }
+    cols += `<section class="tcol" style="--sc:${SLOTHEX[k]}"><h3><kbd>${k}</kbd>${ROLE[k]}</h3><div class="tpick">${chips}</div><div class="tchain">${body}</div></section>`;
+  }
+  const L = SIGS[base], S = skillOf();
+  const schips = L.map((x, i) => `<button class="tchip${i === sigState.idx ? ' on' : ''}" type="button" data-t="sig:${i}" title="${x.name}: ${x.desc}"${i === sigState.idx ? ' disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true" style="color:#ffd66a">${ICONS[x.ico] || ICONS.blink}</svg></button>`).join('');
+  const srk = sigState.rank < MAX_RANK && free ? 'open' : 'have';
+  cols += `<section class="tcol" style="--sc:${SLOTHEX.RMB}"><h3><kbd>RMB</kbd>Signature</h3><div class="tpick">${schips}</div><div class="tchain">${tnode('sigrank', srk, `<span class="trow"><b>${S.name}</b>${tpips(sigState.rank, MAX_RANK)}</span><span>${S.desc}. ${sigCd(S).toFixed(1)}s cooldown${sigState.rank > 1 ? `, +${Math.round((sigBoost() - 1) * 100)}% damage` : ''}</span><em>${sigState.rank < MAX_RANK ? 'Next rank: +15% damage, 6% shorter cooldown' : 'Max rank'}</em>`)}<div class="tnote">Your weapon's signature moves. Switching is free.</div></div></section>`;
+  const plk = player.level < PASSIVE_LV;
+  const pas = PASSIVES.map(p => tnode(`pas:${p.id}`, passives[p.id] >= PASSIVE_MAX ? 'have' : plk || !free ? (passives[p.id] ? 'have' : 'lock') : 'can', `<span class="trow"><b>${p.name}</b>${tpips(passives[p.id], PASSIVE_MAX)}</span><span>${passives[p.id] ? p.desc(passives[p.id]) : p.desc(1)}</span>`)).join('');
+  $('treeOv').innerHTML = `<div class="tbox"><div class="thead"><h2>Skill tree</h2><span class="pts${free ? ' hot' : ''}">${free ? `${free} point${free > 1 ? 's' : ''} to spend` : 'No points to spend'}</span><span class="sp"></span><span class="tsub">Level ${player.level} · one point every level</span></div>
+<div class="tcols">${cols}</div>
+<div class="tpas"><h3>Passives${plk ? ` <small>from level ${PASSIVE_LV}</small>` : ''}</h3><div class="tprow">${pas}</div></div>
+<div class="tfoot"><span class="tsub">Glowing nodes cost 1 point. Switching a skill gives back the points in it. ${isTouch ? '' : 'K or Esc closes.'}</span><button class="go small" type="button" data-t="reset">Refund all</button><button class="go small" type="button" data-t="close">Done</button></div></div>`;
+}
+function treeAct(t) {
+  const [a, k, x] = String(t).split(':'), free = treeFree(), sl = skillSlots[k];
+  let msg = '';
+  if (a === 'close') { closeTree(); return; }
+  if (a === 'reset') { treeReset(); msg = 'Every point refunded'; }
+  else if (a === 'learn') {
+    if (!POOLS[gear.weapon.base][k] || !POOLS[gear.weapon.base][k].includes(x) || player.level < UNLOCK[k] || (sl && sl.id === x) || KEYS3.some(j => j !== k && skillSlots[j] && skillSlots[j].id === x)) return;
+    if (free + slotSpent(sl) < 1) return;
+    skillSlots[k] = { id: x, lvl: 1, mods: 0, form: 0, cd: sl ? sl.cd : 0 };
+    msg = `${SKILLS[x].name} on ${k}`;
+  } else if (a === 'rank') { if (!sl || sl.lvl >= MAX_RANK || !free) return; sl.lvl++; msg = `${SKILLS[sl.id].name} rank ${ROMAN[sl.lvl]}`; }
+  else if (a === 'mod') {
+    if (!sl || !free || sl.mods >= 2 || sl.lvl < sl.mods + 2) return;
+    sl.mods++; msg = `${sl.mods === 1 ? 'Enhanced' : 'Mastery'}: ${(RANKFX[sl.id] || [])[sl.mods - 1] || SKILLS[sl.id].name}`;
+  } else if (a === 'form') {
+    const i = +x; if (!sl || sl.mods < 2 || !(i === 1 || i === 2) || sl.form === i || (!sl.form && !free)) return;
+    sl.form = i; msg = `${FORMS[k][i - 1].name} ${SKILLS[sl.id].name}`;
+  } else if (a === 'sig') { const i = +k; if (!SIGS[gear.weapon.base][i] || i === sigState.idx) return; sigState.idx = i; msg = `${skillOf().name} on RMB`; }
+  else if (a === 'sigrank') { if (sigState.rank >= MAX_RANK || !free) return; sigState.rank++; msg = `${skillOf().name} rank ${ROMAN[sigState.rank]}`; }
+  else if (a === 'pas') { if (!(k in passives) || player.level < PASSIVE_LV || passives[k] >= PASSIVE_MAX || !free) return; passives[k]++; msg = `${PASSIVES.find(p => p.id === k).name} ${ROMAN[passives[k]]}`; }
+  else return;
+  stats = computeStats(); player.hp = Math.min(player.hp, stats.maxHp);
+  updateGearHud(); renderSig(); renderSkillBar(); saveSoon(); sfx('loot');
+  if (!$('treeOv').hidden) renderTree();
+  if (msg) toast(msg, 1.2);
+}
+$('treeOv').addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (b && !b.disabled) treeAct(b.dataset.t); });
+$('treeBtn').addEventListener('click', () => { if (choosing && choosing.tree) closeTree(); else openTree(); });
 let wave = 0, kills = 0, waveDelay = -1, killsSinceDrop = 10;
 function nextWave(rs) {
   wave++; noteBest('arena', wave - 1); if (!rs) arenaMilestone(wave);
@@ -5353,6 +5652,7 @@ function resetRun() {
   setMode('arena');
   for (const k in buffs) delete buffs[k];
   for (const k of KEYS3) skillSlots[k] = null;
+  for (const p in passives) passives[p] = 0;
   showCard(null); showChoices(false); $('card').hidden = true;
   swing = null; combo = 0; spinYaw = 0; spinLean = 0; shake = 0; hitstop = 0; fovKick = 0;
   pendingPicks = 0; pendingSig = 0; sigState.idx = 0; sigState.rank = 1;
@@ -5741,7 +6041,7 @@ function enterDungeon(depth, seed) {
       const rope = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, len, 3), webMat); rope.position.set(e.pos.x, top + len / 2, e.pos.z); DG.group.add(rope);
     } }
   const R = DG.room, b = spawnEnemy('boss', wave + 1, { x: tCen(R.x0 + 3), z: tCen(R.z0 + 3) });
-  b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.name = DBOSS[(depth - 1) % DBOSS.length]; DG.boss = b;
+  b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); if (b.variant === 'demon') b.name = DBOSS[(depth - 1) % DBOSS.length]; DG.boss = b;
   } finally { RNG = Math.random; }
   if (coop) { coop.seed = seed; coop.gotFloor = true; if (coop.host) coopSendFloor(); }
   toast(`Floor ${depth}<small>${FLOOR_NAMES[(depth - 1) % FLOOR_NAMES.length]}</small>`, 2.6);
@@ -5957,7 +6257,7 @@ function trailLevel() { wave = 1 + (TR.n - 1) * 3 + Math.floor(3 * TR.best / Mat
 function trailSpawnBoss() {
   if (TR.bossDone || (coop && !coop.host)) return;
   const k = TR.M - 6, b = spawnEnemy('boss', 1 + (TR.n - 1) * 3 + 3, { x: TR.px[k], z: TR.pz[k] });
-  b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.parts.g.rotation.y = 0; b.name = TBOSS[(TR.n - 1) % TBOSS.length]; TR.boss = b;
+  b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.parts.g.rotation.y = 0; if (b.variant === 'demon') b.name = TBOSS[(TR.n - 1) % TBOSS.length]; TR.boss = b;
 }
 function enterTrail(n) {
   runId++; noteBest('trail', n);
@@ -6413,7 +6713,7 @@ function coopPeers(ch) {
       const code = a[7] | 0, type = TCODES[code & 15] || 'ghoul';
       const e = spawnEnemy(type, Math.round(num(a[8], 1, 999)), { x: num(a[1], -1e5, 1e5) / 10, z: num(a[2], -1e5, 1e5) / 10 }, !!(code & 16));
       e.id = id; e.awake = true; if (type === 'boss' && c.bossName) e.name = c.bossName;
-      if (type === 'boss' && mode === 'trail') { e.name = TBOSS[(TR.n - 1) % TBOSS.length]; e.awake = !!c.bossAwake; TR.boss = e; }
+      if (type === 'boss' && mode === 'trail') { if (e.variant === 'demon') e.name = TBOSS[(TR.n - 1) % TBOSS.length]; e.awake = !!c.bossAwake; TR.boss = e; }
     }
   }
 }
@@ -6554,6 +6854,7 @@ function updateEnemiesGuest(dt) {
     e.phase += dt * (e.moving ? e.speed * 2.2 / e.def.scale : 0);
     P.legs[0].rotation.x = Math.sin(e.phase) * (P.legK || 0.6) * (e.moving ? 1 : 0);
     P.legs[1].rotation.x = -Math.sin(e.phase) * (P.legK || 0.6) * (e.moving ? 1 : 0);
+    if (P.legs2) { P.legs2[0].rotation.x = P.legs[0].rotation.x; P.legs2[1].rotation.x = P.legs[1].rotation.x; }
     P.torso.position.y = 0.95 + Math.abs(Math.sin(e.phase)) * 0.05;
     e.hitT -= dt;
   }
@@ -6689,6 +6990,43 @@ $('coopCode').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.ke
 
 /* boss slam telegraph */
 const slams = [];
+// Each boss kind has its own trick on a cooldown, on top of its melee
+function bossSummon(e, type, n, r) {
+  if (coopMirror()) return;
+  if (enemies.filter(o => o.alive && o.summoner === e.id).length >= 6) return;
+  for (let k = 0; k < n; k++) {
+    const a = rand(0, TAU), x = e.pos.x + Math.cos(a) * r, z = e.pos.z + Math.sin(a) * r;
+    if (mode === 'dungeon' && solidAt(x, z)) continue;
+    const lv = Math.max(1, e.level - 1);
+    const m = typeof rSpawn === 'function' && typeof realm !== 'undefined' && realm ? rSpawn(type, lv, x, z, e.realm, false, { aggro: 30, awake: true, pop: true }) : spawnEnemy(type, lv, { x, z });
+    m.awake = true; m.summoner = e.id; pending++;
+    burst(tmpV.set(x, heightAt(x, z) + 0.5, z), type === 'skeleton' ? 0x7aff8a : 0x5a4a3a, 16, 3, 0.6, -1);
+  }
+}
+function bossSpecial(e, tx, tz, tAlly, d) {
+  const v = e.variant;
+  if (v === 'lich') {
+    // a fan of three soul bolts, and the dead climb out of the ground
+    const ax = tx - e.pos.x, az = tz - e.pos.z, l = Math.hypot(ax, az) || 1;
+    for (const o of [-1, 0, 1]) enemyHex(e, tx + (-az / l) * o * 3, tz + (ax / l) * o * 3, tAlly);
+    bossSummon(e, 'skeleton', 3, 3);
+    e.specCd = rand(6, 8); sfx('growl');
+  } else if (v === 'alpha') {
+    // a howl calls the pack, then the alpha leaps at you
+    bossSummon(e, 'wolf', 3, 5); sfx('growl');
+    if (d > 4 && d < 16 && !e.airY) { e.airV = 8; e.leapT = 0.65; }
+  } else if (v === 'brood') {
+    bossSummon(e, 'spider', 4, 2.5);
+    sfx('growl');
+  } else if (v === 'colossus') {
+    // stamps the ground three times around you
+    for (let k = 0; k < 3; k++) { const a = rand(0, TAU); later(k * 0.35, () => bossSlam(e, tx + Math.cos(a) * rand(0, 3.5), tz + Math.sin(a) * rand(0, 3.5))); }
+    shake = Math.max(shake, 0.2);
+  } else if (d < 18) {
+    // the demon calls fire down around itself
+    for (let k = 0; k < 2; k++) { const a = rand(0, TAU); bossSlam(e, tx + Math.cos(a) * 2.5, tz + Math.sin(a) * 2.5); }
+  }
+}
 function bossSlam(e, x, z) {
   if (coop) coopEmit('slam', { x: Math.round(x * 10), z: Math.round(z * 10), d: Math.round(e.dmg * 1.4) });
   slamAt(x == null ? player.pos.x : x, z == null ? player.pos.z : z, e.dmg * 1.4);
@@ -6708,32 +7046,34 @@ function slamAt(x, z, dmg) {
 /* ---------------- monster tricks ---------------- */
 const hexes = [];
 const hexGeo = new T.IcosahedronGeometry(0.2, 1), hexMat = new T.MeshBasicMaterial({ color: 0xd070ff });
+const arrowGeo = new T.CylinderGeometry(0.025, 0.025, 0.85, 4).rotateX(Math.PI / 2), arrowMat = new T.MeshBasicMaterial({ color: 0xe8dcc0 });
 function losClear(x0, z0, x1, z1) {
   if (mode !== 'dungeon') return true;
   const d = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(d / 1.2);
   for (let k = 1; k < n; k++) if (solidAt(x0 + (x1 - x0) * k / n, z0 + (z1 - z0) * k / n)) return false;
   return true;
 }
-function spawnHex(x, y, z, dx, dy, dz, dmg, hurts) {
-  const m = new T.Mesh(hexGeo, hexMat); m.position.set(x, y, z); scene.add(m);
-  hexes.push({ m, v: new T.Vector3(dx, dy, dz).normalize().multiplyScalar(13), dmg, hurts, t: 0 });
+function spawnHex(x, y, z, dx, dy, dz, dmg, hurts, arrow) {
+  const m = new T.Mesh(arrow ? arrowGeo : hexGeo, arrow ? arrowMat : hexMat); m.position.set(x, y, z); scene.add(m);
+  if (arrow) m.lookAt(x + dx, y + dy, z + dz);
+  hexes.push({ m, v: new T.Vector3(dx, dy, dz).normalize().multiplyScalar(arrow ? 17 : 13), dmg, hurts, t: 0, arrow });
   sfx('swing');
 }
 // A cultist's hex: slow enough to sidestep. Whoever it is aimed at decides whether it lands.
 function enemyHex(e, tx, tz, tAlly) {
   const x = e.pos.x, y = e.pos.y + 1.55 * e.def.scale, z = e.pos.z, ty = heightAt(tx, tz) + 1.2;
   const dx = tx - x, dy = ty - y, dz = tz - z, dmg = Math.round(e.dmg * rand(0.85, 1.15));
-  spawnHex(x, y, z, dx, dy, dz, dmg, !tAlly);
+  spawnHex(x, y, z, dx, dy, dz, dmg, !tAlly, !!e.def.arrow);
   if (coop && coop.host) { const l = Math.hypot(dx, dy, dz) || 1; coopEmit('bolt', { p: [Math.round(x * 10), Math.round(y * 10), Math.round(z * 10)], v: [Math.round(dx / l * 100), Math.round(dy / l * 100), Math.round(dz / l * 100)], d: dmg, a: tAlly ? 1 : 0 }); }
 }
 function updateHexes(dt) {
   for (let i = hexes.length - 1; i >= 0; i--) {
     const b = hexes[i], p = b.m.position; b.t += dt;
     p.addScaledVector(b.v, dt);
-    if (Math.random() < 0.8) FX.emit(p.x, p.y, p.z, rand(-0.3, 0.3), rand(-0.3, 0.3), rand(-0.3, 0.3), 0.35, 0xb050ff, 0, 0);
+    if (Math.random() < (b.arrow ? 0.3 : 0.8)) FX.emit(p.x, p.y, p.z, rand(-0.3, 0.3), rand(-0.3, 0.3), rand(-0.3, 0.3), 0.35, b.arrow ? 0xd8d0b8 : 0xb050ff, 0, 0);
     let done = b.t > 2.4 || solidAt(p.x, p.z) || p.y < heightAt(p.x, p.z);
     if (!done && b.hurts && player.alive && Math.hypot(p.x - player.pos.x, p.z - player.pos.z) < 0.75 && Math.abs(p.y - (player.pos.y + 1.1)) < 1.2) { hurtPlayer(b.dmg, null); done = true; }
-    if (done) { burst(p.clone(), 0xb050ff, 14, 3, 0.4, 2); scene.remove(b.m); hexes.splice(i, 1); }
+    if (done) { burst(p.clone(), b.arrow ? 0xb8a888 : 0xb050ff, b.arrow ? 6 : 14, 3, 0.4, 2); scene.remove(b.m); hexes.splice(i, 1); }
   }
 }
 // A bloater bursts when it dies or reaches you: it hurts you and every monster caught in the cloud.
@@ -6837,7 +7177,7 @@ function updatePlayer(dt) {
 
   player.dashCd = Math.max(0, player.dashCd - dt);
   player.ohCd = Math.max(0, (player.ohCd || 0) - dt);
-  const hasteK = 1 + ((stats.mods && stats.mods.haste) || 0) / 100;
+  const hasteK = 1 + ((stats.mods && stats.mods.haste) || 0) / 100 + passives.focus * 0.06;
   player.surgeCd = Math.max(0, player.surgeCd - dt * hasteK);
   updateMods(dt);
   player.invuln = Math.max(0, player.invuln - dt);
@@ -7057,20 +7397,20 @@ function updateEnemies(dt) {
       e.atkT += dt * slow;
       const w = e.def.windup;
       const k = clamp(e.atkT / w, 0, 1);
-      P.arms.forEach(a => a.rotation.x = -2.6 * easeOut(k));
+      P.arms.forEach(a => a.rotation.x = -2.6 * (P.armK || 1) * easeOut(k));
       if (e.type === 'bloater') { P.torso.scale.setScalar(1 + 0.45 * k); e.skin.emissive.setRGB(0.5 + 0.5 * Math.sin(now * 30), 0.6, 0); }
       if (e.atkT >= w) {
-        P.arms.forEach(a => a.rotation.x = 0.4);
-        if (e.type === 'caster') { if (tAlive) enemyHex(e, tx, tz, tAlly); }
+        P.arms.forEach(a => a.rotation.x = 0.4 * (P.armK || 1));
+        if (e.def.ranged) { if (tAlive) enemyHex(e, tx, tz, tAlly); }
         else if (e.type === 'bloater') { e.atkT = -1; killEnemy(e); continue; }
         else if (d < e.def.range + 0.6 && tAlive) { if (tAlly) coopEmit('hurt', { d: Math.round(e.dmg * rand(0.85, 1.15)), i: e.id }); else hurtPlayer(e.dmg * rand(0.85, 1.15), e); }
-        e.atkT = -1; e.atkCd = e.type === 'caster' ? rand(1.8, 2.8) : rand(0.9, 1.4);
+        e.atkT = -1; e.atkCd = e.def.ranged ? rand(1.8, 2.8) : rand(0.9, 1.4);
       }
     } else {
       e.atkCd -= dt;
       if (e.type === 'bloater') P.torso.scale.setScalar(1);
       const sp = e.speed * slow * dt;
-      if (e.type === 'caster') {
+      if (e.def.ranged) {
         // keeps its distance and needs a clear line to throw
         const los = losClear(e.pos.x, e.pos.z, tx, tz);
         if (d > e.def.range * 0.75 || !los) { e.pos.x += mx / md * sp; e.pos.z += mz / md * sp; moving = true; }
@@ -7078,7 +7418,7 @@ function updateEnemies(dt) {
         if (d < e.def.range && los && e.atkCd <= 0 && e.spawnT <= 0 && tAlive) e.atkT = 0;
       } else if (d > e.def.range * 0.85) {
         e.pos.x += mx / md * sp; e.pos.z += mz / md * sp; moving = true;
-        if (e.type === 'imp' && (e.leapCd = (e.leapCd || 0) - dt) <= 0 && d > 3.5 && d < 9 && tAlive && !e.airY && e.spawnT <= 0) { e.airV = 6.5; e.leapT = 0.5; e.leapCd = rand(2.5, 4); }
+        if ((e.type === 'imp' || e.type === 'wolf') && (e.leapCd = (e.leapCd || 0) - dt) <= 0 && d > 3.5 && d < 9 && tAlive && !e.airY && e.spawnT <= 0) { e.airV = 6.5; e.leapT = 0.5; e.leapCd = rand(2.5, 4); }
         if (e.type === 'wraith' && (e.blinkCd = (e.blinkCd == null ? rand(1, 3) : e.blinkCd) - dt) <= 0 && d > 6 && d < 18 && tAlive && e.spawnT <= 0) wraithBlink(e, tx, tz);
       } else if (e.atkCd <= 0 && e.spawnT <= 0 && tAlive) e.atkT = 0;
       if (e.leapT > 0) { e.leapT -= dt; e.pos.x += mx / md * 11 * dt; e.pos.z += mz / md * 11 * dt; }
@@ -7086,7 +7426,8 @@ function updateEnemies(dt) {
     }
     if (e.type === 'boss' && tAlive && e.spawnT <= 0) {
       e.slamCd -= dt;
-      if (e.slamCd <= 0 && d < 18) { e.slamCd = rand(4, 6); bossSlam(e, tx, tz); }
+      if (e.slamCd <= 0 && d < 18 && e.variant !== 'lich') { e.slamCd = e.variant === 'colossus' ? rand(2.6, 3.6) : rand(4, 6); bossSlam(e, tx, tz); }
+      if ((e.specCd -= dt) <= 0 && d < 24) { e.specCd = rand(7, 10); bossSpecial(e, tx, tz, tAlly, d); }
       P.wings.forEach((w, j) => w.rotation.y = (j ? -1 : 1) * (0.4 + Math.sin(now * 4) * 0.35));
     }
     // separation
@@ -7113,6 +7454,8 @@ function updateEnemies(dt) {
     e.phase += dt * (moving ? e.speed * slow * 2.2 / e.def.scale : 0);
     P.legs[0].rotation.x = Math.sin(e.phase) * (P.legK || 0.6) * (moving ? 1 : 0);
     P.legs[1].rotation.x = -Math.sin(e.phase) * (P.legK || 0.6) * (moving ? 1 : 0);
+    if (P.legs2) { P.legs2[0].rotation.x = P.legs[0].rotation.x; P.legs2[1].rotation.x = P.legs[1].rotation.x; }
+    if (P.float) P.g.position.y += 0.3 + Math.sin(now * 1.8 + e.id) * 0.1;
     P.torso.position.y = 0.95 + Math.abs(Math.sin(e.phase)) * 0.05;
     e.hitT -= dt;
   }
@@ -7237,7 +7580,7 @@ function updateOverlays(dt) {
   for (const k of KEYS3) {
     const sl = skillSlots[k], el = $('slot' + k);
     if (!sl) { el.querySelector('.cd').style.height = '0%'; el.querySelector('.cdn').textContent = ''; continue; }
-    if (started && !paused && !choosing) sl.cd = Math.max(0, sl.cd - dt * (1 + ((stats.mods && stats.mods.haste) || 0) / 100));
+    if (started && !paused && !choosing) sl.cd = Math.max(0, sl.cd - dt * (1 + ((stats.mods && stats.mods.haste) || 0) / 100 + passives.focus * 0.06));
     el.querySelector('.cd').style.height = (100 * sl.cd / skillCd(sl, k)) + '%';
     el.querySelector('.cdn').textContent = sl.cd > 0 ? Math.ceil(sl.cd) : '';
   }
@@ -7281,6 +7624,6 @@ updateGearHud();
 frame();
 
 // debug hook for testing
-window.__vale = { get hexes() { return hexes.length; }, nextWave, get acct() { return acct; }, RW, REALMS, openMap, closeMap, startSiege, travelTo, launchParty, get realm() { return realm; }, realmH, TR, trailNear, enterTrail, trailBossDown, get coop() { return coop; }, bossStart, coopAllyHere, showCard, toggleSheet, hurtPlayer, tryDash, strike, statLines, MODS, rollMods, get orbitOrbs() { return orbitOrbs.length; }, SIGS, sigState, get pendingSig() { return pendingSig; }, POSES, buffs, get playerHp() { return player.hp; }, get weaponObj() { return weaponObj; }, get hand() { return hand; }, killEnemy, DG, enterDungeon, descend, get mode() { return mode; }, resetRun, setPaused, get wave() { return wave; }, tomes, useNear, pickTome, takeTome, makeChoices, rankExtra, POOLS, RANKFX, UNLOCK, SKICON, get choicesShown() { return choicesShown; }, SKILLS, get swing() { return swing; }, SIG, trySurge, boltShot, startAs, skillSlots, xpNext, castLearned, choose, replaceSlot, get choosing() { return choosing; }, gainXp, COMBOS, sweepLoot, gear, genItem, dropItem, player, enemies, loots, spawnEnemy, get stats() { return stats; }, tryEquip, startSwing, castSkill, performAttack, equip(it) { gear[it.slot] = it; stats = computeStats(); rebuildViewmodel(); updateGearHud(); } };
+window.__vale = { openTree, closeTree, treeAct, treeFree, treeSpent, passives, FORMS, BOSSV, bossSpecial, get castR() { return castR; }, get hexes() { return hexes.length; }, nextWave, get acct() { return acct; }, RW, REALMS, openMap, closeMap, startSiege, travelTo, launchParty, get realm() { return realm; }, realmH, TR, trailNear, enterTrail, trailBossDown, get coop() { return coop; }, bossStart, coopAllyHere, showCard, toggleSheet, hurtPlayer, tryDash, strike, statLines, MODS, rollMods, get orbitOrbs() { return orbitOrbs.length; }, SIGS, sigState, get pendingSig() { return pendingSig; }, POSES, buffs, get playerHp() { return player.hp; }, get weaponObj() { return weaponObj; }, get hand() { return hand; }, killEnemy, DG, enterDungeon, descend, get mode() { return mode; }, resetRun, setPaused, get wave() { return wave; }, tomes, useNear, pickTome, takeTome, makeChoices, rankExtra, POOLS, RANKFX, UNLOCK, SKICON, get choicesShown() { return choicesShown; }, SKILLS, get swing() { return swing; }, SIG, trySurge, boltShot, startAs, skillSlots, xpNext, castLearned, choose, replaceSlot, get choosing() { return choosing; }, gainXp, COMBOS, sweepLoot, gear, genItem, dropItem, player, enemies, loots, spawnEnemy, get stats() { return stats; }, tryEquip, startSwing, castSkill, performAttack, equip(it) { gear[it.slot] = it; stats = computeStats(); rebuildViewmodel(); updateGearHud(); } };
 })();
 </script>

@@ -12,6 +12,12 @@ Pick a character at camp to see its gear. The **crafting bench** works on any it
 
 Each mode pays its own way: the Island Trail pays salvage and gear for your class at every island, the dungeon pays ashen cores per floor, and the arena pays marks (free rerolls) for every boss wave. Every 3rd floor or island and every 8th wave also gives a vale key. Toggle **Heroic** on the start screen to spend a key on a solo run with tougher monsters, better drops, doubled rewards and a cache from every boss.
 
+## Skill tree and monsters
+
+Every level gives one skill point, and levels come slower than they used to. Press **K** (or tap **Skills**) for the skill tree. Each key has its own branch: learn a skill (Q at level 1, E at 3, R at 6), rank it up to V, add its **Enhanced** and **Mastery** modifiers, then choose one of two forms (for example Brutal or Echoing on Q). Your right-click signature ranks up too, and from level 5 four passives (Might, Vigor, Fury, Focus) take points. Switching a skill gives back the points in it, and **Refund all** resets the tree for free. Saves from before the tree keep their skills and get every point back.
+
+Wolves, skeleton warriors, skeleton archers and stone golems join the monsters. Bosses come in five kinds with their own attacks: the winged demon, a lich who raises skeletons and throws soul bolts, a giant alpha wolf that calls its pack and leaps, a brood queen spider that hatches spiders, and a stone colossus that stamps the ground around you.
+
 ## The Chapel Below (story version)
 
 **Play:** https://jtr4in.github.io/ashen-vale/story/
