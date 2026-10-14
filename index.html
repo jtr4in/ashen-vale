@@ -194,6 +194,38 @@ body.dungeon #vignette { display: block; }
 .pcard .pglyph { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #1a120c; }
 button.go.small { font-size: 16px; padding: 6px 18px; }
 #startOv .box { max-width: 760px; }
+#campRow { width: 100%; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.4); text-align: left; }
+#campRow .ci { color: var(--muted); font-size: 14px; } #campRow .ci b { color: #ffd98a; font-weight: 800; }
+#campRow .mbtn { font-size: 17px; padding: 5px 14px; }
+.cls .clv { font-size: 12px; font-weight: 800; color: var(--good); }
+#campOv { background: rgba(14,11,8,.97); z-index: 6; }
+#campOv .box { max-width: 760px; text-align: left; justify-items: stretch; }
+#campOv h2 { text-align: center; }
+#campOv h3 { margin: 4px 0 0; font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--parch); }
+#campOv h3 span { font-family: var(--body); font-size: 14px; color: var(--muted); }
+#campOv p { max-width: none; font-size: 14px; }
+.cbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.4); }
+.cbar .big { font-family: var(--display); font-size: 30px; color: #ffd98a; line-height: 1; }
+.cbar .grow { flex: 1; min-width: 180px; color: var(--muted); font-size: 14px; }
+.cchars { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.cchar { padding: 6px 8px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.35); font-size: 13px; color: var(--muted); }
+.cchar b { display: block; font-family: var(--display); font-weight: 400; font-size: 17px; color: var(--parch); }
+.cchar.none b { color: var(--muted); }
+.stash { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.sitem { text-align: left; padding: 6px 8px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.4); color: var(--parch); font-family: var(--body); font-size: 13px; cursor: pointer; min-width: 0; }
+.sitem b { display: block; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sitem span { color: var(--muted); font-size: 12px; }
+.sitem.on, .sitem:hover, .sitem:focus-visible { border-color: #ffd98a; outline: none; }
+.sempty { color: var(--muted); font-size: 14px; padding: 6px 0; }
+.sdetail { padding: 10px; border: 1px solid var(--bronze); background: var(--panel); display: grid; gap: 6px; font-size: 14px; }
+.sdetail .sn { font-family: var(--display); font-size: 20px; }
+.sdetail .sd { color: var(--muted); }
+.sdetail .acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.sdetail .acts .mbtn, .cbar .mbtn, .crow2 .mbtn { font-size: 16px; padding: 4px 12px; }
+.sdetail select { font: inherit; font-size: 15px; padding: 4px 6px; color: var(--parch); background: rgba(0,0,0,.6); border: 1px solid var(--bronze-dim); }
+.crow2 { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+#cCode { width: 100%; min-height: 70px; font: 12px/1.3 ui-monospace, monospace; color: var(--parch); background: rgba(0,0,0,.6); border: 1px solid var(--bronze-dim); padding: 6px; word-break: break-all; }
+#cMsg { color: #ffd98a; font-size: 14px; min-height: 1.2em; }
 .classes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; }
 .cls { display: grid; gap: 2px; padding: 10px 8px; background: var(--panel); border: 1px solid var(--bronze); color: var(--parch); cursor: pointer; font-family: var(--body); text-align: center; }
 .cls:hover, .cls:focus-visible { border-color: #ffd98a; box-shadow: 0 0 0 1px #ffd98a; outline: none; }
@@ -330,14 +362,15 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
 <div class="overlay" id="startOv">
   <div class="box">
     <h1>Ashen Vale</h1>
-    <p>Choose a class. You'll find only your class's weapons, in three sub-types that each fight with their own combo, and you'll learn skills from your class's pool as you level.</p>
+    <p>Choose a class. Each class keeps its level, gear and skills between visits. Weapons for your other classes go to the shared stash at camp.</p>
     <div class="modes" id="modes"><button class="mode on" type="button" data-m="dungeon"><b>Dungeon</b><span>Crawl a dark maze, kill the boss, descend</span></button><button class="mode" type="button" data-m="arena"><b>Arena</b><span>Endless waves in the open vale</span></button><button class="mode" type="button" data-m="trail"><b>Island Trail</b><span>Fight down a narrow cliff path to the far shore</span></button><button class="mode" type="button" data-m="coop"><b>Co-op</b><span>Dungeon, arena or island with a friend</span></button></div>
     <div id="coopBox" hidden>
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button><button class="mbtn kb" type="button" data-k="trail">Island</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 28</div>
+      <div id="coopDiag">Version 29</div>
     </div>
+    <div id="campRow"><span class="ci" id="campInfo"></span><button class="mbtn" id="campBtn" type="button">Camp</button></div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
       <kbd>W A S D</kbd><span>Move</span>
@@ -354,6 +387,23 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   </div>
 </div>
 <div class="overlay" id="pickOv" hidden></div>
+<div class="overlay" id="campOv" hidden>
+  <div class="box">
+    <h2>Camp</h2>
+    <div class="cbar"><span class="big" id="cSalv">0</span><span class="grow" id="cIdle"></span><button class="mbtn" id="cCollect" type="button">Collect</button></div>
+    <h3>Characters <span>each class keeps its level, gear and skills</span></h3>
+    <div class="cchars" id="cChars"></div>
+    <h3>Shared stash <span id="cStashN"></span></h3>
+    <div class="stash" id="cStash"></div>
+    <div class="sdetail" id="cItem" hidden></div>
+    <h3>Save code</h3>
+    <p>Your progress is saved in this browser. To move it to another browser or keep a backup, copy the save code and load it there.</p>
+    <div class="crow2"><button class="mbtn" id="cExport" type="button">Copy save code</button><button class="mbtn" id="cImport" type="button">Load a save code</button><button class="mbtn" id="cImportGo" type="button" hidden>Load it</button></div>
+    <textarea id="cCode" hidden spellcheck="false" aria-label="Save code"></textarea>
+    <div id="cMsg" role="status"></div>
+    <button class="go" id="cClose" type="button">Back</button>
+  </div>
+</div>
 <div id="buffs"></div>
 <div class="overlay" id="pauseOv" hidden>
   <div class="box menu"><h2>Paused</h2><p id="pauseInfo">The horde waits.</p>
@@ -1087,7 +1137,8 @@ function genItem(level, rarity, slot, opts = {}) {
   const s = it.stats;
   const elName = (el) => (el ? PREFIX[el][Math.min(2, Math.max(0, rarity - 1))] + ' ' : '');
   if (slot === 'weapon') {
-    it.base = opts.base || playerClass || pick(WEAPON_BASES);
+    // now and then a weapon for one of your other classes drops; picking it up sends it to the shared stash
+    it.base = opts.base || (playerClass && !opts.own && Math.random() < 0.15 ? pick(WEAPON_BASES.filter(b => b !== playerClass)) : playerClass) || pick(WEAPON_BASES);
     it.combo = opts.combo !== undefined ? opts.combo : randi(0, 2);
     const B = BASES[it.base];
     it.element = opts.element !== undefined ? opts.element : (rarity === 0 ? null : (rarity >= 3 || Math.random() < 0.7 ? pick(ELEMS) : null));
@@ -1888,13 +1939,14 @@ function dropItem(it, at, quiet) {
 }
 // Upgrade = more damage per second, or about the same damage with more health or block.
 function isUpgrade(it) {
+  if (offClass(it)) return false;
   if (it.slot === 'torch' || it.slot === 'trinket') { const c = gear[it.slot]; return !c || it.rarity > c.rarity || (it.slot === 'torch' && !c); }
   const a = computeStats(), b = computeStats(Object.assign({}, gear, { [it.slot]: it }));
   return b.dps > a.dps * 1.01 || (b.dps >= a.dps * 0.98 && (b.maxHp > a.maxHp + 0.5 || b.block > a.block));
 }
 function lootLabel(l) {
   l.up = isUpgrade(l.it);
-  l.label.innerHTML = (l.up ? '<span class="upg">▲</span> ' : '') + l.it.name + (l.kept ? ' <span class="exp">gone after this wave</span>' : '');
+  l.label.innerHTML = (l.up ? '<span class="upg">▲</span> ' : '') + l.it.name + (offClass(l.it) ? ` <span class="exp">for ${CLASSES[l.it.base].name}</span>` : '') + (l.kept ? ' <span class="exp">gone after this wave</span>' : '');
 }
 function refreshLootLabels() { for (const l of loots) if (!l.fading) lootLabel(l); }
 // Two-phase cleanup on wave clear: non-upgrades vanish now, upgrades left lying vanish after the next wave.
@@ -2009,6 +2061,11 @@ function showCard(l) {
   if (cardFor === l) return;
   cardFor = l;
   const it = l.it, cur = gear[it.slot];
+  if (offClass(it)) {
+    card.innerHTML = `<h3 class="rar${it.rarity}">${it.name}</h3><div class="kind">${RARITY[it.rarity]} ${it.sub} · for the ${CLASSES[it.base].name}</div>
+      <div class="vs">${statLines(it).join(' · ')}</div><div class="hint"><kbd>F</kbd> Send to the stash · ${acct.stash.length}/${STASH_MAX}</div>`;
+    card.hidden = false; if (isTouch) $('tEquip').hidden = false; return;
+  }
   const g2 = Object.assign({}, gear, { [it.slot]: it });
   const a = computeStats(), b = computeStats(g2);
   const kind = it.slot === 'weapon' ? SUB[it.base][it.combo || 0] : SLOT_NAME[it.slot];
@@ -2017,7 +2074,7 @@ function showCard(l) {
     <div class="verd">${verdicts(it, cur, a, b).join('')}</div>
     ${it.slot === 'weapon' && comboOf(it) !== comboOf(gear.weapon) ? `<div class="ncomb">New combo: ${comboOf(it).name}<br><span>${comboOf(it).desc}</span></div>` : ''}
     <div class="vs">Replaces <span class="rar${cur ? cur.rarity : 0}">${cur ? cur.name : it.slot === 'torch' ? 'your plain torch' : it.slot === 'trinket' ? 'your empty left hand' : 'empty slot'}</span> · <kbd>C</kbd> for numbers</div>
-    <div class="hint"><kbd>F</kbd> Equip</div>`;
+    <div class="hint"><kbd>F</kbd> Equip · <kbd>G</kbd> Stash</div>`;
   card.hidden = false;
   if (isTouch) $('tEquip').hidden = false;
 }
@@ -2167,6 +2224,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.code === 'KeyQ' || e.code === 'KeyE' || e.code === 'KeyR') trySkillSlot(e.code.slice(3));
   if (e.code === 'KeyF') useNear();
+  if (e.code === 'KeyG') stashLoot();
   if (/^Digit[12]$/.test(e.code) && !paused) pickTome(+e.code.slice(5) - 1);
   if (e.code === 'KeyI' || e.code === 'KeyC') toggleSheet();
   if (e.code === 'Escape' && fallbackLook && player.alive) { setPaused(!paused); if (!paused) requestLock(); return; }
@@ -2227,7 +2285,203 @@ function setPaused(v) {
     $('pauseInfo').textContent = playerClass ? `${CLASSES[playerClass].name} · level ${player.level} · ${mode === 'dungeon' ? 'floor ' + DG.depth : mode === 'trail' ? TR.name : 'wave ' + wave}${coop ? ' · co-op keeps running while you pause' : ''}` : 'The horde waits.';
   }
 }
-$('classes').innerHTML = WEAPON_BASES.map(b => `<button class="cls" type="button" data-b="${b}"><b>${CLASSES[b].name}</b><em>${b}</em><span>${CLASSES[b].blurb}</span></button>`).join('');
+/* ---------------- account: saved characters, shared stash, camp ---------------- */
+// Everything lives in this browser's storage. Each class is its own character; the stash and salvage are shared.
+const SAVE_KEY = 'ashenVale.save.v1', STASH_MAX = 40, IDLE_CAP_H = 16, GEAR_KEYS = ['weapon', 'gloves', 'bracelet', 'ring', 'shield', 'torch', 'trinket'];
+const store = {
+  get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } },
+  set(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } },
+};
+let acct = null, saveDirty = false, lastSave = 0, storeOk = true;
+const newAcct = () => ({ v: 1, created: Date.now(), seen: Date.now(), salvage: 0, idle: 0, stash: [], chars: {} });
+const fin = (x, d = 0) => (typeof x === 'number' && Number.isFinite(x) ? x : d);
+// Rebuild an item from saved data, keeping only known fields and sane values (save codes can come from anywhere)
+function cleanItem(o) {
+  if (!o || typeof o !== 'object' || !GEAR_KEYS.includes(o.slot)) return null;
+  const slot = o.slot, it = { id: ++itemSeq, slot, rarity: clamp(fin(o.rarity) | 0, 0, 4), level: clamp(fin(o.level, 1) | 0, 1, 999), stats: {} };
+  const st = o.stats && typeof o.stats === 'object' ? o.stats : {};
+  for (const k of ['min', 'max', 'aps', 'crit', 'elem', 'reach', 'critDmg', 'hp', 'block', 'armor']) if (typeof st[k] === 'number' && Number.isFinite(st[k])) it.stats[k] = clamp(st[k], 0, 1e6);
+  it.element = ELEMS.includes(o.element) ? o.element : null;
+  if (slot === 'weapon') {
+    if (!BASES[o.base]) return null;
+    it.base = o.base; it.combo = clamp(fin(o.combo) | 0, 0, 2); it.sub = SUB[it.base][it.combo];
+    for (const k of ['min', 'max', 'aps', 'crit', 'reach']) if (!(k in it.stats)) return null;
+    it.stats.aps = Math.max(0.3, it.stats.aps); it.stats.elem = it.stats.elem || 0;
+  } else if (slot === 'torch' || slot === 'trinket') {
+    const L = slot === 'torch' ? TORCHES : TRINKETS;
+    if (!L[o.kind] || o.kind === 'plain') return null;
+    it.kind = o.kind; it.col = L[o.kind].col; it.element = null;
+  } else if (slot === 'shield') {
+    for (const k of ['hp', 'armor', 'block']) it.stats[k] = it.stats[k] || 0;
+  } else {
+    it.mods = (Array.isArray(o.mods) ? o.mods : []).filter(m => m && MODS[m.id] && MODS[m.id].slots.includes(slot) && typeof m.v === 'number' && Number.isFinite(m.v)).slice(0, 4).map(m => ({ id: m.id, v: clamp(Math.round(m.v), 1, 999) }));
+    it.col = it.mods.length ? MODS[it.mods[0].id].col : 0xd8c8a0; it.element = null;
+  }
+  it.name = typeof o.name === 'string' && o.name.length <= 60 && /^[\p{L}\p{N} '\-,.]+$/u.test(o.name) ? o.name : RARITY[it.rarity] + ' ' + (slot === 'weapon' ? it.sub : SLOT_NAME[slot]);
+  return it;
+}
+function cleanChar(base, c) {
+  if (!c || typeof c !== 'object') return null;
+  const g = {}, cg = c.gear && typeof c.gear === 'object' ? c.gear : {};
+  for (const k of GEAR_KEYS) { const it = cleanItem(cg[k]); g[k] = it && it.slot === k && (k !== 'weapon' || it.base === base) ? it : null; }
+  const skills = {}, cs = c.skills && typeof c.skills === 'object' ? c.skills : {};
+  for (const k of KEYS3) { const sl = cs[k]; skills[k] = sl && POOLS[base][k].includes(sl.id) ? { id: sl.id, lvl: clamp(fin(sl.lvl, 1) | 0, 1, 3) } : null; }
+  const used = KEYS3.map(k => skills[k] && skills[k].id).filter(Boolean); if (new Set(used).size !== used.length) for (const k of KEYS3) skills[k] = null;
+  const b = c.best && typeof c.best === 'object' ? c.best : {};
+  return {
+    level: clamp(fin(c.level, 1) | 0, 1, 99), xp: clamp(fin(c.xp), 0, 1e9), gear: g, skills,
+    sig: { idx: clamp(fin(c.sig && c.sig.idx) | 0, 0, 2), rank: clamp(fin(c.sig && c.sig.rank, 1) | 0, 1, 3) },
+    picks: clamp(fin(c.picks) | 0, 0, 30), sigPicks: clamp(fin(c.sigPicks) | 0, 0, 10),
+    best: { dungeon: clamp(fin(b.dungeon, 1) | 0, 1, 999), trail: clamp(fin(b.trail, 1) | 0, 1, 999), arena: clamp(fin(b.arena) | 0, 0, 9999) },
+    played: clamp(fin(c.played), 0, 1e13),
+  };
+}
+function cleanAcct(a) {
+  if (!a || typeof a !== 'object' || a.v !== 1) return null;
+  const out = newAcct();
+  out.created = clamp(fin(a.created, Date.now()), 0, 1e13); out.seen = clamp(fin(a.seen, Date.now()), 0, Date.now());
+  out.salvage = clamp(fin(a.salvage) | 0, 0, 1e7); out.idle = clamp(fin(a.idle), 0, 1e5);
+  out.stash = (Array.isArray(a.stash) ? a.stash : []).slice(0, STASH_MAX).map(cleanItem).filter(Boolean);
+  if (a.chars && typeof a.chars === 'object') for (const b of WEAPON_BASES) { const c = cleanChar(b, a.chars[b]); if (c) out.chars[b] = c; }
+  return out;
+}
+// Idle camp: your camp gathers salvage while you're away, faster for every class you've raised to level 5
+const idleRate = () => 3 + 2 * Object.values(acct.chars).filter(c => c.level >= 5).length;
+function idleTick() {
+  const t = Date.now(), h = clamp((t - acct.seen) / 3.6e6, 0, IDLE_CAP_H);
+  acct.idle = Math.min(acct.idle + h * idleRate(), idleRate() * IDLE_CAP_H); acct.seen = t;
+}
+function loadAcct() {
+  let a = null; const raw = store.get();
+  try { a = raw ? JSON.parse(raw) : null; } catch (e) { a = null; }
+  acct = cleanAcct(a) || newAcct();
+  idleTick();
+  storeOk = store.set(JSON.stringify(acct));
+}
+function snapChar() {
+  if (!acct || !playerClass || !started) return;
+  const prev = acct.chars[playerClass], g = {};
+  for (const k of GEAR_KEYS) g[k] = gear[k] || null;
+  const picks = pendingPicks + (tomes.some(t => t.o.k !== 'RMB') || (choosing && choosing.ch && choosing.ch.some(o => o.k !== 'RMB')) ? 1 : 0);
+  acct.chars[playerClass] = {
+    level: player.level, xp: Math.floor(player.xp), gear: g,
+    skills: Object.fromEntries(KEYS3.map(k => [k, skillSlots[k] ? { id: skillSlots[k].id, lvl: skillSlots[k].lvl } : null])),
+    sig: { idx: sigState.idx, rank: sigState.rank }, picks, sigPicks: pendingSig + (tomes.some(t => t.o.k === 'RMB') ? 1 : 0),
+    best: prev ? prev.best : { dungeon: 1, trail: 1, arena: 0 }, played: Date.now(),
+  };
+}
+function persist() {
+  if (!acct) return;
+  snapChar(); idleTick();
+  storeOk = store.set(JSON.stringify(acct)); saveDirty = false; lastSave = performance.now();
+}
+const saveSoon = () => { saveDirty = true; };
+function noteBest(k, n) {
+  if (!acct || !playerClass || !started) return;
+  if (!acct.chars[playerClass]) snapChar();
+  const c = acct.chars[playerClass]; if (c && n > (c.best[k] || 0)) { c.best[k] = n; saveSoon(); }
+}
+// Load a class's saved character into the live game (called from startAs, after a fresh run reset)
+function applyChar(base) {
+  const C = acct && acct.chars[base];
+  if (!C) return false;
+  player.level = C.level; player.xp = C.xp;
+  for (const k of GEAR_KEYS) { if (k === 'weapon') { if (C.gear.weapon) gear.weapon = C.gear.weapon; } else if (k === 'gloves') { if (C.gear.gloves) gear.gloves = C.gear.gloves; } else gear[k] = C.gear[k] || null; }
+  for (const k of KEYS3) skillSlots[k] = C.skills[k] ? { id: C.skills[k].id, lvl: C.skills[k].lvl, cd: 0 } : null;
+  sigState.idx = C.sig.idx; sigState.rank = C.sig.rank; pendingSig = C.sigPicks;
+  const open = KEYS3.some(k => !skillSlots[k] && player.level >= UNLOCK[k]);
+  pendingPicks = Math.max(C.picks, open ? 1 : 0);
+  return true;
+}
+const offClass = (it) => it && it.slot === 'weapon' && playerClass && it.base !== playerClass;
+function toStash(it) {
+  if (!acct || acct.stash.length >= STASH_MAX) return false;
+  acct.stash.push(it); persist(); return true;
+}
+const SALV = [2, 5, 12, 30, 70];
+const salvValue = (it) => Math.round(SALV[it.rarity] * (1 + (it.level - 1) * 0.04));
+const ago = (ms) => { const m = Math.round(ms / 60000); return m < 60 ? `${Math.max(1, m)} min` : m < 2880 ? `${Math.round(m / 60)} h` : `${Math.round(m / 1440)} days`; };
+function renderClasses() {
+  $('classes').innerHTML = WEAPON_BASES.map(b => { const c = acct && acct.chars[b]; return `<button class="cls" type="button" data-b="${b}"><b>${CLASSES[b].name}</b><em>${b}</em><span>${CLASSES[b].blurb}</span>${c ? `<span class="clv">Level ${c.level}</span>` : ''}</button>`; }).join('');
+  const n = Math.floor(acct.idle);
+  $('campInfo').innerHTML = `<b>${acct.salvage}</b> salvage · stash <b>${acct.stash.length}</b>/${STASH_MAX}${n >= 1 ? ` · <b>${n}</b> waiting at camp` : ''}${storeOk ? '' : ' · <span style="color:var(--bad)">this browser is not saving</span>'}`;
+}
+let campSel = -1;
+function renderCamp() {
+  idleTick();
+  const n = Math.floor(acct.idle), rate = idleRate();
+  $('cSalv').textContent = acct.salvage;
+  $('cIdle').innerHTML = `salvage. ${n >= 1 ? `Your camp gathered <b style="color:#ffd98a">${n}</b> more while you were away.` : 'Nothing gathered yet.'} It gathers ${rate} an hour, up to ${IDLE_CAP_H} hours' worth, and every class at level 5 or higher adds 2 an hour.`;
+  $('cCollect').disabled = n < 1; $('cCollect').style.opacity = n < 1 ? 0.5 : 1;
+  $('cChars').innerHTML = WEAPON_BASES.map(b => { const c = acct.chars[b]; return c ? `<div class="cchar"><b>${CLASSES[b].name}</b>Level ${c.level} · ${c.gear.weapon ? `<span class="rar${c.gear.weapon.rarity}">${c.gear.weapon.name}</span>` : b}<br>Floor ${c.best.dungeon} · island ${c.best.trail} · wave ${c.best.arena}</div>` : `<div class="cchar none"><b>${CLASSES[b].name}</b>Not played yet</div>`; }).join('');
+  $('cStashN').textContent = `${acct.stash.length} of ${STASH_MAX}`;
+  $('cStash').innerHTML = acct.stash.length ? acct.stash.map((it, i) => `<button class="sitem${i === campSel ? ' on' : ''}" type="button" data-i="${i}"><b class="rar${it.rarity}">${it.name}</b><span>${it.slot === 'weapon' ? `${CLASSES[it.base].name} · ${it.sub}` : SLOT_NAME[it.slot]} · level ${it.level}</span></button>`).join('') : '<div class="sempty">Empty. Weapons for your other classes land here when you pick them up, and you can press G on any item to send it here.</div>';
+  const it = acct.stash[campSel], d = $('cItem');
+  if (!it) { d.hidden = true; campSel = -1; return; }
+  const who = it.slot === 'weapon' ? [it.base] : WEAPON_BASES.filter(b => acct.chars[b]);
+  const cur = (b) => acct.chars[b] && acct.chars[b].gear[it.slot];
+  const fx = fxLine(it);
+  d.innerHTML = `<div class="sn rar${it.rarity}">${it.name}</div><div class="sd">${RARITY[it.rarity]} ${it.slot === 'weapon' ? it.sub + ' for the ' + CLASSES[it.base].name : SLOT_NAME[it.slot]} · item level ${it.level}</div>
+    <div>${statLines(it).join('<br>')}${fx ? `<br><i class="sd">${fx}</i>` : ''}</div>
+    <div class="acts">${who.length ? `<select id="cWho" aria-label="Class to equip">${who.map(b => `<option value="${b}">${CLASSES[b].name}${acct.chars[b] ? ' (level ' + acct.chars[b].level + ')' : ''}</option>`).join('')}</select><button class="mbtn" id="cEquip" type="button">Equip</button>` : '<span class="sd">Play a class first to equip this</span>'}
+    <button class="mbtn danger" id="cSalvage" type="button">Salvage for ${salvValue(it)}</button></div>
+    <div class="sd" id="cSwapNote">${who.length && cur(who[0]) ? `Swaps out ${cur(who[0]).name}, which goes to the stash` : ''}</div>`;
+  d.hidden = false;
+}
+function campMsg(t) { $('cMsg').textContent = t; }
+$('campBtn').addEventListener('click', () => { campSel = -1; campMsg(''); $('cCode').hidden = true; $('cImportGo').hidden = true; renderCamp(); $('campOv').hidden = false; });
+$('cClose').addEventListener('click', () => { $('campOv').hidden = true; persist(); renderClasses(); });
+$('cCollect').addEventListener('click', () => { const n = Math.floor(acct.idle); if (n < 1) return; acct.salvage += n; acct.idle -= n; persist(); campMsg(`Collected ${n} salvage`); renderCamp(); });
+$('cStash').addEventListener('click', (e) => { const b = e.target.closest('.sitem'); if (!b) return; campSel = +b.dataset.i === campSel ? -1 : +b.dataset.i; renderCamp(); if (campSel >= 0) $('cItem').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+$('cItem').addEventListener('change', (e) => { if (e.target.id !== 'cWho') return; const it = acct.stash[campSel], c = acct.chars[e.target.value], o = c && c.gear[it.slot]; $('cSwapNote').textContent = o ? `Swaps out ${o.name}, which goes to the stash` : ''; });
+$('cItem').addEventListener('click', (e) => {
+  const it = acct.stash[campSel]; if (!it) return;
+  if (e.target.id === 'cSalvage') { const v = salvValue(it); acct.stash.splice(campSel, 1); acct.salvage += v; campSel = -1; persist(); campMsg(`Salvaged ${it.name} for ${v}`); renderCamp(); }
+  if (e.target.id === 'cEquip') {
+    const b = $('cWho').value, c = acct.chars[b] || (acct.chars[b] = cleanChar(b, { level: 1 }));
+    const old = c.gear[it.slot];
+    c.gear[it.slot] = it; acct.stash.splice(campSel, 1); if (old) acct.stash.push(old);
+    campSel = -1; persist(); campMsg(`${it.name} is now on your ${CLASSES[b].name}`); renderCamp();
+  }
+});
+// Save codes: the whole account, compressed when the browser can, as text you can paste anywhere
+const b64 = { enc: (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }, dec: (t) => Uint8Array.from(atob(t), c => c.charCodeAt(0)) };
+async function exportCode() {
+  persist();
+  const raw = new TextEncoder().encode(JSON.stringify(acct));
+  if (typeof CompressionStream === 'function') { const z = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); return 'AV1z' + b64.enc(z); }
+  return 'AV1p' + b64.enc(raw);
+}
+async function importCode(t) {
+  t = (t || '').replace(/\s+/g, '');
+  const kind = t.slice(0, 4), body = t.slice(4);
+  let u8 = b64.dec(body);
+  if (kind === 'AV1z') u8 = new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  else if (kind !== 'AV1p') throw new Error('not a save code');
+  const a = cleanAcct(JSON.parse(new TextDecoder().decode(u8)));
+  if (!a) throw new Error('not a save code');
+  return a;
+}
+$('cExport').addEventListener('click', async () => {
+  try {
+    const code = await exportCode(), ta = $('cCode');
+    ta.value = code; ta.hidden = false; $('cImportGo').hidden = true; ta.select();
+    let copied = false; try { await navigator.clipboard.writeText(code); copied = true; } catch (e) { copied = false; }
+    campMsg(copied ? 'Save code copied. Paste it into "Load a save code" in another browser.' : 'Select the code above and copy it.');
+  } catch (e) { campMsg('Could not make a save code in this browser.'); }
+});
+$('cImport').addEventListener('click', () => { const ta = $('cCode'); ta.value = ''; ta.hidden = false; $('cImportGo').hidden = false; ta.focus(); campMsg('Paste a save code, then press Load it. It replaces everything saved in this browser.'); });
+$('cImportGo').addEventListener('click', async () => {
+  let a = null;
+  try { a = await importCode($('cCode').value); } catch (e) { campMsg('That is not a working save code.'); return; }
+  acct = a; acct.seen = Date.now(); persist(); campSel = -1;
+  $('cCode').hidden = true; $('cImportGo').hidden = true;
+  campMsg(`Loaded: ${Object.keys(acct.chars).length} characters, ${acct.stash.length} items in the stash, ${acct.salvage} salvage.`); renderCamp(); renderClasses();
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+window.addEventListener('pagehide', () => persist());
+loadAcct();
+renderClasses();
 $('modes').addEventListener('click', (e) => {
   const b = e.target.closest('.mode'); if (!b) return;
   selMode = b.dataset.m;
@@ -2243,14 +2497,17 @@ $('classes').addEventListener('click', (e) => {
 function startAs(base) {
   playerClass = base;
   gear.weapon = genItem(1, 0, 'weapon', { base, element: null, combo: 0 });
-  stats = computeStats(); player.hp = stats.maxHp;
+  const had = applyChar(base);
+  stats = computeStats(); player.hp = stats.maxHp; $('lvl').textContent = player.level;
   rebuildViewmodel(); updateGearHud(); renderSkillBar();
   started = true; $('startOv').hidden = true; audio(); if (AC && AC.resume) AC.resume();
   requestLock(); if (isTouch) $('touch').hidden = false;
-  toast(`${CLASSES[base].name}<small>Pick your first Q skill: press 1 or 2</small>`, 2.2);
-  pendingPicks = 1;
+  if (!had) pendingPicks = 1;
+  toast(had ? `${CLASSES[base].name} · level ${player.level}<small>Welcome back</small>` : `${CLASSES[base].name}<small>Pick your first Q skill: press 1 or 2</small>`, 2.2);
+  const best = had ? acct.chars[base].best : null;
   if (selMode === 'coop') { if (!coop.host) coopGuestStart(); else if (coopKind === 'arena') { coop.kind = 'arena'; nextWave(); } else if (coopKind === 'trail') { coop.kind = 'trail'; enterTrail(1); } else { coop.kind = 'dungeon'; enterDungeon(1); } }
-  else if (selMode === 'dungeon') enterDungeon(1); else if (selMode === 'trail') enterTrail(1); else nextWave();
+  else if (selMode === 'dungeon') enterDungeon(best ? best.dungeon : 1); else if (selMode === 'trail') enterTrail(best ? best.trail : 1); else nextWave();
+  persist();
 }
 $('resumeBtn').addEventListener('click', () => { setPaused(false); requestLock(); });
 $('reviveBtn').addEventListener('click', revive);
@@ -3506,8 +3763,16 @@ function tryDash() {
   if (M.dashfire) { let acc = 0; addTemp(null, 0.2, (dt) => { acc += dt; if (acc > 0.05) { acc = 0; firePatch(player.pos.x, player.pos.z, M.dashfire / 100); } }); }
   if (M.dashshock) later(0.2, () => { shockwave(player.pos.clone(), 3.2, M.dashshock / 100, 0.6, 0x4ab0ff); sfx('lightning'); });
 }
+function stashLoot() {
+  if (!cardFor || !player.alive) return;
+  const l = cardFor, it = l.it;
+  if (!toStash(it)) { toast('The stash is full<small>Salvage something at camp to make room</small>', 1.8); return; }
+  removeLoot(l); showCard(null); sfx('loot');
+  toast(`<span class="rar${it.rarity}">${it.name}</span><small>Sent to the stash${offClass(it) ? ` for your ${CLASSES[it.base].name}` : ''} · ${acct.stash.length}/${STASH_MAX}</small>`, 1.8);
+}
 function tryEquip() {
   if (!cardFor || !player.alive) return;
+  if (offClass(cardFor.it)) { stashLoot(); return; }
   const l = cardFor, it = l.it, old = gear[it.slot];
   const before = { style: comboOf(gear.weapon).name, skill: (stats.element || 'none') };
   gear[it.slot] = it;
@@ -3523,6 +3788,7 @@ function tryEquip() {
   const notes = [];
   if (after.style !== before.style) { notes.push(`Combo is now ${after.style}`); pulse('atkSlot'); }
   toast(`<span class="rar${it.rarity}">${it.name}</span><small>${notes.length ? notes.join(' · ') : 'Equipped'}</small>`, notes.length ? 2.4 : 1.4);
+  saveSoon();
   sfx('loot');
   for (let i = 0; i < 40 + it.rarity * 20; i++) VFX.emit(rand(-0.1, 0.5), rand(-0.6, 0.3), rand(-0.9, -0.4), rand(-0.3, 0.3), rand(0.2, 1), rand(-0.2, 0.2), rand(0.4, 0.9), RCOL[it.rarity], 0.5, 1);
 }
@@ -4166,6 +4432,7 @@ function gainXp(x) {
     renderSkillBar();
     pendingPicks++;
     if (player.level % 4 === 0) pendingSig++;
+    saveSoon();
     sfx('level');
     for (let i = 0; i < 60; i++) { const a = rand(0, Math.PI * 2); FX.emit(player.pos.x + Math.cos(a) * 1.2, player.pos.y + rand(0, 0.3), player.pos.z + Math.sin(a) * 1.2, 0, rand(2, 5), 0, rand(0.6, 1.2), 0xffd66a, 0, 0.5); }
     updateGearHud();
@@ -4299,6 +4566,7 @@ function finishPick(msg) {
   if (!locked && !fallbackLook && !isTouch) requestLock();
 }
 function renderSkillBar() {
+  saveSoon();
   for (const k of KEYS3) {
     const sl = skillSlots[k], el = $('slot' + k), lk = !sl && player.level < UNLOCK[k];
     el.classList.toggle('empty', !sl); el.classList.toggle('locked', lk);
@@ -4379,7 +4647,7 @@ function finishTome(t, msg) {
 $('choices').addEventListener('click', (e) => { const b = e.target.closest('.ccard'); if (b) pickTome(+b.dataset.i); });
 let wave = 0, kills = 0, waveDelay = -1, killsSinceDrop = 10;
 function nextWave(rs) {
-  wave++;
+  wave++; noteBest('arena', wave - 1);
   const boss = wave % 4 === 0;
   const n = 4 + Math.floor(wave * 2.5);
   let i = 0;
@@ -4426,6 +4694,7 @@ function clearWorld() {
   showCard(null); showChoices(false); $('card').hidden = true; $('boss').hidden = true;
 }
 function resetRun() {
+  if (started && playerClass) persist();
   runId++;
   clearWorld();
   setMode('arena');
@@ -4784,7 +5053,7 @@ function enterDungeon(depth, seed) {
   const carry = tomes.length > 0; clearWorld(); if (carry) pendingPicks++;
   setMode('dungeon');
   const L = buildDungeon(depth);
-  DG.depth = depth; DG.bossStarted = false; DG.boss = null; DG.stairs = null; DG.gateMeshes = []; DG.flowAt = -1; DG.goal = 'Find the boss chamber';
+  DG.depth = depth; noteBest('dungeon', depth); DG.bossStarted = false; DG.boss = null; DG.stairs = null; DG.gateMeshes = []; DG.flowAt = -1; DG.goal = 'Find the boss chamber';
   wave = 1 + (depth - 1) * 2; waveDelay = -1; pending = 999;
   player.pos.set(tCen(L.si), 0, tCen(L.sj)); player.vel.set(0, 0, 0);
   player.yaw = Math.atan2(player.pos.x, player.pos.z); player.pitch = 0;
@@ -5036,7 +5305,7 @@ function trailSpawnBoss() {
   b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.parts.g.rotation.y = 0; b.name = TBOSS[(TR.n - 1) % TBOSS.length]; TR.boss = b;
 }
 function enterTrail(n) {
-  runId++;
+  runId++; noteBest('trail', n);
   const carry = tomes.length > 0; clearWorld(); if (carry) pendingPicks++;
   enemySeq = 0; DG.dead = new Set();
   setMode('trail');
@@ -5282,15 +5551,15 @@ function askConfirm(txt, yes) {
   $('mYes').onclick = () => { $('mConfirm').hidden = true; yes(); };
 }
 $('mNo').addEventListener('click', () => { $('mConfirm').hidden = true; });
-$('restartBtn').addEventListener('click', () => askConfirm('Restart from wave 1? Your gear and skills are lost.', () => {
+$('restartBtn').addEventListener('click', () => askConfirm('Start this mode over? Your character keeps its level, gear and skills.', () => {
   const base = playerClass; resetRun(); setPaused(false); startAs(base);
 }));
-$('classBtn').addEventListener('click', () => askConfirm('Quit this run and pick a new class?', () => {
+$('classBtn').addEventListener('click', () => askConfirm('Leave for camp and the class list? Your character is saved.', () => {
   if (coop) coopLeave();
   resetRun(); setPaused(false); started = false; playerClass = null;
   gear.weapon = genItem(1, 0, 'weapon', { base: 'sword', element: null, combo: 0, name: 'Rusty Shortsword' });
   stats = computeStats(); player.hp = stats.maxHp; rebuildViewmodel(); updateGearHud(); renderSkillBar();
-  $('startOv').hidden = false; $('touch').hidden = true;
+  $('startOv').hidden = false; $('touch').hidden = true; renderClasses();
 }));
 $('soundBtn').addEventListener('click', () => { muted = !muted; $('soundBtn').textContent = 'Sound: ' + (muted ? 'off' : 'on'); });
 $('pauseCtl').insertAdjacentHTML('beforeend', document.querySelector('#startOv .controls').outerHTML);
@@ -5316,7 +5585,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 28;
+const NET_VER = 29;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
@@ -5848,6 +6117,7 @@ function frame() {
   let dt = Math.min(clock.getDelta(), 0.05);
   now += dt;
   if (pendingPicks > 0 && !tomes.length && started && !paused && player.alive) { pendingPicks--; spawnTomes(); }
+  if (started && playerClass) { const pn = performance.now(); if ((saveDirty && pn - lastSave > 1000) || pn - lastSave > 15000) persist(); }
   // in co-op the dungeon keeps running while you pause or pick a skill
   const live = started && (coop ? true : !paused && !choosing);
   let wdt = live ? dt : 0;
