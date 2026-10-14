@@ -10,6 +10,8 @@ Each class keeps its level, gear, skills and the furthest floor and island it ha
 
 Pick a character at camp to see its gear. The **crafting bench** works on any item there or in the stash: reroll the weakest modifier, lock one so rerolls never touch it, reforge a weapon or shield up to your level, or empower an item a rarity tier (up to epic) with salvage and ashen cores, which you earn by clearing dungeon floors. Weapons now roll modifiers too.
 
+Each mode pays its own way: the Island Trail pays salvage and gear for your class at every island, the dungeon pays ashen cores per floor, and the arena pays marks (free rerolls) for every boss wave. Every 3rd floor or island and every 8th wave also gives a vale key. Toggle **Heroic** on the start screen to spend a key on a solo run with tougher monsters, better drops, doubled rewards and a cache from every boss.
+
 ## Co-op
 
 Both players open the link above. One picks **Co-op**, chooses **Dungeon**, **Arena** or **Island**, clicks **Host a run** and shares the 4-letter code; the other picks **Co-op**, types the code and hits **Join**. The host's browser runs the monsters; the two browsers find each other through public Nostr relays (Trystero) and then connect directly, so there is no server to run.

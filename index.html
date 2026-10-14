@@ -197,10 +197,17 @@ button.go.small { font-size: 16px; padding: 6px 18px; }
 #campRow { width: 100%; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.4); text-align: left; }
 #campRow .ci { color: var(--muted); font-size: 14px; } #campRow .ci b { color: #ffd98a; font-weight: 800; }
 #campRow .mbtn { font-size: 17px; padding: 5px 14px; }
+#campRow .cbtns { display: flex; gap: 6px; }
+#heroBtn[aria-pressed="true"] { border-color: #ff7a3a; color: #ffb08a; box-shadow: 0 0 10px rgba(255,90,30,.45); }
+#heroNote { width: 100%; text-align: left; font-size: 13px; color: #ffb08a; }
+body.heroic #lvl { border-color: #ff7a3a; box-shadow: 0 0 0 3px rgba(0,0,0,.6), 0 0 14px rgba(255,90,30,.7); }
 .cls .clv { font-size: 12px; font-weight: 800; color: var(--good); }
 #campOv { background: rgba(14,11,8,.97); z-index: 6; }
-.cbar.slim { padding: 6px 10px; }
-.cbar .big.core { color: #ff9a5a; font-size: 24px; }
+.mats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 6px; }
+.mats > div { padding: 6px 10px; border: 1px solid var(--bronze-dim); background: rgba(0,0,0,.4); display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: baseline; }
+.mats b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; grid-row: span 2; }
+.mats span { color: var(--parch); font-size: 14px; } .mats em { color: var(--muted); font-size: 12px; font-style: normal; }
+.mats .core { color: #ff9a5a; } .mats .mark { color: #9ad0ff; } .mats .key { color: #ffd98a; }
 button.cchar { text-align: left; font-family: var(--body); cursor: pointer; }
 button.cchar.on, button.cchar:hover, button.cchar:focus-visible { border-color: #ffd98a; outline: none; }
 .bench { border-top: 1px solid var(--bronze-dim); padding-top: 8px; display: grid; gap: 6px; }
@@ -381,9 +388,10 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button><button class="mbtn kb" type="button" data-k="trail">Island</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 30</div>
+      <div id="coopDiag">Version 31</div>
     </div>
-    <div id="campRow"><span class="ci" id="campInfo"></span><button class="mbtn" id="campBtn" type="button">Camp</button></div>
+    <div id="campRow"><span class="ci" id="campInfo"></span><span class="cbtns"><button class="mbtn" id="heroBtn" type="button" aria-pressed="false">Heroic</button><button class="mbtn" id="campBtn" type="button">Camp</button></span></div>
+    <div id="heroNote" hidden></div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
       <kbd>W A S D</kbd><span>Move</span>
@@ -404,7 +412,12 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   <div class="box">
     <h2>Camp</h2>
     <div class="cbar"><span class="big" id="cSalv">0</span><span class="grow" id="cIdle"></span><button class="mbtn" id="cCollect" type="button">Collect</button></div>
-    <div class="cbar slim"><span class="big core" id="cCores">0</span><span class="grow">ashen cores, earned by clearing dungeon floors (more on deeper floors). The crafting bench spends them to empower gear.</span></div>
+    <div class="mats">
+      <div><b class="core" id="cCores">0</b><span>ashen cores</span><em>Clear dungeon floors. Empower gear.</em></div>
+      <div><b class="mark" id="cMarks">0</b><span>arena marks</span><em>Beat arena boss waves. Pay for rerolls.</em></div>
+      <div><b class="key" id="cKeys">0</b><span>vale keys</span><em>Every 3rd floor or island, every 8th wave. Start a Heroic run.</em></div>
+    </div>
+    <p class="sd">The Island Trail pays salvage and gear for your class at every island.</p>
     <h3>Characters <span>pick one to see and craft on its gear</span></h3>
     <div class="cchars" id="cChars"></div>
     <h3 id="cGearH" hidden></h3>
@@ -1882,8 +1895,8 @@ function spawnEnemy(type, wave, at, elite = false) {
   }
   // The arena gets steeper every wave so it keeps up with your gear, and a friend makes it tougher still
   const ar = mode !== 'dungeon', duo = coop && coop.ally ? 1.5 : 1;
-  const scale = (1 + 0.32 * (wave - 1)) * (ar ? Math.pow(1.07, wave - 1) * duo : 1) * (elite ? 3 : 1);
-  const dmul = (1 + 0.14 * (wave - 1)) * (ar ? Math.pow(1.04, wave - 1) : 1) * (elite ? 1.4 : 1);
+  const scale = (1 + 0.32 * (wave - 1)) * (ar ? Math.pow(1.07, wave - 1) * duo : 1) * (elite ? 3 : 1) * (heroic ? 1.6 : 1);
+  const dmul = (1 + 0.14 * (wave - 1)) * (ar ? Math.pow(1.04, wave - 1) : 1) * (elite ? 1.4 : 1) * (heroic ? 1.3 : 1);
   const e = {
     id: enemySeq++, type, def, parts, skin, baseColor: new T.Color(def.color), elite,
     pos: new T.Vector3(x, heightAt(x, z), z), kb: new T.Vector3(),
@@ -2312,8 +2325,8 @@ const store = {
   set(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } },
 };
 let acct = null, saveDirty = false, lastSave = 0, storeOk = true;
-const newAcct = () => ({ v: 1, created: Date.now(), seen: Date.now(), salvage: 0, cores: 0, idle: 0, stash: [], chars: {} });
-let runFloor = 0, charLive = false; // charLive: the live run holds this class's character (false between a reset and the next start)
+const newAcct = () => ({ v: 1, created: Date.now(), seen: Date.now(), salvage: 0, cores: 0, marks: 0, keys: 1, idle: 0, stash: [], chars: {} });
+let runFloor = 0, charLive = false, heroic = false, heroPick = false; // charLive: the live run holds this class's character (false between a reset and the next start)
 const fin = (x, d = 0) => (typeof x === 'number' && Number.isFinite(x) ? x : d);
 // Rebuild an item from saved data, keeping only known fields and sane values (save codes can come from anywhere)
 function cleanItem(o) {
@@ -2367,7 +2380,7 @@ function cleanAcct(a) {
   if (!a || typeof a !== 'object' || a.v !== 1) return null;
   const out = newAcct();
   out.created = clamp(fin(a.created, Date.now()), 0, 1e13); out.seen = clamp(fin(a.seen, Date.now()), 0, Date.now());
-  out.salvage = clamp(fin(a.salvage) | 0, 0, 1e7); out.cores = clamp(fin(a.cores) | 0, 0, 1e5); out.idle = clamp(fin(a.idle), 0, 1e5);
+  out.salvage = clamp(fin(a.salvage) | 0, 0, 1e7); out.cores = clamp(fin(a.cores) | 0, 0, 1e5); out.marks = clamp(fin(a.marks) | 0, 0, 1e5); out.keys = clamp(fin(a.keys, 1) | 0, 0, 999); out.idle = clamp(fin(a.idle), 0, 1e5);
   out.stash = (Array.isArray(a.stash) ? a.stash : []).slice(0, STASH_MAX).map(cleanItem).filter(Boolean);
   if (a.chars && typeof a.chars === 'object') for (const b of WEAPON_BASES) { const c = cleanChar(b, a.chars[b]); if (c) out.chars[b] = c; }
   return out;
@@ -2431,13 +2444,24 @@ const ago = (ms) => { const m = Math.round(ms / 60000); return m < 60 ? `${Math.
 function renderClasses() {
   $('classes').innerHTML = WEAPON_BASES.map(b => { const c = acct && acct.chars[b]; return `<button class="cls" type="button" data-b="${b}"><b>${CLASSES[b].name}</b><em>${b}</em><span>${CLASSES[b].blurb}</span>${c ? `<span class="clv">Level ${c.level}</span>` : ''}</button>`; }).join('');
   const n = Math.floor(acct.idle);
-  $('campInfo').innerHTML = `<b>${acct.salvage}</b> salvage · <b>${acct.cores}</b> cores · stash <b>${acct.stash.length}</b>/${STASH_MAX}${n >= 1 ? ` · <b>${n}</b> waiting at camp` : ''}${storeOk ? '' : ' · <span style="color:var(--bad)">this browser is not saving</span>'}`;
+  heroUi();
+  $('campInfo').innerHTML = `<b>${acct.salvage}</b> salvage · <b>${acct.cores}</b> cores · <b>${acct.marks}</b> marks · <b>${acct.keys}</b> key${acct.keys === 1 ? '' : 's'} · stash <b>${acct.stash.length}</b>/${STASH_MAX}${n >= 1 ? ` · <b>${n}</b> waiting at camp` : ''}${storeOk ? '' : ' · <span style="color:var(--bad)">this browser is not saving</span>'}`;
 }
 // Crafting bench: deterministic tinkering with salvage and ashen cores
-function gainCores(n) {
+// Each mode pays its own way: the trail pays salvage, the dungeon ashen cores, the arena marks; all three hand out keys at milestones
+const REW = { salvage: ['salvage', 'salvage'], cores: ['ashen core', 'ashen cores'], marks: ['arena mark', 'arena marks'], keys: ['vale key', 'vale keys'] };
+function award(r, why) {
   if (!acct) return;
-  acct.cores += n; saveSoon();
-  setTimeout(() => toast(`+${n} ashen core${n > 1 ? 's' : ''}<small>For empowering gear at the camp's crafting bench · you have ${acct.cores}</small>`, 2), 1600);
+  const parts = [];
+  for (const k in r) { let n = r[k] | 0; if (k !== 'keys' && heroic) n *= 2; if (n < 1) continue; acct[k] += n; parts.push(`+${n} ${REW[k][n > 1 ? 1 : 0]}`); }
+  if (!parts.length) return;
+  saveSoon();
+  setTimeout(() => toast(`${parts.join(' · ')}<small>${why}${heroic ? ' · doubled on Heroic' : ''}</small>`, 2.4), 1600);
+}
+const gainCores = (n) => award({ cores: n }, 'Floor cleared. Cores empower gear at the crafting bench');
+function arenaMilestone(w) {
+  // a boss wave just fell
+  if (w > 1 && (w - 1) % 4 === 0) award({ marks: 1 + Math.floor((w - 1) / 12), keys: (w - 1) % 8 === 0 ? 1 : 0 }, `Wave ${w - 1} survived. Marks pay for rerolls at the crafting bench`);
 }
 const MOD_N = { weapon: [0, 0, 1, 1, 2], gloves: [1, 1, 2, 3, 3], bracelet: [1, 1, 2, 3, 3], ring: [1, 1, 2, 3, 3] };
 const rollModV = (id, r) => Math.max(1, Math.round(MODS[id].roll(r) * rand(0.85, 1.15) * (r === 4 ? 1.35 : 1)));
@@ -2500,21 +2524,33 @@ function benchHtml(it, target) {
   }
   const acts = [], lo = lowestMod(it);
   if (lo) acts.push(btn('reroll', `Reroll ${MOD_SHORT[lo.id].toLowerCase()} · ${COST.reroll(it)}`, can(COST.reroll(it))));
+  if (lo && acct.marks > 0) acts.push(btn('rerollm', `Reroll with a mark (${acct.marks})`, true));
   if (levelled(it) && target > it.level) acts.push(btn('reforge', `Reforge to level ${target} · ${COST.reforge(it, target)}`, can(COST.reforge(it, target))));
   if (it.rarity < 3) { const [c, k] = COST.empower(it); acts.push(btn('empower', `Empower to ${RARITY[it.rarity + 1]} · ${c} + ${k} core${k > 1 ? 's' : ''}`, can(c, k))); }
   if (!rows.length && !acts.length) return '';
-  return `<div class="bench"><div class="bh">Crafting bench <span>Reroll changes the weakest unlocked modifier. A locked one is never rerolled. Cores come from clearing dungeon floors.</span></div>${rows.join('')}${acts.length ? `<div class="acts">${acts.join('')}</div>` : ''}</div>`;
+  return `<div class="bench"><div class="bh">Crafting bench <span>Reroll changes the weakest unlocked modifier, paid in salvage or an arena mark. A locked one is never rerolled. Empowering costs ashen cores.</span></div>${rows.join('')}${acts.length ? `<div class="acts">${acts.join('')}</div>` : ''}</div>`;
 }
 function craft(it, a, mid, target) {
   let msg = '';
   if (a === 'lock') { if (acct.salvage < COST.lock()) return; acct.salvage -= COST.lock(); it.lock = mid; msg = `Locked ${MOD_SHORT[mid].toLowerCase()}`; }
   else if (a === 'unlock') { delete it.lock; msg = 'Unlocked'; }
-  else if (a === 'reroll') { const c = COST.reroll(it); if (acct.salvage < c) return; acct.salvage -= c; const r = craftReroll(it); if (!r) return; msg = `${MOD_SHORT[r[0].id]} became ${MOD_SHORT[r[1].id].toLowerCase()}: ${MODS[r[1].id].text(r[1].v)}`; }
+  else if (a === 'reroll' || a === 'rerollm') { const c = a === 'rerollm' ? 0 : COST.reroll(it); if (a === 'rerollm' ? acct.marks < 1 : acct.salvage < c) return; if (a === 'rerollm') acct.marks--; else acct.salvage -= c; const r = craftReroll(it); if (!r) return; msg = `${MOD_SHORT[r[0].id]} became ${MOD_SHORT[r[1].id].toLowerCase()}: ${MODS[r[1].id].text(r[1].v)}`; }
   else if (a === 'reforge') { const c = COST.reforge(it, target); if (!(target > it.level) || acct.salvage < c) return; acct.salvage -= c; regenStats(it, target, it.rarity); msg = `${it.name} is now item level ${target}`; }
   else if (a === 'empower') { if (it.rarity >= 3) return; const [c, k] = COST.empower(it); if (acct.salvage < c || acct.cores < k) return; acct.salvage -= c; acct.cores -= k; craftEmpower(it); msg = `${it.name} is now ${RARITY[it.rarity]}`; }
   else return;
   sfx('loot'); persist(); campMsg(msg); renderCamp();
 }
+function heroUi() {
+  if (heroPick && acct.keys < 1) heroPick = false;
+  $('heroBtn').setAttribute('aria-pressed', heroPick ? 'true' : 'false');
+  $('heroBtn').textContent = heroPick ? 'Heroic: on' : 'Heroic';
+  $('heroNote').hidden = !heroPick;
+  $('heroNote').textContent = heroPick ? `Your next solo run is Heroic: it uses 1 of your ${acct.keys} vale keys. Monsters are tougher, drops are better, rewards are doubled and every boss leaves a cache.` : '';
+}
+$('heroBtn').addEventListener('click', () => {
+  if (!heroPick && acct.keys < 1) { $('heroNote').hidden = false; $('heroNote').textContent = 'You need a vale key. Earn them every 3rd dungeon floor, every 3rd island and every 8th arena wave.'; return; }
+  heroPick = !heroPick; heroUi();
+});
 let campSel = null, campChar = null;
 const selItem = () => !campSel ? null : campSel.src === 'stash' ? acct.stash[campSel.i] : acct.chars[campSel.b] ? acct.chars[campSel.b].gear[campSel.slot] : null;
 const sitemHtml = (it, key, on) => `<button class="sitem${on ? ' on' : ''}" type="button" data-k="${key}"><b class="rar${it.rarity}">${it.name}</b><span>${it.slot === 'weapon' ? `${CLASSES[it.base].name} · ${it.sub}` : SLOT_NAME[it.slot]} · level ${it.level}${it.mods && it.mods.length ? ` · ${it.mods.length} mod${it.mods.length > 1 ? 's' : ''}` : ''}</span></button>`;
@@ -2524,7 +2560,7 @@ function renderCamp() {
   $('cSalv').textContent = acct.salvage;
   $('cIdle').innerHTML = `salvage. ${n >= 1 ? `Your camp gathered <b style="color:#ffd98a">${n}</b> more while you were away.` : 'Nothing gathered yet.'} It gathers ${rate} an hour, up to ${IDLE_CAP_H} hours' worth, and every class at level 5 or higher adds 2 an hour.`;
   $('cCollect').disabled = n < 1; $('cCollect').style.opacity = n < 1 ? 0.5 : 1;
-  $('cCores').textContent = acct.cores;
+  $('cCores').textContent = acct.cores; $('cMarks').textContent = acct.marks; $('cKeys').textContent = acct.keys;
   $('cChars').innerHTML = WEAPON_BASES.map(b => { const c = acct.chars[b]; return c ? `<button class="cchar${campChar === b ? ' on' : ''}" type="button" data-b="${b}"><b>${CLASSES[b].name}</b>Level ${c.level} · ${c.gear.weapon ? `<span class="rar${c.gear.weapon.rarity}">${c.gear.weapon.name}</span>` : b}<br>Floor ${c.best.dungeon} · island ${c.best.trail} · wave ${c.best.arena}</button>` : `<div class="cchar none"><b>${CLASSES[b].name}</b>Not played yet</div>`; }).join('');
   const C = campChar && acct.chars[campChar];
   $('cGearH').hidden = $('cGear').hidden = !C;
@@ -2635,11 +2671,15 @@ function startAs(base) {
   playerClass = base;
   gear.weapon = genItem(1, 0, 'weapon', { base, element: null, combo: 0 });
   const had = applyChar(base); charLive = true;
+  heroic = heroPick && selMode !== 'coop' && acct.keys > 0;
+  if (heroic) { acct.keys--; } else if (heroPick) { heroPick = false; }
+  document.body.classList.toggle('heroic', heroic);
   stats = computeStats(); player.hp = stats.maxHp; $('lvl').textContent = player.level;
   rebuildViewmodel(); updateGearHud(); renderSkillBar();
   started = true; $('startOv').hidden = true; audio(); if (AC && AC.resume) AC.resume();
   requestLock(); if (isTouch) $('touch').hidden = false;
   if (!had) pendingPicks = 1;
+  if (heroic) setTimeout(() => toast(`Heroic run<small>1 key used · tougher monsters, better drops, double rewards, a cache from every boss · ${acct.keys} key${acct.keys === 1 ? '' : 's'} left</small>`, 3), 2400);
   toast(had ? `${CLASSES[base].name} · level ${player.level}<small>Welcome back</small>` : `${CLASSES[base].name}<small>Pick your first Q skill: press 1 or 2</small>`, 2.2);
   const best = had ? acct.chars[base].best : null;
   if (selMode === 'coop') { if (!coop.host) coopGuestStart(); else if (coopKind === 'arena') { coop.kind = 'arena'; nextWave(); } else if (coopKind === 'trail') { coop.kind = 'trail'; enterTrail(1); } else { coop.kind = 'dungeon'; enterDungeon(1); } }
@@ -4548,9 +4588,11 @@ function killEnemy(e) {
   const dropChance = isBoss || e.elite ? 1 : e.type === 'brute' ? 0.3 : 0.09;
   if (Math.random() < dropChance || killsSinceDrop >= 14) {
     let r = rollRarity(isBoss, wave);
+    if (heroic && r < 4 && Math.random() < 0.5) r++;
     if (killsSinceDrop >= 14) r = Math.max(r, 1);
     if (!(r === 0 && Math.random() < 0.6)) { dropItem(genItem(e.level + (isBoss ? 1 : 0), r), e.pos); killsSinceDrop = 0; }
   }
+  if (isBoss && heroic) { for (let k = 0; k < 2; k++) dropItem(genItem(e.level + 1, Math.max(2, rollRarity(true, wave))), e.pos); award({ salvage: 15 + 3 * wave }, 'Heroic cache'); }
   if (isBoss) { if (Math.random() < 0.4) dropItem(genItem(e.level + 1, rollRarity(true, wave)), e.pos); $('boss').hidden = true; if (mode === 'dungeon') dungeonBossDown(e); else if (mode === 'trail') trailBossDown(e); }
   if (Math.random() < 0.22) dropOrb(e.pos);
   // torches turn up in the dungeon, trinkets out in the vale
@@ -4784,7 +4826,7 @@ function finishTome(t, msg) {
 $('choices').addEventListener('click', (e) => { const b = e.target.closest('.ccard'); if (b) pickTome(+b.dataset.i); });
 let wave = 0, kills = 0, waveDelay = -1, killsSinceDrop = 10;
 function nextWave(rs) {
-  wave++; noteBest('arena', wave - 1);
+  wave++; noteBest('arena', wave - 1); if (!rs) arenaMilestone(wave);
   const boss = wave % 4 === 0;
   const n = 4 + Math.floor(wave * 2.5);
   let i = 0;
@@ -4832,7 +4874,7 @@ function clearWorld() {
 }
 function resetRun() {
   if (started && playerClass) persist();
-  runId++; runFloor = 0; charLive = false;
+  runId++; runFloor = 0; charLive = false; heroic = false; document.body.classList.remove('heroic');
   clearWorld();
   setMode('arena');
   for (const k in buffs) delete buffs[k];
@@ -5190,7 +5232,7 @@ function enterDungeon(depth, seed) {
   const carry = tomes.length > 0; clearWorld(); if (carry) pendingPicks++;
   setMode('dungeon');
   const L = buildDungeon(depth);
-  if (runFloor && depth === runFloor + 1) gainCores(1 + Math.floor((depth - 1) / 3));
+  if (runFloor && depth === runFloor + 1) award({ cores: 1 + Math.floor((depth - 1) / 3), keys: (depth - 1) % 3 === 0 ? 1 : 0 }, 'Floor cleared. Cores empower gear at the crafting bench');
   runFloor = depth;
   DG.depth = depth; noteBest('dungeon', depth); DG.bossStarted = false; DG.boss = null; DG.stairs = null; DG.gateMeshes = []; DG.flowAt = -1; DG.goal = 'Find the boss chamber';
   wave = 1 + (depth - 1) * 2; waveDelay = -1; pending = 999;
@@ -5491,6 +5533,9 @@ function trailCampfire(c, quiet) {
   const n = 5 + 2 * TR.n; trailHorde(n, 1, true); trailHorde(n, -1, true);
 }
 function trailBossDown(e) {
+  award({ salvage: 8 + 4 * TR.n, keys: TR.n % 3 === 0 ? 1 : 0 }, `Island ${TR.n} taken. Salvage pays for crafting`);
+  // the trail is where gear for your own class turns up
+  if (e) dropItem(genItem(e.level, Math.max(1, rollRarity(false, wave + 4)), 'weapon', { own: true }), e.pos);
   TR.bossDone = true; TR.boss = null; TR.goal = 'Step into the light to sail on';
   addTemp(null, 1.4, null, () => {
     if (mode !== 'trail' || !TR.group) return;
@@ -5724,7 +5769,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 30;
+const NET_VER = 31;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
@@ -5950,6 +5995,7 @@ function coopWave(d) {
   if (d.rs || w < wave || first) { for (const e of enemies) { scene.remove(e.parts.g); e.bar.remove(); } enemies.length = 0; c.snap = null; }
   if (!first && !d.sync && w > wave) { const gone = sweepLoot(); if (gone) toast(`${gone} item${gone > 1 ? 's' : ''} faded away`, 1.6); player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * 0.3); }
   const changed = w !== wave;
+  if (!first && !d.rs && !d.sync && w === wave + 1) arenaMilestone(w);
   wave = w; arenaTheme(wave, first);
   c.bossName = typeof d.bn === 'string' ? d.bn.slice(0, 40) : '';
   if (c.bossName) { $('boss').hidden = false; $('bossName').textContent = c.bossName; } else $('boss').hidden = true;
@@ -6752,6 +6798,6 @@ updateGearHud();
 frame();
 
 // debug hook for testing
-window.__vale = { get hexes() { return hexes.length; }, TR, trailNear, enterTrail, trailBossDown, get coop() { return coop; }, bossStart, coopAllyHere, showCard, toggleSheet, hurtPlayer, tryDash, strike, statLines, MODS, rollMods, get orbitOrbs() { return orbitOrbs.length; }, SIGS, sigState, get pendingSig() { return pendingSig; }, POSES, buffs, get playerHp() { return player.hp; }, get weaponObj() { return weaponObj; }, get hand() { return hand; }, killEnemy, DG, enterDungeon, descend, get mode() { return mode; }, resetRun, setPaused, get wave() { return wave; }, tomes, useNear, pickTome, takeTome, makeChoices, rankExtra, POOLS, RANKFX, UNLOCK, SKICON, get choicesShown() { return choicesShown; }, SKILLS, get swing() { return swing; }, SIG, trySurge, boltShot, startAs, skillSlots, xpNext, castLearned, choose, replaceSlot, get choosing() { return choosing; }, gainXp, COMBOS, sweepLoot, gear, genItem, dropItem, player, enemies, loots, spawnEnemy, get stats() { return stats; }, tryEquip, startSwing, castSkill, performAttack, equip(it) { gear[it.slot] = it; stats = computeStats(); rebuildViewmodel(); updateGearHud(); } };
+window.__vale = { get hexes() { return hexes.length; }, nextWave, get acct() { return acct; }, TR, trailNear, enterTrail, trailBossDown, get coop() { return coop; }, bossStart, coopAllyHere, showCard, toggleSheet, hurtPlayer, tryDash, strike, statLines, MODS, rollMods, get orbitOrbs() { return orbitOrbs.length; }, SIGS, sigState, get pendingSig() { return pendingSig; }, POSES, buffs, get playerHp() { return player.hp; }, get weaponObj() { return weaponObj; }, get hand() { return hand; }, killEnemy, DG, enterDungeon, descend, get mode() { return mode; }, resetRun, setPaused, get wave() { return wave; }, tomes, useNear, pickTome, takeTome, makeChoices, rankExtra, POOLS, RANKFX, UNLOCK, SKICON, get choicesShown() { return choicesShown; }, SKILLS, get swing() { return swing; }, SIG, trySurge, boltShot, startAs, skillSlots, xpNext, castLearned, choose, replaceSlot, get choosing() { return choosing; }, gainXp, COMBOS, sweepLoot, gear, genItem, dropItem, player, enemies, loots, spawnEnemy, get stats() { return stats; }, tryEquip, startSwing, castSkill, performAttack, equip(it) { gear[it.slot] = it; stats = computeStats(); rebuildViewmodel(); updateGearHud(); } };
 })();
 </script>
