@@ -336,7 +336,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button><button class="mbtn kb" type="button" data-k="trail">Island</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 27</div>
+      <div id="coopDiag">Version 28</div>
     </div>
     <div class="classes" id="classes"></div>
     <details class="ctlwrap"><summary>Controls</summary><div class="controls">
@@ -663,6 +663,10 @@ const NAMES = {
   dagger: ['Shiv', 'Dirk', 'Stiletto', 'Kris', 'Fang'],
   flail: ['Chain Flail', 'Iron Flail', 'Spiked Flail', 'Morning Flail', 'Scourge'],
   wand: ['Twig Wand', 'Ashwood Wand', 'Crystal Wand', 'Rune Wand', 'Arch Wand'],
+  javelin: ['Sharpened Stick', 'Javelin', 'Barbed Javelin', 'Runed Javelin', 'Skylance'],
+  staff: ['Gnarled Staff', 'Oak Staff', 'Battle Staff', 'Rune Staff', 'Archstaff'],
+  bow: ['Shortbow', 'Hunting Bow', 'Longbow', 'Rune Bow', 'Warbow'],
+  claws: ['Bone Claws', 'Iron Claws', 'Tiger Claws', 'Rune Claws', 'Talons'],
   gloves: ['Worn Wraps', 'Leather Gloves', 'Chain Gauntlets', 'Plate Gauntlets', 'Gauntlets'],
   bracelet: ['Copper Band', 'Silver Bracelet', 'Runed Bracer', 'Warded Bangle', 'Bracelet'],
   ring: ['Iron Ring', 'Silver Ring', 'Signet', 'Seal', 'Ring'],
@@ -681,6 +685,10 @@ const UNIQUE = {
   spear: { fire: 'Sunpiercer', frost: 'Icicle of Hel', lightning: 'Wrath of the Sky', void: 'Widowmaker' },
   dagger: { fire: 'Kindling', frost: 'Splinter of Winter', lightning: 'Sparkfang', void: 'Last Whisper' },
   flail: { fire: 'Pyre Chain', frost: 'Hailbringer', lightning: 'Thundercoil', void: 'The Undertow' },
+  javelin: { fire: 'Sunspear', frost: 'Hailspike', lightning: 'Skyfall Lance', void: 'Nightfall Lance' },
+  staff: { fire: 'Pyrestaff of Ashara', frost: 'Winterheart', lightning: 'Stormspire', void: 'Staff of the Hollow' },
+  bow: { fire: 'Phoenix Wing', frost: 'Rimestring', lightning: 'Thunderstring', void: "Widow's Sigh" },
+  claws: { fire: 'Cinderclaws', frost: 'Frostfang Talons', lightning: 'Stormtalons', void: 'Grasp of the Abyss' },
   wand: { fire: 'Phoenix Quill', frost: 'Rimewhisper', lightning: 'Thunderquill', void: 'Gloomspire' },
   bracelet: { fire: 'Band of the Phoenix', frost: "Ymir's Clasp", lightning: 'Stormlace', void: 'Shackle of the Hollow' },
   ring: { fire: 'Ember Heart', frost: 'Tear of Ymir', lightning: 'Eye of the Storm', void: 'The Hollow Crown' },
@@ -694,6 +702,10 @@ const BASES = {
   dagger: { dmg: [4, 7], aps: 1.95, reach: 2.3 },
   flail: { dmg: [12, 19], aps: 0.95, reach: 3.1 },
   wand: { dmg: [6, 10], aps: 1.25, reach: 2.4 },
+  javelin: { dmg: [9, 14], aps: 1.05, reach: 3.0 },
+  staff: { dmg: [8, 13], aps: 1.0, reach: 3.2 },
+  bow: { dmg: [7, 11], aps: 1.3, reach: 2.4 },
+  claws: { dmg: [4, 7], aps: 1.9, reach: 2.2 },
   shield: { dmg: [9, 14], aps: 1.1, reach: 2.6 },
 };
 const WEAPON_BASES = Object.keys(BASES);
@@ -802,6 +814,26 @@ const COMBOS = {
     { name: 'Nova', desc: 'Two bolts, then a burst that blasts everything around you', steps: [{ pose: 'flick', a: 'bolt' }, { pose: 'flick2', a: 'bolt' }, { pose: 'slam', a: 'nova', m: 1.4 }] },
     { name: 'Lance', desc: 'Beams that cut through every enemy in a line, then a huge one', steps: [{ pose: 'thrust', a: 'beam' }, { pose: 'jab2', a: 'beam' }, { pose: 'thrust', a: 'beam', m: 1.8, big: true }] },
   ],
+  javelin: [
+    { name: 'Hunter', desc: 'Hurl two javelins, then a heavy one that bursts where it lands', steps: [{ pose: 'hurl', a: 'jav' }, { pose: 'hurl', a: 'jav' }, { pose: 'hurl', a: 'jav', m: 1.5, boom: 3 }] },
+    { name: 'Harrier', desc: 'Two quick stabs that skewer a line of enemies, then a fan of three javelins', steps: [{ pose: 'thrust', a: 'line' }, { pose: 'jab2', a: 'line' }, { pose: 'hurl', a: 'javs', m: 0.9 }] },
+    { name: 'Thunderlance', desc: 'Two javelins that pierce everything in their path, then a giant lance that lands like a thunderbolt', steps: [{ pose: 'hurl', a: 'jav', m: 0.85, pierce: true }, { pose: 'hurl', a: 'jav', m: 0.85, pierce: true }, { pose: 'hurl', a: 'bigjav', m: 1.8 }] },
+  ],
+  staff: [
+    { name: 'Battlemage', desc: 'Two sweeping staff strikes, then a slam that bursts out around you', steps: [{ pose: 'c0', a: 'arc', cos: 0, reach: 0.3 }, { pose: 'c1', a: 'arc', cos: 0, reach: 0.3 }, { pose: 'slam', a: 'nova', m: 1.5 }] },
+    { name: 'Pyromancer', desc: 'Two orbs that explode on impact, then a fan of three', steps: [{ pose: 'cast', a: 'orb' }, { pose: 'cast', a: 'orb' }, { pose: 'cast', a: 'orbs', m: 0.8 }] },
+    { name: 'Stormcaller', desc: 'Two lightning bolts that leap to the nearest enemies, then a pillar of light from the sky', steps: [{ pose: 'cast', a: 'zap' }, { pose: 'cast', a: 'zap' }, { pose: 'slam', a: 'smite', m: 2 }] },
+  ],
+  bow: [
+    { name: 'Marksman', desc: 'Two arrows, then a fully drawn shot that pierces everything and often crits', steps: [{ pose: 'draw', a: 'arrow' }, { pose: 'draw', a: 'arrow' }, { pose: 'draw', a: 'arrow', m: 2.2, crit: 30, pierce: true, big: true, dur: 1.2 }] },
+    { name: 'Volley', desc: 'Two arrows, then a spread of five', steps: [{ pose: 'draw', a: 'arrow' }, { pose: 'draw', a: 'arrow' }, { pose: 'draw', a: 'arrows', m: 0.75 }] },
+    { name: 'Fleetfoot', desc: 'Two quick arrows, then a backflip and an arrow that explodes', steps: [{ pose: 'draw', a: 'arrow', dur: 0.8 }, { pose: 'draw', a: 'arrow', dur: 0.8 }, { pose: 'draw', a: 'flip', m: 1.6 }] },
+  ],
+  claws: [
+    { name: 'Ripper', desc: 'Two raking slashes, then a flurry of four', steps: [{ pose: 'c0', a: 'arc', crit: 5 }, { pose: 'c1', a: 'arc', crit: 5 }, { pose: 'flurry', a: 'arc', m: 0.55, cos: 0.5, crit: 15, hits: [0.32, 0.42, 0.52, 0.62] }] },
+    { name: 'Tiger', desc: 'A jab, an uppercut that launches enemies, then a pouncing slam', steps: [{ pose: 'stab', a: 'arc', cos: 0.5, crit: 10 }, { pose: 'c2b', a: 'launch', m: 1.1 }, { pose: 'slam', a: 'leap', m: 1.6 }] },
+    { name: 'Wolf', desc: 'Two slashes that make enemies bleed, then a spinning rake that hits twice', steps: [{ pose: 'c0', a: 'arc', bleed: 0.3 }, { pose: 'c1', a: 'arc', bleed: 0.3 }, { pose: 'spin', a: 'spin', m: 0.8, hits: [0.38, 0.6] }] },
+  ],
   shield: [
     { name: 'Vanguard', desc: 'Two stunning bashes, then a shield charge that bowls through enemies', steps: [{ pose: 'thrust', a: 'arc', stun: 0.5, cos: 0.3 }, { pose: 'jab2', a: 'arc', stun: 0.5, cos: 0.3 }, { pose: 'thrust', a: 'lunge', m: 1.6 }] },
     { name: 'Bastion', desc: 'A bash, a wide shove, then a slam that sends a stunning shockwave', steps: [{ pose: 'thrust', a: 'arc', m: 1.1, stun: 0.6, cos: 0.3 }, { pose: 'c0', a: 'arc', cos: -0.2 }, { pose: 'slam', a: 'shock', m: 1.8, r: 3.6, stun: 1.2 }] },
@@ -819,6 +851,8 @@ const SUB = {
   sword: ['Rapier', 'Scimitar', 'Falchion'], axe: ['War Axe', 'Twin Axe', 'Throwing Axe'], mace: ['Warhammer', 'Morningstar', 'Bell Mace'],
   spear: ['Pike', 'Dragoon Lance', 'Javelin'], dagger: ['Stiletto', 'Shadow Knife', 'Kris'], flail: ['Ball and Chain', 'Chain Scourge', 'Wrecking Flail'],
   wand: ['Ashwood Wand', 'Crystal Scepter', 'Rune Rod'],
+  javelin: ['Hunting Javelin', 'Skirmish Javelin', 'Thunder Javelin'], staff: ['Battle Staff', 'Ember Staff', 'Storm Staff'],
+  bow: ['Longbow', 'Recurve Bow', 'Hunting Bow'], claws: ['Feral Claws', 'Tiger Fists', 'Wolf Claws'],
   shield: ['Buckler', 'Tower Shield', 'Spiked Aegis'],
 };
 const CLASSES = {
@@ -829,6 +863,10 @@ const CLASSES = {
   dagger: { name: 'Assassin', blurb: 'Crits, shadowsteps and smoke' },
   flail: { name: 'Warden', blurb: 'Hooks, whirls and iron skin' },
   wand: { name: 'Magus', blurb: 'Bolts, novas and chain lightning' },
+  javelin: { name: 'Skirmisher', blurb: 'Thrown javelins and hit-and-run' },
+  staff: { name: 'Archmage', blurb: 'Fireballs, frozen orbs and meteors' },
+  bow: { name: 'Ranger', blurb: 'Arrows, volleys and rains of arrows' },
+  claws: { name: 'Feral', blurb: 'Fast claws, bleeding and pounces' },
   shield: { name: 'Sentinel', blurb: 'Shield bashes, blocks and charges' },
 };
 let playerClass = null;
@@ -880,6 +918,19 @@ const SKILLS = {
   shieldwall: { name: 'Shield Wall', cd: 9, pose: 'surge', col: 0xffe6a0, desc: (l) => `Raise your shield for ${(2.5 + 0.3 * l).toFixed(1)}s. You block every hit and shove the attacker back` },
   bulwark: { name: 'Bulwark', cd: 18, pose: 'slam', col: 0xffd66a, desc: (l) => `Plant your shield and raise a dome around you for ${4 + l}s. Enemies are pushed out of it and you take ${40 + 4 * l}% less damage` },
   smoke: { name: 'Smoke Bomb', cd: 15, pose: 'c0', col: 0x6a6a7a, desc: (l) => `Vanish in smoke: you can't be hit for ${(1.5 + 0.2 * l).toFixed(1)}s and nearby enemies are dazed for ${(2 + 0.3 * l).toFixed(1)}s` },
+  splitjav: { name: 'Splitting Javelin', cd: 7, pose: 'hurl', col: 0xe0d0a0, desc: (l) => `Hurl a javelin for ${pctTxt(1.6 + 0.3 * l)} weapon damage that splits into ${3 + Math.ceil(l / 2)} more when it hits, each dealing ${pctTxt(0.6 + 0.12 * l)}` },
+  harpoon: { name: 'Harpoon', cd: 8, pose: 'hurl', col: 0xb8c0c8, desc: (l) => `Throw a barbed javelin on a chain for ${pctTxt(1.4 + 0.3 * l)} weapon damage. It drags the enemy it hits to you and stuns it for ${(1 + 0.2 * l).toFixed(1)}s` },
+  javrain: { name: 'Javelin Rain', cd: 12, pose: 'hurl', col: 0xffe8b0, desc: (l) => `Hurl a javelin into the sky. ${6 + 2 * l} javelins rain down on the enemies around you, each blasting for ${pctTxt(0.9 + 0.2 * l)} weapon damage` },
+  fireball: { name: 'Fireball', cd: 5, pose: 'cast', col: 0xff6a1a, desc: (l) => `Hurl a fireball that explodes for ${pctTxt(2 + 0.4 * l)} weapon damage in a ${(2.6 + 0.2 * l).toFixed(1)} m blast and sets the ground on fire` },
+  frozenorb: { name: 'Frozen Orb', cd: 8, pose: 'cast', col: 0x8fe4ff, desc: (l) => `A slow orb of ice drifts forward spraying ${8 + 2 * l} shards a second, each dealing ${pctTxt(0.35 + 0.08 * l)} weapon damage and slowing, then bursts` },
+  manashield: { name: 'Mana Shield', cd: 16, pose: 'surge', col: 0x7ab0ff, desc: (l) => `A shell of arcane force: take ${35 + 5 * l}% less damage for ${5 + l}s. When it ends it bursts for ${pctTxt(1.2 + 0.25 * l)} weapon damage` },
+  multishot: { name: 'Multishot', cd: 5, pose: 'draw', col: 0xe8dcc0, desc: (l) => `Loose ${5 + l} arrows in a wide spread, each dealing ${pctTxt(0.7 + 0.15 * l)} weapon damage` },
+  powershot: { name: 'Power Shot', cd: 7, pose: 'draw', col: 0xfff0d0, desc: (l) => `A fully drawn arrow that pierces everything in its path for ${pctTxt(2.4 + 0.45 * l)} weapon damage and knocks enemies back` },
+  explarrow: { name: 'Explosive Arrow', cd: 6, pose: 'draw', col: 0xff7a2a, desc: (l) => `An arrow that explodes on impact for ${pctTxt(1.8 + 0.35 * l)} weapon damage in a ${(2.8 + 0.2 * l).toFixed(1)} m blast` },
+  disengage: { name: 'Disengage', cd: 7, pose: 'draw', col: 0xc8e0a0, desc: (l) => `Leap back out of reach, loosing ${3 + Math.ceil(l / 2)} arrows as you go for ${pctTxt(0.9 + 0.2 * l)} weapon damage each. Enemies near where you stood are slowed` },
+  arrowrain: { name: 'Rain of Arrows', cd: 12, pose: 'draw', col: 0xe8dcc0, desc: (l) => `Arrows pour down on the area ahead for 3s, hitting everything inside for ${pctTxt(0.4 + 0.1 * l)} weapon damage every quarter second and slowing it` },
+  maul: { name: 'Maul', cd: 6, pose: 'flurry', col: 0xd03030, desc: (l) => `Rake the enemy in front of you ${4 + Math.ceil(l / 2)} times for ${pctTxt(0.6 + 0.12 * l)} weapon damage each. Every hit makes it bleed` },
+  pounce: { name: 'Pounce', cd: 7, pose: 'slam', col: 0xd8a860, desc: (l) => `Leap onto the nearest enemy within ${10 + l} m and rip into it for ${pctTxt(2 + 0.4 * l)} weapon damage, stunning everything where you land` },
 };
 // Each key has a job. Q: main attack skill. E: movement or defense. R: ultimate with a long cooldown.
 const POOLS = {
@@ -890,6 +941,10 @@ const POOLS = {
   dagger: { Q: ['fan', 'execute', 'rend', 'shuriken'], E: ['shadowstep', 'smoke', 'blink'], R: ['poison', 'deathmark', 'bloodlust'] },
   flail: { Q: ['quake', 'groundslam', 'sweep', 'judgment'], E: ['ironskin', 'leap', 'charge'], R: ['pull', 'whirlwind', 'consecrate'] },
   wand: { Q: ['barrage', 'iceshards', 'chainlightning', 'flamewave'], E: ['blink', 'frostnova', 'voidrift'], R: ['meteor', 'thunderstorm', 'blizzard'] },
+  javelin: { Q: ['volley', 'splitjav', 'harpoon', 'impale'], E: ['vault', 'charge', 'leap'], R: ['javrain', 'warcry', 'frenzy'] },
+  staff: { Q: ['fireball', 'frozenorb', 'chainlightning', 'flamewave'], E: ['blink', 'frostnova', 'manashield'], R: ['meteor', 'blizzard', 'thunderstorm'] },
+  bow: { Q: ['multishot', 'powershot', 'explarrow'], E: ['disengage', 'smoke', 'vault'], R: ['arrowrain', 'deathmark', 'frenzy'] },
+  claws: { Q: ['rend', 'maul', 'execute', 'fan'], E: ['pounce', 'shadowstep', 'smoke'], R: ['frenzy', 'bloodlust', 'rampage'] },
   shield: { Q: ['shieldbash', 'shieldthrow', 'groundslam', 'judgment'], E: ['shieldwall', 'charge', 'riposte'], R: ['bulwark', 'warcry', 'aura'] },
 };
 const UNLOCK = { Q: 1, E: 3, R: 6 };
@@ -945,6 +1000,19 @@ const RANKFX = {
   shieldthrow: ['+2 bounces', 'Every hit stuns for 1.5s'],
   shieldwall: ['Ends in a blast that grows with every hit blocked', 'Each blocked hit heals 4%'],
   bulwark: ['Enemies at the edge burn', 'Heals 30% when it ends'],
+  splitjav: ['+2 split javelins', 'The splits split once more'],
+  harpoon: ['Drags every enemy it passes through', 'Ends with a shockwave at your feet'],
+  javrain: ['+6 javelins', 'Every javelin stuns'],
+  fireball: ['Two more fireballs to the sides', 'Leaves a wide ring of fire'],
+  frozenorb: ['Freezes everything when it bursts', 'A second orb follows'],
+  manashield: ['Heals 20% of your health', 'The burst freezes enemies'],
+  multishot: ['A second volley follows', 'Arrows pierce'],
+  powershot: ['Stuns everything it hits', 'A second shot follows'],
+  explarrow: ['Leaves the ground burning', 'Three more blasts scatter around it'],
+  disengage: ['Resets your dash', 'Leaves an explosive trap behind'],
+  arrowrain: ['Lasts twice as long', 'A second rain falls on the nearest enemy'],
+  maul: ['Bleeding is twice as strong', 'Ends with a roar that stuns'],
+  pounce: ['Resets your dash', 'Lands with a shockwave'],
 };
 // Inline SVG icons. Each skill maps to a glyph.
 const ICONS = {
@@ -987,9 +1055,11 @@ const ICONS = {
   disc: '<circle cx="14" cy="12" r="6"/><circle cx="14" cy="12" r="2"/><path d="M2 8h5M2 12h4M2 16h5"/>',
   wall: '<path d="M12 3 20 6v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/><path d="M8 11h8M8 15h8M12 7v12"/>',
   dome: '<path d="M3 19a9 9 0 0 1 18 0z"/><path d="M12 14v5M9 16l3-2 3 2"/>',
+  bow: '<path d="M6 3c8 3 8 15 0 18"/><path d="M6 3v18M3 12h17M17 9l3 3-3 3"/>',
+  paw: '<circle cx="12" cy="16" r="4"/><circle cx="5.5" cy="10" r="2"/><circle cx="9.5" cy="5.5" r="2"/><circle cx="14.5" cy="5.5" r="2"/><circle cx="18.5" cy="10" r="2"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
 };
-const SKICON = { whirlwind: 'spin', rampage: 'spin', sweep: 'spin', fan: 'fan', charge: 'charge', execute: 'execute', warcry: 'shout', leap: 'leap', bloodlust: 'drop', quake: 'quake', groundslam: 'hammer', consecrate: 'sun', aura: 'sun', judgment: 'pillar', ironskin: 'shield', riposte: 'parry', secondwind: 'heart', volley: 'javelins', vault: 'javelins', impale: 'spear', pull: 'chain', shadowstep: 'ghost', smoke: 'smoke', flamewave: 'flame', meteor: 'meteor', frostnova: 'snow', blizzard: 'snow', chainlightning: 'bolt', thunderstorm: 'bolt', voidrift: 'vortex', rend: 'claw', crescent: 'crescent', bladestorm: 'blades', frenzy: 'frenzy', axethrow: 'axe', poison: 'vial', deathmark: 'target', shuriken: 'shuriken', barrage: 'missiles', iceshards: 'shards', blink: 'blink', shieldbash: 'bash', shieldthrow: 'disc', shieldwall: 'wall', bulwark: 'dome' };
+const SKICON = { whirlwind: 'spin', rampage: 'spin', sweep: 'spin', fan: 'fan', charge: 'charge', execute: 'execute', warcry: 'shout', leap: 'leap', bloodlust: 'drop', quake: 'quake', groundslam: 'hammer', consecrate: 'sun', aura: 'sun', judgment: 'pillar', ironskin: 'shield', riposte: 'parry', secondwind: 'heart', volley: 'javelins', vault: 'javelins', impale: 'spear', pull: 'chain', shadowstep: 'ghost', smoke: 'smoke', flamewave: 'flame', meteor: 'meteor', frostnova: 'snow', blizzard: 'snow', chainlightning: 'bolt', thunderstorm: 'bolt', voidrift: 'vortex', rend: 'claw', crescent: 'crescent', bladestorm: 'blades', frenzy: 'frenzy', axethrow: 'axe', poison: 'vial', deathmark: 'target', shuriken: 'shuriken', barrage: 'missiles', iceshards: 'shards', blink: 'blink', shieldbash: 'bash', shieldthrow: 'disc', shieldwall: 'wall', bulwark: 'dome', splitjav: 'javelins', harpoon: 'chain', javrain: 'javelins', fireball: 'flame', frozenorb: 'snow', manashield: 'shield', multishot: 'fan', powershot: 'bow', explarrow: 'meteor', disengage: 'leap', arrowrain: 'bow', maul: 'claw', pounce: 'paw' };
 const hexOf = (c) => '#' + new T.Color(c).getHexString();
 const iconSvg = (id, col) => `<svg viewBox="0 0 24 24" aria-hidden="true" style="color:${col || hexOf(SKILLS[id].col)}">${ICONS[SKICON[id] || id] || ICONS.blink}</svg>`;
 
@@ -1021,12 +1091,12 @@ function genItem(level, rarity, slot, opts = {}) {
     it.combo = opts.combo !== undefined ? opts.combo : randi(0, 2);
     const B = BASES[it.base];
     it.element = opts.element !== undefined ? opts.element : (rarity === 0 ? null : (rarity >= 3 || Math.random() < 0.7 ? pick(ELEMS) : null));
-    if (it.base === 'wand' && !it.element) it.element = pick(ELEMS);
+    if ((it.base === 'wand' || it.base === 'staff') && !it.element) it.element = pick(ELEMS);
     const roll = rand(0.92, 1.1);
     s.min = Math.round(B.dmg[0] * tier * rm * roll);
     s.max = Math.round(B.dmg[1] * tier * rm * roll);
     s.aps = +(B.aps * (1 + 0.03 * rarity)).toFixed(2);
-    s.crit = Math.round(4 + rarity * 1.5 + rand(0, 2)) + (it.base === 'dagger' ? 6 : 0);
+    s.crit = Math.round(4 + rarity * 1.5 + rand(0, 2)) + (it.base === 'dagger' ? 6 : it.base === 'claws' ? 5 : 0);
     s.elem = it.element ? Math.round((s.min + s.max) / 2 * (0.25 + 0.14 * rarity)) : 0;
     s.reach = +(B.reach + rarity * 0.12).toFixed(2);
     if (rarity >= 2 && Math.random() < 0.6) s.critDmg = Math.round(rand(10, 20) * rarity / 2);
@@ -1100,6 +1170,7 @@ function computeStats(g = gear) {
     if (buffs.ironskin) st.armor = Math.min(85, st.armor + buffs.ironskin.armor);
     if (buffs.aura) st.armor = Math.min(85, st.armor + buffs.aura.armor);
     if (buffs.bulwark) st.armor = Math.min(85, st.armor + buffs.bulwark.armor);
+    if (buffs.mana) st.armor = Math.min(85, st.armor + buffs.mana.armor);
     st.leech = (buffs.bloodlust ? buffs.bloodlust.leech : 0) + (buffs.frenzy && buffs.frenzy.leech ? buffs.frenzy.leech : 0) + (mods.leech || 0) / 100 + (buffs.bloodflame ? buffs.bloodflame.leech : 0);
   }
   st.dps = ((st.min + st.max) / 2 * (1 + st.crit / 100 * (st.critMult - 1)) + st.elem + st.proc * st.procDmg) * st.aps;
@@ -1141,11 +1212,11 @@ function buildWeapon(it) {
     const m = new T.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m); return m;
   };
   // grip & pommel
-  const gripLen = it.base === 'sword' ? 0.2 : 0.22;
-  add(new T.CylinderGeometry(0.022, 0.025, gripLen, 6), leather, 0, 0, 0);
-  if (r >= 2) for (let i = 0; i < 3; i++) add(new T.TorusGeometry(0.026, 0.006, 4, 8), trim, 0, -0.06 + i * 0.06, 0, Math.PI / 2);
-  const pom = add(r >= 3 ? new T.OctahedronGeometry(0.04 + r * 0.004) : new T.SphereGeometry(0.034, 6, 4), trim, 0, -gripLen / 2 - 0.03, 0);
-  if (r >= 3) { const gem = add(new T.OctahedronGeometry(0.022), runeMat, 0, -gripLen / 2 - 0.03, 0); gem.scale.y = 1.4; }
+  const gripLen = it.base === 'sword' ? 0.2 : 0.22, noPom = it.base === 'bow' || it.base === 'claws';
+  if (it.base !== 'claws') add(new T.CylinderGeometry(0.022, 0.025, gripLen, 6), leather, 0, 0, 0);
+  if (r >= 2 && it.base !== 'claws') for (let i = 0; i < 3; i++) add(new T.TorusGeometry(0.026, 0.006, 4, 8), trim, 0, -0.06 + i * 0.06, 0, Math.PI / 2);
+  if (!noPom) add(r >= 3 ? new T.OctahedronGeometry(0.04 + r * 0.004) : new T.SphereGeometry(0.034, 6, 4), trim, 0, -gripLen / 2 - 0.03, 0);
+  if (r >= 3 && !noPom) { const gem = add(new T.OctahedronGeometry(0.022), runeMat, 0, -gripLen / 2 - 0.03, 0); gem.scale.y = 1.4; }
   let tipY = 1, baseY = 0.3;
 
   if (it.base === 'sword') {
@@ -1250,6 +1321,58 @@ function buildWeapon(it) {
     if (r >= 2) for (let i = 0; i < 2; i++) add(new T.TorusGeometry(0.019, 0.005, 4, 8), trim, 0, gripLen / 2 + 0.04 + i * 0.08, 0, Math.PI / 2);
     if (r >= 3) add(new T.TorusGeometry(cs * 1.7, 0.004, 4, 16), new T.MeshBasicMaterial({ color: ec, transparent: true, opacity: 0.7, blending: T.AdditiveBlending, depthWrite: false }), 0, hy + 0.05, 0, Math.PI / 2);
     tipY = hy + 0.05 + cs * 1.8; baseY = hy - 0.04;
+  } else if (it.base === 'javelin') {
+    const shaft = 0.95 + r * 0.05, y0 = -0.32;
+    add(new T.CylinderGeometry(0.014, 0.017, shaft, 6), phong(r >= 3 ? 0x2a2028 : 0x7a5a32, { shininess: 8 }), 0, y0 + shaft / 2, 0);
+    const hy = y0 + shaft, hl = 0.2 + r * 0.03, hw = 0.03 + r * 0.004;
+    const head = add(new T.CylinderGeometry(0.002, hw, hl, 4), metal, 0, hy + hl / 2, 0, 0, Math.PI / 4, 0); head.scale.z = 0.35;
+    add(new T.CylinderGeometry(0.02, 0.016, 0.05, 6), trim, 0, hy, 0);
+    if (r >= 2) for (const sd of [-1, 1]) add(new T.ConeGeometry(0.01, 0.07, 4), trim, sd * 0.03, hy + 0.03, 0, 0, 0, -sd * 1.0);
+    if (el && r >= 1) add(new T.BoxGeometry(hw * 0.4, hl * 0.6, 0.016), new T.MeshBasicMaterial({ color: ec, transparent: true, opacity: 0.4 + r * 0.12 }), 0, hy + hl * 0.4, 0);
+    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; add(new T.BoxGeometry(0.003, 0.1, 0.035), phong(r >= 3 ? 0xc02030 : 0xd8d0c0), Math.cos(a) * 0.018, y0 + 0.06, Math.sin(a) * 0.018, 0, -a, 0); }
+    if (r >= 3) add(new T.OctahedronGeometry(0.02), runeMat, 0, hy - 0.04, 0.02);
+    tipY = hy + hl; baseY = hy - 0.2;
+  } else if (it.base === 'staff') {
+    const shaft = 1.45 + r * 0.06, y0 = -0.5;
+    add(new T.CylinderGeometry(0.02, 0.026, shaft, 6), phong(r >= 3 ? 0x2a2028 : 0x5a3a22, { shininess: 8 }), 0, y0 + shaft / 2, 0);
+    const hy = y0 + shaft;
+    add(new T.CylinderGeometry(0.034, 0.024, 0.08, 6), trim, 0, hy, 0);
+    const np = 3 + Math.min(r, 2);
+    for (let i = 0; i < np; i++) { const a = i / np * Math.PI * 2; add(new T.ConeGeometry(0.012, 0.16 + r * 0.015, 4), trim, Math.cos(a) * 0.045, hy + 0.08, Math.sin(a) * 0.045, Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4); }
+    const cs = 0.05 + r * 0.008;
+    const cry = add(new T.OctahedronGeometry(cs), new T.MeshBasicMaterial({ color: el ? ec : 0xdfe8ff }), 0, hy + 0.12, 0); cry.scale.y = 1.6;
+    if (r >= 2) add(new T.TorusGeometry(cs * 1.9, 0.005, 4, 18), new T.MeshBasicMaterial({ color: el ? ec : 0xfff2d0, transparent: true, opacity: 0.7, blending: T.AdditiveBlending, depthWrite: false }), 0, hy + 0.12, 0, Math.PI / 2);
+    if (r >= 1) for (let i = 0; i < 2; i++) add(new T.TorusGeometry(0.025, 0.006, 4, 8), trim, 0, hy - 0.2 - i * 0.12, 0, Math.PI / 2);
+    add(new T.ConeGeometry(0.024, 0.06, 5), trim, 0, y0 - 0.02, 0, Math.PI, 0, 0);
+    tipY = hy + 0.12 + cs * 1.6; baseY = hy - 0.1;
+  } else if (it.base === 'bow') {
+    // limbs run up and down from the grip and curve back toward you; the string and a nocked arrow sit behind the grip
+    const H = 0.36 + r * 0.03, back = 0.1;
+    const wood = phong(r >= 3 ? 0x2a2028 : 0x6a4422, { shininess: 10 });
+    const curve = new T.QuadraticBezierCurve3(new T.Vector3(0, -H, back), new T.Vector3(0, 0, -back * 1.2), new T.Vector3(0, H, back));
+    g.add(new T.Mesh(new T.TubeGeometry(curve, 16, 0.016 + r * 0.002, 5, false), wood));
+    if (r >= 1) for (const sd of [-1, 1]) add(new T.TorusGeometry(0.02, 0.005, 4, 8), trim, 0, sd * 0.14, -0.02, Math.PI / 2);
+    for (const sd of [-1, 1]) add(new T.ConeGeometry(0.014, 0.05, 4), trim, 0, sd * (H + 0.015), back, sd > 0 ? 0 : Math.PI, 0, 0);
+    add(new T.CylinderGeometry(0.0025, 0.0025, 2 * H, 3), new T.MeshBasicMaterial({ color: el && r >= 1 ? ec : 0xf0e8d0 }), 0, 0, back);
+    const arrow = new T.Group(); arrow.position.set(0.022, 0, 0); g.add(arrow);
+    const sa = new T.Mesh(new T.CylinderGeometry(0.006, 0.006, 0.62, 4), phong(0xc8b088)); sa.rotation.x = Math.PI / 2; sa.position.z = back - 0.31; arrow.add(sa);
+    const ta = new T.Mesh(new T.ConeGeometry(0.014, 0.05, 4), metal); ta.rotation.x = -Math.PI / 2; ta.position.z = back - 0.64; arrow.add(ta);
+    for (const sd of [-1, 1]) { const fl = new T.Mesh(new T.BoxGeometry(0.002, 0.03, 0.06), phong(el ? ec : 0xd8d0c0)); fl.position.set(0, sd * 0.012, back - 0.05); arrow.add(fl); }
+    if (el && r >= 1) { const gl = new T.Mesh(new T.OctahedronGeometry(0.02), new T.MeshBasicMaterial({ color: ec })); gl.position.z = back - 0.64; arrow.add(gl); }
+    if (r >= 3) add(new T.OctahedronGeometry(0.024), runeMat, 0, 0.0, -0.04);
+    tipY = H; baseY = -H; g.userData.noTrail = true; g.userData.arrow = arrow;
+  } else if (it.base === 'claws') {
+    const len = 0.26 + r * 0.035;
+    add(new T.BoxGeometry(0.12, 0.05, 0.05), trim, 0, 0.08, -0.03);
+    for (const sx of [-1, 1]) add(new T.BoxGeometry(0.012, 0.16, 0.05), trim, sx * 0.058, 0.0, -0.03);
+    for (let i = 0; i < 3; i++) {
+      const x = (i - 1) * 0.04, bl = len * (i === 1 ? 1 : 0.88);
+      const b = add(new T.CylinderGeometry(0.002, 0.016, bl, 4), metal, x, 0.1 + bl / 2, -0.03, 0, Math.PI / 4, -(i - 1) * 0.08); b.scale.z = 0.3;
+      if (el && r >= 1) add(new T.BoxGeometry(0.006, bl * 0.6, 0.008), new T.MeshBasicMaterial({ color: ec, transparent: true, opacity: 0.4 + r * 0.12 }), x, 0.1 + bl * 0.4, -0.03);
+    }
+    if (r >= 2) for (const sx of [-1, 1]) add(new T.ConeGeometry(0.01, 0.05, 4), trim, sx * 0.06, 0.1, -0.03, 0, 0, -sx * 0.5);
+    if (r >= 3) add(new T.OctahedronGeometry(0.02), runeMat, 0, 0.08, -0.06);
+    tipY = 0.1 + len; baseY = 0.12;
   } else {
     const shaft = 0.36 + r * 0.04;
     add(new T.CylinderGeometry(0.022, 0.026, shaft, 6), trim, 0, gripLen / 2 + shaft / 2 - 0.02, 0);
@@ -1281,7 +1404,7 @@ function buildWeapon(it) {
   }
   const spinners = addTier(g, it, tipY, baseY, shards, ec || RCOL[r]);
   // sub-type silhouette: slender, broad or heavy
-  const SV = [[0.8, 1.1, 0.8], [1.2, 0.97, 1.2], [1.45, 0.9, 1.3]][it.combo || 0];
+  const SV = it.base === 'bow' ? [[0.9, 1.05, 1], [1, 0.95, 1], [1.15, 0.9, 1]][it.combo || 0] : [[0.8, 1.1, 0.8], [1.2, 0.97, 1.2], [1.45, 0.9, 1.3]][it.combo || 0];
   const inner = new T.Group();
   while (g.children.length) inner.add(g.children[0]);
   inner.scale.set(SV[0], SV[1], SV[2]); g.add(inner);
@@ -1428,7 +1551,7 @@ const vmRoot = new T.Group(); vmScene.add(vmRoot);
 const hand = new T.Group(); vmRoot.add(hand);
 const VM_SCALE = 0.78;
 const leftHand = new T.Group(); vmRoot.add(leftHand);
-let weaponObj = null, armObj = null, leftArmObj = null, shieldObj = null, torchObj = null;
+let weaponObj = null, armObj = null, leftArmObj = null, shieldObj = null, torchObj = null, clawLObj = null;
 let blockAnim = 0, inspectK = 0;
 const BASE_P = new T.Vector3(0.3, -0.3, -0.58);
 const POSES = {
@@ -1447,6 +1570,9 @@ const POSES = {
   flurry: [{ p: [0.34, -0.24, -0.36], r: [-1.45, 0.0, 0.2] }, { p: [0.12, -0.2, -0.8], r: [-1.57, 0.0, 0.05] }, { p: [0.14, -0.22, -0.78], r: [-1.55, 0.0, 0.08] }],
   flick: [{ p: [0.42, -0.14, -0.45], r: [-0.4, 0.1, -0.5] }, { p: [0.15, -0.22, -0.78], r: [-1.45, 0.0, 0.1] }, { p: [0.12, -0.28, -0.7], r: [-1.5, 0.0, 0.15] }],
   flick2: [{ p: [0.0, -0.1, -0.45], r: [-0.4, -0.1, 0.6] }, { p: [0.12, -0.2, -0.8], r: [-1.5, 0.0, -0.05] }, { p: [0.16, -0.26, -0.7], r: [-1.45, 0.0, 0.05] }],
+  hurl: [{ p: [0.42, 0.08, -0.15], r: [-1.2, 0.1, 0.1] }, { p: [0.12, -0.1, -0.95], r: [-1.6, 0.0, 0.05] }, { p: [0.1, -0.3, -0.8], r: [-1.8, 0.0, 0.05] }],
+  draw: [{ p: [0.24, -0.18, -0.5], r: [-0.05, 0.6, 0.1] }, { p: [0.22, -0.17, -0.62], r: [-0.02, 0.6, 0.1] }, { p: [0.25, -0.2, -0.56], r: [-0.12, 0.6, 0.15] }],
+  cast: [{ p: [0.32, -0.12, -0.4], r: [-0.3, 0.0, 0.2] }, { p: [0.12, -0.2, -0.85], r: [-1.0, 0.0, 0.05] }, { p: [0.16, -0.24, -0.75], r: [-0.9, 0.0, 0.1] }],
   lrest: { p: [-0.36, -0.36, -0.62], r: [-0.9, -0.25, -0.12] },
   lshield: { p: [-0.56, -0.5, -0.78], r: [0.05, 0.45, 0.08] },
   lblock: { p: [-0.12, -0.2, -0.55], r: [0.0, 0.05, 0.0] },
@@ -1455,8 +1581,10 @@ const POSES = {
   inspectL: { p: [-0.3, -0.22, -0.72], r: [0.15, -0.45, -0.1] },
   surge: [{ p: [0.32, -0.22, -0.32], r: [-1.45, 0.0, 0.25] }, { p: [0.12, -0.18, -0.95], r: [-1.55, 0.0, 0.05] }, { p: [0.18, -0.25, -0.8], r: [-1.5, 0.0, 0.1] }],
 };
-const DEF_REST = POSES.rest, DEF_GUARD = POSES.guard, SH_TILT = 0.9;
+const DEF_REST = POSES.rest, DEF_GUARD = POSES.guard, DEF_LREST = POSES.lrest, CLAW_LREST = { p: [-0.3, -0.2, -0.62], r: [-1.25, -0.2, -0.1] }, SH_TILT = 0.9;
 const SH_REST = { p: [0.15, -0.12, -0.7], r: [-1.1, 0.1, 0.0] }, SH_GUARD = { p: [0.06, -0.12, -0.6], r: [-1.2, 0.0, 0.0] };
+// how each class carries its weapon when idle: the bow held out upright, the staff planted, the javelin cocked
+const REST_BY = { bow: { p: [0.3, -0.22, -0.6], r: [-0.1, 0.65, 0.25] }, claws: { p: [0.3, -0.2, -0.62], r: [-1.25, 0.2, 0.1] }, staff: { p: [0.3, -0.4, -0.6], r: [-0.45, 0.15, 0.15] }, javelin: { p: [0.34, -0.24, -0.6], r: [-1.2, 0.2, 0.1] } };
 const tmpQ1 = new T.Quaternion(), tmpQ2 = new T.Quaternion(), tmpE = new T.Euler(), tmpV = new T.Vector3(), tmpV2 = new T.Vector3();
 function poseQ(pose, q) { tmpE.set(pose.r[0], pose.r[1], pose.r[2]); return q.setFromEuler(tmpE); }
 function blendTo(obj, pose, k) {
@@ -1474,6 +1602,7 @@ function rebuildViewmodel() {
   if (armObj) hand.remove(armObj);
   if (leftArmObj) leftHand.remove(leftArmObj);
   if (shieldObj) leftHand.remove(shieldObj);
+  if (clawLObj) { leftHand.remove(clawLObj); clawLObj = null; }
   weaponObj = buildWeapon(gear.weapon);
   armObj = buildArm(gear.gloves, gear.bracelet, gear.ring);
   armObj.scale.setScalar(VM_SCALE); weaponObj.scale.setScalar(VM_SCALE);
@@ -1483,7 +1612,8 @@ function rebuildViewmodel() {
   const isSh = gear.weapon.base === 'shield';
   armObj.rotation.x = isSh ? SH_TILT : 0;
   if (isSh) armObj.scale.z = VM_SCALE * 1.5; // longer forearm so it still reaches off-screen when the shield is thrust out
-  POSES.rest = isSh ? SH_REST : DEF_REST; POSES.guard = isSh ? SH_GUARD : DEF_GUARD;
+  POSES.rest = isSh ? SH_REST : REST_BY[gear.weapon.base] || DEF_REST;
+  POSES.lrest = gear.weapon.base === 'claws' && !gear.shield && !(mode === 'dungeon' || gear.trinket) ? CLAW_LREST : DEF_LREST; POSES.guard = isSh ? SH_GUARD : DEF_GUARD;
   leftArmObj = buildArm(gear.gloves);
   leftArmObj.scale.set(-VM_SCALE, VM_SCALE, VM_SCALE);
   leftHand.add(leftArmObj);
@@ -1493,6 +1623,8 @@ function rebuildViewmodel() {
   else if (mode !== 'dungeon' && gear.trinket) { torchObj = buildTrinket(gear.trinket.kind, gear.trinket.col); torchObj.scale.setScalar(VM_SCALE * 1.3); torchObj.position.set(0, 0.0, -0.02); leftHand.add(torchObj); }
   vmTorch.color.setHex(ohCol()); setTorchLight();
   if (typeof renderOffhand === 'function') renderOffhand();
+  // claws come in pairs: the empty left hand wears the mirror of the right
+  if (gear.weapon.base === 'claws' && !torchObj && !gear.shield) { clawLObj = buildWeapon(gear.weapon); clawLObj.scale.set(-VM_SCALE, VM_SCALE, VM_SCALE); leftHand.add(clawLObj); }
   if (gear.shield) { shieldObj = buildShield(gear.shield); shieldObj.scale.setScalar(VM_SCALE * 0.72); shieldObj.position.set(0.02, 0.05, -0.08); leftHand.add(shieldObj); }
   const c = new T.Color(weaponObj.userData.color);
   vmGlow.color.copy(c);
@@ -1535,7 +1667,7 @@ trail.frustumCulled = false;
 vmScene.add(trail);
 const trailSamples = [];
 function updateTrail(now, recording) {
-  if (recording && weaponObj) {
+  if (recording && weaponObj && !weaponObj.userData.noTrail) {
     const ud = weaponObj.userData;
     const tip = weaponObj.localToWorld(tmpV.set(ud.tipX || 0, ud.tipY, 0)).clone();
     const base = weaponObj.localToWorld(tmpV2.set(0, ud.baseY, 0)).clone();
@@ -1570,19 +1702,49 @@ const ETYPES = {
   caster: { hp: 24, dmg: 9, speed: 3.4, scale: 1.05, color: 0x4a3a6a, radius: 0.5, xp: 16, range: 14, windup: 0.75 },
   bloater: { hp: 60, dmg: 11, speed: 2.3, scale: 1.25, color: 0x7a8a3a, radius: 0.8, xp: 20, range: 2.2, windup: 1.0 },
   wraith: { hp: 32, dmg: 8, speed: 4.4, scale: 1.05, color: 0x8ab0d0, radius: 0.5, xp: 18, range: 1.8, windup: 0.45 },
+  // spiders scuttle fast and bite quickly; in the dungeon they hang from threads and drop on you
+  spider: { hp: 20, dmg: 6, speed: 5.0, scale: 0.9, color: 0x2a2228, radius: 0.55, xp: 12, range: 1.5, windup: 0.35 },
 };
-const TCODES = ['ghoul', 'brute', 'boss', 'imp', 'caster', 'bloater', 'wraith'];
+const webMat = new T.MeshBasicMaterial({ color: 0xd8d8d0, transparent: true, opacity: 0.5 });
+const TCODES = ['ghoul', 'brute', 'boss', 'imp', 'caster', 'bloater', 'wraith', 'spider'];
 // Which monster turns up: brutes at the given chance, the newer kinds as the level climbs, ghouls the rest of the time.
 function rollType(lv, bru, r = Math.random) {
   const x = r();
   if (x < bru) return 'brute';
   let a = bru;
-  for (const [t, from, ch] of [['imp', 2, 0.14], ['caster', 3, 0.11], ['bloater', 4, 0.08], ['wraith', 5, 0.08]]) if (lv >= from && x < (a += ch)) return t;
+  for (const [t, from, ch] of [['imp', 2, 0.14], ['caster', 3, 0.11], ['bloater', 4, 0.08], ['wraith', 5, 0.08], ['spider', 3, 0.07]]) if (lv >= from && x < (a += ch)) return t;
   return 'ghoul';
 }
 const BOSS_NAMES = ['Bloodclaw, the Hippogriff', 'Gorehorn the Flayer', 'Mother of Ash', 'Kurgath, Pit Lord'];
 
+function buildSpider(skin) {
+  const g = new T.Group(), add = (parent, geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
+  const torso = new T.Group(); torso.position.y = 0.95; g.add(torso);
+  const body = new T.Group(); body.position.y = -0.55; torso.add(body);
+  const ab = add(body, new T.SphereGeometry(0.42, 10, 8), skin, 0, 0.14, -0.42); ab.scale.set(1, 0.85, 1.2);
+  const mark = add(body, new T.OctahedronGeometry(0.1), new T.MeshBasicMaterial({ color: 0xb01818 }), 0, 0.48, -0.45); mark.scale.set(0.8, 0.3, 1.4);
+  add(body, new T.SphereGeometry(0.26, 8, 6), skin, 0, 0.05, 0.05);
+  const head = add(body, new T.SphereGeometry(0.17, 8, 6), skin, 0, 0.06, 0.32);
+  for (let k = 0; k < 4; k++) add(head, new T.SphereGeometry(0.035, 5, 4), eyeMat, (k % 2 ? 1 : -1) * (k > 1 ? 0.1 : 0.05), k > 1 ? 0.03 : 0.07, 0.14);
+  const arms = [];
+  for (const sd of [-1, 1]) { const a = new T.Group(); a.position.set(sd * 0.06, -0.04, 0.14); head.add(a); const fang = add(a, new T.ConeGeometry(0.03, 0.14, 4), phong(0xe8dcc0), 0, -0.07, 0); fang.rotation.x = Math.PI; arms.push(a); }
+  // eight legs: each rises to a knee and comes down to the ground, fanned from front to back
+  const legs = [], up = new T.CylinderGeometry(0.035, 0.045, 0.54, 4), lo = new T.CylinderGeometry(0.02, 0.035, 0.78, 4);
+  for (const sd of [-1, 1]) {
+    const side = new T.Group(); side.position.set(0, 0.42, 0.05); g.add(side);
+    for (let k = 0; k < 4; k++) {
+      const yaw = (k - 1.5) * 0.45;
+      const pv = new T.Group(); pv.position.set(sd * 0.16, 0, 0.22 - k * 0.15); pv.rotation.y = sd > 0 ? yaw : -yaw; side.add(pv);
+      add(pv, up, skin, sd * 0.225, 0.15, 0).rotation.z = -sd * 0.983;
+      add(pv, lo, skin, sd * 0.6, -0.06, 0).rotation.z = -sd * 2.747;
+    }
+    legs.push(side);
+  }
+  g.scale.setScalar(ETYPES.spider.scale);
+  return { g, torso, arms, legs, wings: [], head, legK: 0.22 };
+}
 function buildEnemyMesh(type, skin) {
+  if (type === 'spider') return buildSpider(skin);
   const g = new T.Group();
   const big = type === 'brute' || type === 'boss' || type === 'bloater';
   const add = (parent, geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
@@ -2143,8 +2305,8 @@ function startSwing() {
 const TAU = Math.PI * 2;
 const fr = (d) => player.pos.clone().addScaledVector(fwd(), d);
 const ecol = () => (stats.element ? ECOL[stats.element] : 0xd8c8a0);
-function sigKeys(list) {
-  const R = POSES.rest, out = [{ t: 0, p: R.p, r: R.r, w: [0, 0, 0], o: [0, 0, 0] }];
+function sigKeys(list, R = POSES.rest) {
+  const out = [{ t: 0, p: R.p, r: R.r, w: [0, 0, 0], o: [0, 0, 0] }];
   for (const k of list) { const prev = out[out.length - 1]; out.push({ t: k.t, p: k.p, r: k.r, w: k.w || prev.w, o: k.o || [0, 0, 0], lin: k.lin }); }
   const last = out[out.length - 1];
   out.push({ t: 1, p: R.p, r: R.r, w: last.w, o: [0, 0, 0] });
@@ -2449,13 +2611,108 @@ function harvest() {
   meleeHit(1.1, -1.01, 0.8); spinFx(0.5);
   const n = justHit().length; if (n) healPct(Math.min(0.15, 0.03 * n));
 }
-function javelinRain(n) {
+function javelinRain(n, mult = 1, R = 1.7, stun = 0.4) {
   const tg = nearEnemies(14, n);
   for (let i = 0; i < n; i++) later(0.3 + i * 0.09, () => {
     const c = tg[i] && tg[i].alive ? tg[i].pos.clone() : fr(rand(4, 10)).add(new T.Vector3(rand(-3, 3), 0, rand(-3, 3)));
     const jav = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 2.2, 5), new T.MeshBasicMaterial({ color: 0xffe8b0, fog: false }));
-    addTemp(jav, 0.18, (dt, t) => { const k = t.age / t.max; jav.position.set(c.x, heightAt(c.x, c.z) + 1.1 + (1 - k) * 14, c.z); }, () => { shockwave(c, 1.7, 1.0, 0.4, ecol()); burst(c.clone().setY(c.y + 0.3), 0xffe8b0, 12, 4, 0.4, 6); });
+    addTemp(jav, 0.18, (dt, t) => { const k = t.age / t.max; jav.position.set(c.x, heightAt(c.x, c.z) + 1.1 + (1 - k) * 14, c.z); }, () => { shockwave(c, R, mult, stun, ecol()); burst(c.clone().setY(c.y + 0.3), 0xffe8b0, 12, 4, 0.4, 6); });
   });
+}
+// Signature moves for the ranged and feral classes. They start and end in the class's own carry pose.
+{
+  const RJ = REST_BY.javelin, RS = REST_BY.staff, RB = REST_BY.bow;
+  const W = { p: [0.42, 0.08, -0.15], r: [-1.2, 0.1, 0.1] }, REL = { p: [0.12, -0.1, -0.95], r: [-1.6, 0, 0.05] };
+  const DRAW = { p: [0.24, -0.18, -0.5], r: [-0.05, 0.6, 0.1] }, LOOSE = { p: [0.22, -0.17, -0.63], r: [-0.02, 0.6, 0.1] };
+  const SL = { p: [0.46, -0.08, -0.5], r: [0.15, 0.2, -0.95] }, SR = { p: [-0.3, -0.4, -0.55], r: [-1.15, -0.1, 1.6] };
+  const flipBack = (h = 0.6, t = 0.16) => { player.lungeT = t; player.lungeDir.copy(fwd()).negate(); player.lungeSpeed = 22; hop(h); player.invuln = t + 0.15; };
+  Object.assign(SIG, {
+    javelin: {
+      name: 'Javelin Storm', cd: 8, dur: 1.6, ico: 'javelins',
+      desc: 'Hurl four javelins in a rapid stream, then backflip and send a heavy one that bursts where it lands',
+      k: sigKeys([{ t: 0.08, ...W }, { t: 0.16, ...REL }, { t: 0.24, ...W }, { t: 0.32, ...REL }, { t: 0.4, ...W }, { t: 0.48, ...REL }, { t: 0.56, ...W }, { t: 0.64, ...REL },
+        { t: 0.76, p: [0.45, 0.15, -0.1], r: [-1.0, 0.1, 0.1] }, { t: 0.86, ...REL }], RJ),
+      h: [...[0.16, 0.32, 0.48, 0.64].map((t) => [t, () => throwJav(0.8, rand(-0.05, 0.05), {})]), [0.72, () => flipBack()], [0.86, () => throwJav(1.8, 0, { boom: 3, size: 1.3 })]],
+    },
+    staff: {
+      name: 'Elemental Surge', cd: 8, dur: 1.6, ico: 'sun',
+      desc: 'Raise the staff and spin it overhead, loosing two rings of bolts in every direction, then slam it down in a burst',
+      k: sigKeys([{ t: 0.12, p: [0.15, 0.1, -0.6], r: [0.2, 0, 0] }, { t: 0.62, p: [0.15, 0.12, -0.6], r: [0.2, 0, 0], w: [0, 2 * TAU, 0], lin: true },
+        { t: 0.72, ...SLAM_UP, w: [0, 2 * TAU, 0] }, { t: 0.82, ...SLAM_DN, w: [0, 2 * TAU, 0] }], RS),
+      h: [[0.35, () => { for (let k = 0; k < 12; k++) boltShot(0.6, k * TAU / 12, 0.9); sfx('skill'); }], [0.55, () => { for (let k = 0; k < 12; k++) boltShot(0.6, (k + 0.5) * TAU / 12, 0.9); sfx('skill'); }],
+        [0.82, () => { shockwave(player.pos.clone(), 4.5, 2.0, 0.8, ecol()); shake = Math.max(shake, 0.2); }]],
+    },
+    bow: {
+      name: 'Barrage', cd: 7, dur: 1.5, ico: 'bow',
+      desc: 'Loose eight arrows as fast as you can draw, then a fully drawn shot that pierces everything',
+      k: sigKeys([...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => [{ t: 0.08 + i * 0.075, ...DRAW }, { t: 0.115 + i * 0.075, ...LOOSE }]), { t: 0.78, p: [0.25, -0.17, -0.42], r: [-0.05, 0.6, 0.1] }, { t: 0.86, ...LOOSE }], RB),
+      h: [...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => [0.115 + i * 0.075, () => { shoot(0.55, rand(-0.05, 0.05), { kind: 'arrow' }); bowFx(); }]), [0.86, () => { shoot(2.4, 0, { kind: 'arrow', size: 1.7, pierce: true, kb: 12, speed: 58, crit: 20 }); bowFx(true); }]],
+    },
+    claws: {
+      name: 'Savage Flurry', cd: 7, dur: 1.5, ico: 'claw',
+      desc: 'Eight frenzied rakes that make everything in front of you bleed, then a crossing slash that sends two waves',
+      k: sigKeys([...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ t: 0.08 + i * 0.07, ...(i % 2 ? SR : SL) })), { t: 0.72, ...SL }, { t: 0.82, ...SR }]),
+      h: [...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => [0.12 + i * 0.07, () => { meleeHit(0.42, 0.2, 0.3, 5); for (const e of justHit()) bleedOn(e, avgHit() * 0.25, 3, 0xb01818); }]),
+        [0.8, () => { launchWave(elOf(), 1.0, 0.6, false, 0.12); launchWave(elOf(), 1.0, 0.6, false, -0.12); shake = Math.max(shake, 0.12); }]],
+    },
+  });
+  Object.assign(SIGX, {
+    javelin: [{
+      name: 'Skewer', cd: 7, dur: 1.3, ico: 'spear',
+      desc: 'Charge through everything in front of you with the javelin levelled, then drive it through a long line',
+      k: sigKeys([{ t: 0.12, ...PULL }, { t: 0.2, ...JAB }, { t: 0.5, ...JAB }, { t: 0.6, ...PULL }, { t: 0.7, ...JAB }], RJ),
+      h: [[0.2, () => rushThrough(0.3, 20, 1.4, 0.6)], [0.7, () => { pierceLine(2.2, stats.reach + 3); fovKick = 6; }]],
+    }, {
+      name: 'Skyfall', cd: 10, dur: 1.5, ico: 'leap',
+      desc: 'Leap high and hurl a javelin into the sky. Ten more rain down around you, then you land in a shockwave',
+      k: sigKeys([{ t: 0.15, p: [0.25, 0.1, -0.35], r: [0.5, 0, 0.1] }, { t: 0.3, p: [0.15, 0.3, -0.5], r: [1.2, 0, 0] }, { t: 0.62, ...SLAM_DN }], RJ),
+      h: [[0.08, () => hop(1.2)], [0.3, () => { player.javHide = now + 1.2; javelinRain(10, 1.1, 2.2); sfx('swing', { heavy: true }); }], [0.62, () => { shockwave(player.pos.clone(), 3.5, 1.2, 0.6, ecol()); shake = Math.max(shake, 0.18); }]],
+    }],
+    staff: [{
+      name: 'Meteor Shower', cd: 10, dur: 1.5, ico: 'meteor',
+      desc: 'Raise the staff to the sky and call six meteors down on the nearest enemies',
+      k: sigKeys([{ t: 0.15, p: [0.15, 0.15, -0.55], r: [0.6, 0, 0] }, { t: 0.7, p: [0.14, 0.18, -0.55], r: [0.65, 0, 0] }], RS),
+      h: [[0.3, () => { const tg = nearEnemies(18, 6); for (let i = 0; i < 6; i++) { const c = tg[i] ? tg[i].pos.clone() : fr(rand(5, 11)).add(new T.Vector3(rand(-4, 4), 0, rand(-4, 4))); later(i * 0.16, () => meteor(1.2, 2.6, c)); } sfx('fire'); }]],
+    }, {
+      name: 'Storm Pillars', cd: 9, dur: 1.5, ico: 'pillar',
+      desc: 'Plant the staff and call six pillars of lightning down on the nearest enemies, one after another',
+      k: sigKeys([{ t: 0.12, p: [0.12, 0.1, -0.5], r: [0.3, 0, 0] }, { t: 0.24, p: [0.1, -0.35, -0.65], r: [-0.3, 0, 0] }, { t: 0.85, p: [0.1, -0.34, -0.65], r: [-0.3, 0, 0] }], RS),
+      h: [...[0, 1, 2, 3, 4, 5].map((i) => [0.28 + i * 0.1, () => { const tg = nearEnemies(16, 6), e = tg[i % Math.max(1, tg.length)]; smite(e ? e.pos : fr(4 + i), 1.3, 2.0, stats.element ? ecol() : 0xfff07a); }])],
+    }],
+    bow: [{
+      name: 'Hail of Arrows', cd: 8, dur: 1.4, ico: 'fan',
+      desc: 'Backflip out of reach, then loose three wide spreads of seven arrows',
+      k: sigKeys([{ t: 0.15, ...DRAW }, { t: 0.3, ...LOOSE }, { t: 0.4, ...DRAW }, { t: 0.48, ...LOOSE }, { t: 0.58, ...DRAW }, { t: 0.66, ...LOOSE }], RB),
+      h: [[0.1, () => flipBack(0.7, 0.2)], ...[0.3, 0.48, 0.66].map((t) => [t, () => { for (let k = -3; k <= 3; k++) shoot(0.75, k * 0.1, { kind: 'arrow' }); bowFx(); }])],
+    }, {
+      name: 'Explosive Shot', cd: 8, dur: 1.4, ico: 'meteor',
+      desc: 'A long, slow draw, then an arrow that explodes in a huge blast and scatters four more explosions',
+      k: sigKeys([{ t: 0.2, ...DRAW }, { t: 0.55, p: [0.25, -0.17, -0.4], r: [-0.05, 0.6, 0.1] }, { t: 0.62, ...LOOSE }], RB),
+      h: [[0.62, () => {
+        const c = 0xff7a2a; bowFx(true);
+        shoot(1.0, 0, { kind: 'arrow', size: 1.8, col: c, speed: 50, boom: (p) => {
+          shockwave(p, 4, 2.6, 0.6, c); burst(p.clone().setY(p.y + 0.6), 0xffb050, 50, 9, 0.7, 6); firePatch(p.x, p.z); shake = Math.max(shake, 0.2);
+          for (let i = 0; i < 4; i++) later(0.15 + i * 0.1, () => { const a = rand(0, TAU), q = p.clone().add(new T.Vector3(Math.cos(a) * 2.8, 0, Math.sin(a) * 2.8)); shockwave(q, 2, 1.0, 0.2, c); burst(q.clone().setY(q.y + 0.4), 0xffb050, 20, 6, 0.5, 6); });
+        } });
+      }]],
+    }],
+    claws: [{
+      name: "Predator's Leap", cd: 8, dur: 1.3, ico: 'paw',
+      desc: 'Pounce onto the nearest enemy within 14 m, rip into it, then two raking slashes',
+      k: sigKeys([{ t: 0.12, ...SLAM_UP }, { t: 0.3, ...SLAM_DN }, { t: 0.5, ...SL }, { t: 0.6, ...SR }, { t: 0.7, ...SL }, { t: 0.8, ...SR }]),
+      h: [[0.06, () => pounceAt(14, 2.4, 1.0, true)], [0.6, () => meleeHit(0.9, 0.2, 0.3)], [0.8, () => meleeHit(0.9, 0.2, 0.3)]],
+    }, {
+      name: 'Feral Roar', cd: 10, dur: 1.3, ico: 'shout',
+      desc: 'A roar that stuns everything within 6 m, then 30% faster attacks and 5% life steal for 6s',
+      k: sigKeys([{ t: 0.15, p: [0.4, -0.05, -0.4], r: [0.4, 0.2, -0.6] }, { t: 0.3, p: [0.3, -0.25, -0.75], r: [-1.2, 0, 0.3] }, { t: 0.7, p: [0.3, -0.24, -0.75], r: [-1.2, 0, 0.3] }]),
+      h: [[0.3, () => {
+        sfx('growl'); groundRing(player.pos, 0xd8a860, 0.5, 6, 0.5, 0.8); shake = Math.max(shake, 0.2);
+        for (const e of nearEnemies(6)) { strike(e, 0.6, null, 0); if (e.alive) e.stunT = Math.max(e.stunT, e.type === 'boss' ? 0.5 : 1.6); }
+        addBuff('frenzy', 6, { aps: 0.3, leech: 0.05, label: 'Feral Roar' });
+      }]],
+    }],
+  });
+  for (const S of [SIG.claws, ...SIGX.claws]) for (const k of [S.k[0], S.k[S.k.length - 1]]) { k.p = REST_BY.claws.p; k.r = REST_BY.claws.r; }
 }
 const SIGS = {}; for (const b in SIG) SIGS[b] = [SIG[b].ico ? SIG[b] : Object.assign(SIG[b], { ico: { sword: 'blades', axe: 'execute', mace: 'hammer', spear: 'charge', dagger: 'ghost', flail: 'meteor', wand: 'blink', shield: 'charge' }[b] }), ...SIGX[b]];
 const sigState = { idx: 0, rank: 1 };
@@ -2473,7 +2730,7 @@ function sigPose(s, t) {
     weaponObj.rotation.set(lerp(a.w[0], b.w[0], lu), lerp(a.w[1], b.w[1], lu), lerp(a.w[2], b.w[2], lu));
     weaponObj.position.set(lerp(a.o[0], b.o[0], u), lerp(a.o[1], b.o[1], u), lerp(a.o[2], b.o[2], u));
   }
-  if (gear.weapon.base === 'wand' && t > 0.34 && t < 0.66 && weaponObj) {
+  if ((gear.weapon.base === 'wand' || gear.weapon.base === 'staff') && t > 0.34 && t < 0.66 && weaponObj) {
     const ud = weaponObj.userData; weaponObj.localToWorld(tmpV.set(0, ud.tipY, 0));
     for (let n = 0; n < 2; n++) VFX.emit(tmpV.x, tmpV.y, tmpV.z, rand(-0.03, 0.03), rand(-0.03, 0.03), rand(-0.03, 0.03), 0.6, ecol(), 0, 0.6);
   }
@@ -2500,6 +2757,121 @@ function nearestInFront(maxD, minDot) {
     if (d < bd) { bd = d; best = e; }
   }
   return best;
+}
+const volleyShot = (m, yo) => gear.weapon.base === 'javelin' ? throwJav(m, yo, {}) : launchWave(stats.element || 'none', m, 0.55, false, yo);
+// Skills for the javelin, staff, bow and claw classes. Their rank II and III effects are built in, from l.
+function castNew(id, l, f, col, elc) {
+  const r = Math.round((l + 1) / 2), II = r >= 2, III = r >= 3;
+  switch (id) {
+    case 'splitjav': {
+      const n = 3 + Math.ceil(l / 2) + (II ? 2 : 0), m2 = 0.6 + 0.12 * l;
+      const split = (p, dir, skip, more) => {
+        const base = Math.atan2(-dir.x, -dir.z), k = more ? n : 3;
+        for (let i = 0; i < k; i++) shoot(m2, 0, { kind: 'jav', size: 0.65, yaw: base + (i - (k - 1) / 2) * 0.35, from: p, skip, life: 0.35, speed: 30, onHit: more && III ? (e, q, d) => split(q, d, [e], false) : null });
+      };
+      throwJav(1.6 + 0.3 * l, 0, { onHit: (e, p, d) => split(p, d, [e], true) });
+      return true;
+    }
+    case 'harpoon': {
+      const st = 1 + 0.2 * l;
+      throwJav(1.4 + 0.3 * l, 0, { pierce: II, col: 0xb8c0c8, onHit: (e) => {
+        if (e.type !== 'boss') e.kb.addScaledVector(tmpV2.subVectors(player.pos, e.pos).setY(0).normalize(), Math.max(0, e.pos.distanceTo(player.pos) - 1.6) * 8);
+        e.stunT = Math.max(e.stunT, st * (e.type === 'boss' ? 0.3 : 1)); arcLine(e.pos, 0xb8c0c8);
+      } });
+      if (III) later(0.5, () => shockwave(player.pos.clone(), 3.2, 1.0 + 0.2 * l, 0.6, col));
+      return true;
+    }
+    case 'javrain': player.javHide = now + 0.8; javelinRain(6 + 2 * l + (II ? 6 : 0), 0.9 + 0.2 * l, 1.9, III ? 1.2 : 0.4); return true;
+    case 'fireball': {
+      const R = 2.6 + 0.2 * l, m = 2 + 0.4 * l, fc = stats.element ? elc : col;
+      const ball = (yo) => shoot(m * 0.3, yo, { kind: 'orb', size: 1.5, speed: 24, col: fc, life: 0.9, boom: (p) => {
+        shockwave(p, R, m, 0.2, fc); burst(p.clone().setY(p.y + 0.5), fc, 40, 8, 0.6, 5); firePatch(p.x, p.z); sfx('slam');
+        if (III) for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; firePatch(p.x + Math.cos(a) * R * 0.8, p.z + Math.sin(a) * R * 0.8); }
+      } });
+      ball(0); if (II) { ball(-0.25); ball(0.25); }
+      sfx('fire');
+      return true;
+    }
+    case 'frozenorb': {
+      const fc = col, rate = 8 + 2 * l, sm = 0.35 + 0.08 * l;
+      const orb = () => {
+        let acc = 0, spin = player.yaw;
+        shoot(0.5 + 0.1 * l, 0, { kind: 'orb', size: 1.6, speed: 7, life: 2.2, col: fc, pierce: true, kb: 0, tick: (dt, p) => {
+          acc += dt;
+          while (acc > 1 / rate) { acc -= 1 / rate; spin += 2.4; shoot(sm, 0, { kind: 'arrow', size: 0.55, col: fc, yaw: spin, from: p, speed: 24, life: 0.35, kb: 1, onHit: (e) => { e.slowT = Math.max(e.slowT, 1.5); } }); }
+        }, boom: (p) => {
+          shockwave(p, 3, 1.0 + 0.2 * l, 0, fc); burst(p.clone().setY(p.y + 1), fc, 40, 7, 0.6, 2); sfx('frost');
+          if (II) for (const e of enemies) if (e.alive && e.type !== 'boss' && Math.hypot(e.pos.x - p.x, e.pos.z - p.z) < 3.5) { e.stunT = Math.max(e.stunT, 1.5); e.slowT = Math.max(e.slowT, 3); }
+        } });
+      };
+      orb(); if (III) later(0.6, orb);
+      sfx('frost');
+      return true;
+    }
+    case 'manashield': {
+      const D = 5 + l;
+      addBuff('mana', D, { armor: 35 + 5 * l, label: 'Mana Shield' });
+      const sph = new T.Mesh(new T.SphereGeometry(1.4, 16, 10), new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.08, blending: T.AdditiveBlending, depthWrite: false, fog: false, side: T.DoubleSide }));
+      addTemp(sph, D, (dt, t) => { sph.position.set(player.pos.x, player.pos.y + 1, player.pos.z); sph.material.opacity = 0.06 + Math.sin(t.age * 6) * 0.03; },
+        () => { shockwave(player.pos.clone(), 4, 1.2 + 0.25 * l, III ? 2 : 0.3, col); burst(player.pos.clone().setY(player.pos.y + 1), col, 40, 8, 0.6, 2); });
+      if (II) healPct(0.2);
+      groundRing(player.pos, col, 0.5, 3, 0.4); sfx('block');
+      return true;
+    }
+    case 'multishot': {
+      const n = 5 + l, vol = () => { for (let i = 0; i < n; i++) shoot(0.7 + 0.15 * l, (i - (n - 1) / 2) * 0.11, { kind: 'arrow', pierce: III }); bowFx(); };
+      vol(); if (II) later(0.25, vol);
+      return true;
+    }
+    case 'powershot': {
+      const shot = () => { shoot(2.4 + 0.45 * l, 0, { kind: 'arrow', size: 1.8, pierce: true, kb: 14, speed: 58, onHit: II ? (e) => { e.stunT = Math.max(e.stunT, e.type === 'boss' ? 0.4 : 1.2); } : null }); bowFx(true); };
+      shot(); if (III) later(0.3, shot);
+      return true;
+    }
+    case 'explarrow': {
+      const R = 2.8 + 0.2 * l, m = 1.8 + 0.35 * l;
+      shoot(0.4, 0, { kind: 'arrow', size: 1.3, col, boom: (p) => {
+        shockwave(p, R, m, 0.3, col); burst(p.clone().setY(p.y + 0.5), 0xffb050, 40, 8, 0.6, 5); shake = Math.max(shake, 0.14);
+        if (II) firePatch(p.x, p.z);
+        if (III) for (let i = 0; i < 3; i++) later(0.15 + i * 0.12, () => { const a = rand(0, TAU), q = p.clone().add(new T.Vector3(Math.cos(a) * R * 0.8, 0, Math.sin(a) * R * 0.8)); shockwave(q, R * 0.6, m * 0.5, 0.2, col); });
+      } });
+      bowFx();
+      return true;
+    }
+    case 'disengage': {
+      const start = player.pos.clone(), n = 3 + Math.ceil(l / 2);
+      player.lungeT = 0.25; player.lungeDir.copy(f).negate(); player.lungeSpeed = 22; hop(0.7); player.invuln = 0.4;
+      for (let i = 0; i < n; i++) later(0.04 + i * 0.07, () => { shoot(0.9 + 0.2 * l, rand(-0.15, 0.15), { kind: 'arrow' }); bowFx(); });
+      for (const e of nearEnemies(4.5)) e.slowT = Math.max(e.slowT, 3);
+      burst(start.clone().setY(start.y + 0.5), col, 20, 4, 0.5, -1);
+      if (II) player.dashCd = 0;
+      if (III) {
+        const trap = new T.Mesh(new T.OctahedronGeometry(0.25), new T.MeshBasicMaterial({ color: 0xff7a2a })); trap.position.copy(start).setY(heightAt(start.x, start.z) + 0.25);
+        addTemp(trap, 8, (dt, t) => { trap.rotation.y += dt * 3; if (enemies.some(e => e.alive && Math.hypot(e.pos.x - start.x, e.pos.z - start.z) < 2 + e.def.radius)) t.age = t.max; },
+          () => { shockwave(start, 3.2, 2 + 0.3 * l, 0.8, 0xff7a2a); burst(start.clone().setY(start.y + 0.5), 0xffb050, 40, 8, 0.6, 5); });
+      }
+      return true;
+    }
+    case 'arrowrain': {
+      const e = nearestInFront(18, 0.5), c = e ? e.pos : fr(9);
+      for (let i = 0; i < 12; i++) FX.emit(player.pos.x + rand(-0.3, 0.3), player.pos.y + 1.6, player.pos.z + rand(-0.3, 0.3), f.x * 6, 30, f.z * 6, 0.4, 0xe8dcc0, 0, 4);
+      bowFx(true);
+      later(0.35, () => arrowRain(c, 4, 0.4 + 0.1 * l, II ? 6 : 3, col));
+      if (III) later(0.9, () => { const o = nearEnemies(20, 1)[0]; arrowRain(o ? o.pos : fr(12), 3.4, 0.4 + 0.1 * l, 3, col); });
+      return true;
+    }
+    case 'maul': {
+      const e = nearestInFront(stats.reach + 1.5, 0.3), n = 4 + Math.ceil(l / 2), m = 0.6 + 0.12 * l;
+      for (let i = 0; i < n; i++) later(i * 0.09, () => {
+        if (e && e.alive) { strike(e, m, fwd(), 2, 5); bleedOn(e, avgHit() * 0.15 * (II ? 2 : 1), 3, 0xb01818); burst(e.pos.clone().setY(e.pos.y + 1.1 * e.def.scale), 0xb01818, 10, 4, 0.4, 8); sfx('hit', {}); }
+        else meleeHit(m, 0.4);
+      });
+      if (III) later(n * 0.09 + 0.1, () => { sfx('growl'); groundRing(player.pos, col, 0.5, 3.5, 0.4); for (const o of nearEnemies(3.5)) if (o.alive) o.stunT = Math.max(o.stunT, o.type === 'boss' ? 0.4 : 1.5); });
+      return true;
+    }
+    case 'pounce': pounceAt(10 + l, 2 + 0.4 * l, 1.0, III); if (II) player.dashCd = 0; return true;
+  }
+  return false;
 }
 function castLearned(id, l) {
   const f = fwd(), def = SKILLS[id], col = def.col;
@@ -2589,7 +2961,7 @@ function castLearned(id, l) {
       sfx('level');
       break;
     }
-    case 'volley': { const n = 2 + Math.ceil(l / 2); for (let i = 0; i < n; i++) addTemp(null, 0.001 + i * 0.13, null, () => { launchWave(stats.element || 'none', 1.1 + 0.2 * l, 0.55, false, rand(-0.06, 0.06)); sfx('swing'); }); break; }
+    case 'volley': { const n = 2 + Math.ceil(l / 2); for (let i = 0; i < n; i++) addTemp(null, 0.001 + i * 0.13, null, () => { volleyShot(1.1 + 0.2 * l, rand(-0.06, 0.06)); sfx('swing'); }); break; }
     case 'pull': {
       const R = 9 + l;
       for (const e of enemies) {
@@ -2621,7 +2993,7 @@ function castLearned(id, l) {
     case 'shieldthrow': shieldThrow(1.2 + 0.25 * l, 2 + Math.ceil(l / 2), 0.5, elc); sfx('swing', { heavy: true }); break;
     case 'shieldwall': addBuff('wall', 2.5 + 0.3 * l, { n: 0, label: 'Shield Wall' }); blockAnim = 1; sfx('block'); groundRing(player.pos, col, 0.5, 2.2, 0.3); break;
     case 'bulwark': bulwarkDome(4 + l, 40 + 4 * l, col); break;
-    default: castLearned2(id, l, f, col, elc); break;
+    default: if (!castNew(id, l, f, col, elc)) castLearned2(id, l, f, col, elc); break;
     case 'smoke': {
       player.invuln = 1.5 + 0.2 * l;
       for (let i = 0; i < 120; i++) { const a = rand(0, Math.PI * 2), r = rand(0, 4); FX.emit(player.pos.x + Math.cos(a) * r, player.pos.y + rand(0.2, 2.5), player.pos.z + Math.sin(a) * r, rand(-0.5, 0.5), rand(0, 0.6), rand(-0.5, 0.5), rand(1.2, 2.2), 0x50505a, -0.2, 0.5); }
@@ -2767,7 +3139,7 @@ function rankExtra(id, r, l, k) {
     case 'secondwind': if (skillSlots.Q) skillSlots.Q.cd = 0; if (III) regen(0.03, 5); break;
     case 'volley': {
       const n0 = 2 + Math.ceil(l / 2), n = III ? 4 : 2;
-      for (let i = 0; i < n; i++) later((n0 + i) * 0.13, () => { launchWave(el, 1.1 + 0.2 * l, 0.55, false, rand(-0.08, 0.08)); sfx('swing'); });
+      for (let i = 0; i < n; i++) later((n0 + i) * 0.13, () => { volleyShot(1.1 + 0.2 * l, rand(-0.08, 0.08)); sfx('swing'); });
       break;
     }
     case 'pull':
@@ -3262,6 +3634,7 @@ function doAction(d, idx) {
   switch (d.a) {
     case 'arc': {
       meleeHit(m, d.cos !== undefined ? d.cos : 0.35, d.reach || 0, d.crit || 0, d.max || 99);
+      if (d.bleed) for (const e of justHit()) bleedOn(e, avgHit() * d.bleed, 3, 0xb01818);
       if (d.stun) for (const e of enemies) if (e.alive && e.hitT > 3.9 && e.type !== 'boss') e.stunT = Math.max(e.stunT, d.stun);
       break;
     }
@@ -3320,6 +3693,19 @@ function doAction(d, idx) {
       break;
     }
     case 'bolt': boltShot(m, rand(-0.02, 0.02), 1); break;
+    case 'jav': throwJav(m, rand(-0.01, 0.01), { pierce: d.pierce, boom: d.boom }); break;
+    case 'javs': for (let k = -1; k <= 1; k++) throwJav(m, k * 0.16, {}); break;
+    case 'bigjav': throwJav(m, 0, { pierce: true, size: 1.7, boom: 2.6, bolt: true }); break;
+    case 'arrow': shoot(m, rand(-0.01, 0.01), { kind: 'arrow', pierce: d.pierce, crit: d.crit || 0, size: d.big ? 1.6 : 1, kb: d.big ? 10 : 3, speed: d.big ? 56 : 44 }); bowFx(d.big); break;
+    case 'arrows': for (let k = -2; k <= 2; k++) shoot(m, k * 0.12, { kind: 'arrow' }); bowFx(); break;
+    case 'flip':
+      player.lungeT = 0.14; player.lungeDir.copy(f).negate(); hop(0.5); player.invuln = 0.25;
+      shoot(m * 0.5, 0, { kind: 'arrow', size: 1.3, col: 0xff8a3a, boom: (p) => { shockwave(p, 2.6, m, 0.4, 0xff8a3a); burst(p.clone().setY(p.y + 0.5), 0xffb050, 24, 6, 0.5, 5); } }); bowFx();
+      break;
+    case 'orb': shoot(m * 0.5, rand(-0.02, 0.02), { kind: 'orb', speed: 22, boom: (p) => shockwave(p, 1.8, m * 0.6, 0, col) }); sfx('fire'); break;
+    case 'orbs': for (let k = -1; k <= 1; k++) shoot(m * 0.5, k * 0.2, { kind: 'orb', speed: 22, boom: (p) => shockwave(p, 1.8, m * 0.6, 0, col) }); sfx('fire'); break;
+    case 'zap': chainLightning(m * 1.1, 2); sfx('lightning'); break;
+    case 'smite': { const e = nearestInFront(15, 0.55); smite(e ? e.pos : fr(6), m, 2.4, stats.element ? col : 0xfff0a0); break; }
     case 'bolts': for (let k = -2; k <= 2; k++) boltShot(m, k * 0.15, 0.85); break;
     case 'nova': shockwave(player.pos.clone(), 3.8, m, 0.5, col); break;
     case 'beam': pierceLine(m, d.big ? 16 : 11); beamFx(d.big ? 16 : 11, col, d.big ? 0.14 : 0.06); break;
@@ -3371,6 +3757,113 @@ function boltShot(mult, yawOff = 0, size = 1, pierce = false, opt = {}) {
       burst(m.position.clone(), col, 10 + size * 6, 5, 0.4, 3);
       sfx('hit', { crit: h.crit }); hitstop = Math.max(hitstop, 0.03);
       if (!pierce) { t.age = t.max; break; }
+    }
+  });
+}
+// Thrown and loosed projectiles: arrows, javelins and orbs that fly straight, hit, and may burst where they stop.
+const PG = { shaftA: new T.CylinderGeometry(0.018, 0.018, 0.8, 5), shaftJ: new T.CylinderGeometry(0.035, 0.035, 1.6, 5), tipA: new T.ConeGeometry(0.045, 0.12, 4), tipJ: new T.ConeGeometry(0.085, 0.24, 4), glowA: new T.CylinderGeometry(0.04, 0.04, 0.72, 6, 1, true), glowJ: new T.CylinderGeometry(0.08, 0.08, 1.44, 6, 1, true), orb: new T.IcosahedronGeometry(0.22, 1), orbH: new T.IcosahedronGeometry(0.34, 1) };
+function projMesh(kind, col, s) {
+  const g = new T.Group(), add = (geo, mat, rx, z) => { const o = new T.Mesh(geo, mat); o.rotation.x = rx; o.position.z = z; g.add(o); return o; };
+  const halo = new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.3, blending: T.AdditiveBlending, depthWrite: false, fog: false, side: T.DoubleSide });
+  if (kind === 'orb') { add(PG.orb, new T.MeshBasicMaterial({ color: col, fog: false }), 0, 0); add(PG.orbH, halo, 0, 0); }
+  else {
+    const J = kind === 'jav', L = J ? 1.6 : 0.8;
+    add(J ? PG.shaftJ : PG.shaftA, new T.MeshBasicMaterial({ color: J ? 0xd8c090 : 0xe8dcc0, fog: false }), Math.PI / 2, 0);
+    add(J ? PG.tipJ : PG.tipA, new T.MeshBasicMaterial({ color: col, fog: false }), -Math.PI / 2, -L / 2 - (J ? 0.12 : 0.06));
+    add(J ? PG.glowJ : PG.glowA, halo, Math.PI / 2, 0);
+  }
+  g.scale.setScalar(s);
+  return g;
+}
+function shoot(mult, yawOff = 0, o = {}) {
+  const kind = o.kind || 'arrow';
+  const col = o.col || (stats.element ? ECOL[stats.element] : kind === 'orb' ? 0xffb050 : 0xfff0d0);
+  const yaw = (o.yaw != null ? o.yaw : player.yaw) + yawOff, dir = new T.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const m = projMesh(kind, col, o.size || 1);
+  if (o.from) m.position.copy(o.from);
+  else { m.position.copy(camPos()).addScaledVector(dir, 0.7).addScaledVector(right(), kind === 'arrow' ? 0.05 : 0.15); m.position.y -= kind === 'arrow' ? 0.15 : 0.3; }
+  m.quaternion.setFromUnitVectors(new T.Vector3(0, 0, -1), dir);
+  const hit = new Set(o.skip || []), speed = o.speed || (kind === 'arrow' ? 44 : 32), R = (o.r || 0.3) * (o.size || 1);
+  let done = false;
+  const end = (t) => { if (done) return; done = true; if (o.boom) { const p = m.position.clone(); p.y = heightAt(p.x, p.z); o.boom(p); } if (t) t.age = t.max; };
+  addTemp(m, o.life || 0.7, (dt, t) => {
+    if (done) return;
+    m.position.addScaledVector(dir, speed * dt);
+    if (kind === 'orb') { m.rotation.x += dt * 6; m.rotation.y += dt * 4; }
+    if (o.tick) o.tick(dt, m.position);
+    if (mode === 'dungeon' && solidAt(m.position.x, m.position.z)) { burst(m.position.clone(), col, 8, 3, 0.3, 3); end(t); return; }
+    if (Math.random() < 0.7) FX.emit(m.position.x, m.position.y, m.position.z, 0, 0, 0, kind === 'orb' ? 0.35 : 0.18, col, 0, 0);
+    for (const e of enemies) {
+      if (!e.alive || e.spawnT > 0.3 || hit.has(e)) continue;
+      if (Math.hypot(e.pos.x - m.position.x, e.pos.z - m.position.z) > e.def.radius + R) continue;
+      hit.add(e);
+      const h = strike(e, mult, dir.clone(), o.kb != null ? o.kb : 4, o.crit || 0);
+      if (o.onHit) o.onHit(e, m.position.clone(), dir);
+      burst(m.position.clone(), col, 10, 5, 0.4, 3);
+      sfx('hit', { crit: h.crit }); hitstop = Math.max(hitstop, 0.03);
+      if (!o.pierce) { end(t); break; }
+    }
+  }, () => end(null));
+}
+function throwJav(mult, yawOff, o = {}) {
+  player.javHide = now + 0.3; sfx('swing', { heavy: true });
+  const col = stats.element ? ECOL[stats.element] : 0xfff0d0;
+  shoot(mult, yawOff, Object.assign({ kind: 'jav', speed: 34, life: 0.75, kb: 7 }, o, {
+    boom: o.boom ? (p) => { shockwave(p, o.boom, mult * 0.7, 0.3, col); burst(p.clone().setY(p.y + 0.4), col, 20, 5, 0.5, 6); if (o.bolt) smite(p, mult * 0.6, o.boom, col); } : null,
+  }));
+}
+function bowFx(big) {
+  player.arrowT = now + 0.22; sfx('swing'); if (big) fovKick = Math.max(fovKick, 5);
+}
+// A pillar of light from the sky
+function smite(c, mult, R, col) {
+  c = c.clone(); c.y = heightAt(c.x, c.z);
+  const pil = new T.Mesh(new T.CylinderGeometry(0.35 * R / 2.4, 0.55 * R / 2.4, 16, 10, 1, true), new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false, fog: false, side: T.DoubleSide }));
+  pil.position.set(c.x, c.y + 8, c.z);
+  addTemp(pil, 0.4, (dt, t) => { const k = t.age / t.max; pil.material.opacity = 0.9 * (1 - k); pil.scale.set(1 + k, 1, 1 + k); });
+  shockwave(c, R, mult, 0.5, col); burst(c.clone().setY(c.y + 0.5), col, 30, 7, 0.5, 4); sfx('lightning'); shake = Math.max(shake, 0.12);
+}
+// Arrows pour down on a circle for a while, hitting everything inside four times a second
+function arrowRain(c, R, mult, dur, col, slow = true) {
+  c = c.clone(); c.y = heightAt(c.x, c.z);
+  groundRing(c, col, R, R * 0.98, dur, 0.4);
+  let acc = 0;
+  addTemp(null, dur, (dt) => {
+    for (let i = 0; i < 5; i++) { const a = rand(0, TAU), r = Math.sqrt(Math.random()) * R; FX.emit(c.x + Math.cos(a) * r, c.y + rand(3, 7), c.z + Math.sin(a) * r, 0, -38, 0, 0.16, i % 2 ? 0xe8dcc0 : col, 0, 4); }
+    acc += dt; if (acc < 0.25) return; acc -= 0.25;
+    let n = 0;
+    for (const e of enemies) {
+      if (!e.alive || e.spawnT > 0.3 || Math.hypot(e.pos.x - c.x, e.pos.z - c.z) > R + e.def.radius) continue;
+      strike(e, mult, null, 0); n++; if (slow && e.alive) e.slowT = Math.max(e.slowT, 0.6);
+    }
+    if (n) sfx('hit', {});
+  });
+}
+// Leap onto the nearest enemy and rip into it
+function pounceAt(R, mult, stun, big) {
+  const col = stats.element ? ECOL[stats.element] : 0xd8a860;
+  const e = nearestInFront(R, 0.2) || nearEnemies(R, 1)[0];
+  const from = player.pos.clone(), to = e ? e.pos.clone() : fr(6), v = new T.Vector3(to.x - from.x, 0, to.z - from.z), dist = v.length();
+  const dur = 0.28, go = Math.max(0, dist - (e ? e.def.radius + 0.7 : 0));
+  if (dist > 0.01) { v.normalize(); player.yaw = Math.atan2(-v.x, -v.z); }
+  player.lungeT = dur; player.lungeDir.copy(v); player.lungeSpeed = go / dur; hop(0.8); player.invuln = dur + 0.2; fovKick = 8;
+  sfx('growl');
+  later(dur, () => {
+    if (e && e.alive) { strike(e, mult, fwd(), 10, 15); burst(e.pos.clone().setY(e.pos.y + 1.1 * e.def.scale), 0xb01818, 24, 6, 0.5, 8); }
+    for (const o of nearEnemies(3)) if (o.type !== 'boss') o.stunT = Math.max(o.stunT, stun);
+    if (big) shockwave(player.pos.clone(), 3.4, mult * 0.5, stun, col); else groundRing(player.pos, col, 0.3, 3, 0.3);
+    hitstop = 0.08; shake = Math.max(shake, 0.14); sfx('slam');
+  });
+}
+// Charge forward, hitting everything you pass through once
+function rushThrough(dur, speed, mult, stun) {
+  const hit = new Set(), f = fwd();
+  player.lungeT = dur; player.lungeDir.copy(f); player.lungeSpeed = speed; player.invuln = dur + 0.1; fovKick = 9;
+  addTemp(null, dur, () => {
+    for (const e of enemies) {
+      if (!e.alive || hit.has(e) || e.pos.distanceTo(player.pos) > 1.8 + e.def.radius) continue;
+      hit.add(e); strike(e, mult, f.clone(), 14); if (stun && e.alive && e.type !== 'boss') e.stunT = Math.max(e.stunT, stun);
+      sfx('hit', { heavy: true }); hitstop = 0.04;
     }
   });
 }
@@ -3639,6 +4132,7 @@ function killEnemy(e) {
   if (coop && coop.host && e.id != null) coopEmit('kill', { i: e.id });
   if (stats.mods && stats.mods.killheal && player.alive) { player.hp = Math.min(stats.maxHp, player.hp + stats.maxHp * stats.mods.killheal / 100); burst(player.pos.clone().setY(player.pos.y + 1), 0xe8e0d0, 10, 2, 0.5, -1); }
   e.alive = false; e.deadT = 0.7; e.bar.remove();
+  if (e.hang) { dropIfHung(e); e.deadT = 1.1; }
   if (e.type === 'bloater') bloaterBurst(e);
   stats && gainXp(e.def.xp * (1 + 0.2 * (e.level - 1)));
   kills++;
@@ -4113,8 +4607,23 @@ function flowTarget(p, F = DG.flow) {
 }
 function wakeEnemy(e) {
   if (e.awake) return;
-  e.awake = true; sfx('growl');
-  for (const o of enemies) if (o.alive && !o.awake && o.type !== 'boss' && o.pos.distanceTo(e.pos) < 9) o.awake = true;
+  e.awake = true; dropIfHung(e); sfx('growl');
+  for (const o of enemies) if (o.alive && !o.awake && !o.hang && o.type !== 'boss' && o.pos.distanceTo(e.pos) < 9) o.awake = true;
+}
+// a hanging spider lets go of its thread
+function dropIfHung(e) {
+  if (!e.hang) return;
+  e.dropFrom = e.hang; e.hang = 0; e.dropT = 0.5; e.atkCd = Math.max(e.atkCd, 0.6);
+}
+function hangIdle(e, dt) {
+  const P = e.parts;
+  P.g.position.y += e.hang + Math.sin(now * 1.1 + e.phase) * 0.06; P.g.rotation.y += dt * 0.25; P.torso.rotation.x = 0;
+}
+function dropAnim(e, dt) {
+  if (!(e.dropT > 0)) return;
+  e.dropT -= dt; const u = 1 - Math.max(0, e.dropT / 0.5);
+  e.parts.g.position.y = e.pos.y + e.dropFrom * (1 - u * u);
+  if (e.dropT <= 0) burst(e.pos.clone().setY(e.pos.y + 0.2), 0x8a7a5a, 12, 3, 0.4, 6);
 }
 // Rooms joined by corridors, with doors where a corridor meets a room. You start in one corner and the
 // boss chamber sits in the opposite one, so the whole floor lies between you and it.
@@ -4298,6 +4807,15 @@ function enterDungeon(depth, seed) {
       e.awake = false; e.spawnT = 0; e.parts.g.scale.setScalar(e.def.scale); e.parts.g.rotation.y = rand(0, 6);
     }
   }
+  // spiders hang on threads above the corridors and rooms, and drop when you walk up to them
+  { const BR = DG.room, webs = L.open.filter(([i, j]) => L.d0[i + j * DG.N] > 6 && !(i >= BR.x0 - 1 && i <= BR.x1 + 1 && j >= BR.z0 - 1 && j <= BR.z1 + 1));
+    for (let k = 0; k < Math.min(3 + depth, 10) && webs.length; k++) {
+      const [i, j] = webs.splice(randi(0, webs.length - 1), 1)[0];
+      const e = spawnEnemy('spider', wave, { x: tCen(i) + rand(-0.8, 0.8), z: tCen(j) + rand(-0.8, 0.8) });
+      e.awake = false; e.spawnT = 0; e.parts.g.scale.setScalar(e.def.scale); e.parts.g.rotation.y = rand(0, 6); e.hang = rand(2.6, 3.4);
+      const top = e.pos.y + e.hang + 0.75, len = WALL_H - top;
+      const rope = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, len, 3), webMat); rope.position.set(e.pos.x, top + len / 2, e.pos.z); DG.group.add(rope);
+    } }
   const R = DG.room, b = spawnEnemy('boss', wave + 1, { x: tCen(R.x0 + 3), z: tCen(R.z0 + 3) });
   b.awake = false; b.spawnT = 0; b.parts.g.scale.setScalar(b.def.scale); b.name = DBOSS[(depth - 1) % DBOSS.length]; DG.boss = b;
   } finally { RNG = Math.random; }
@@ -4798,7 +5316,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 27;
+const NET_VER = 28;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {
@@ -5067,13 +5585,13 @@ function updateEnemiesGuest(dt) {
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i], P = e.parts;
     if (!e.alive) {
-      e.deadT -= dt; P.g.rotation.x = lerp(P.g.rotation.x, -1.5, dt * 6); P.g.position.y -= dt * 0.8;
+      e.deadT -= dt; P.g.rotation.x = lerp(P.g.rotation.x, -1.5, dt * 6); P.g.position.y -= dt * 0.8; dropAnim(e, dt);
       if (e.deadT <= 0) { scene.remove(P.g); enemies.splice(i, 1); }
       continue;
     }
     const s = snap && snap.get(e.id);
     if (s) {
-      if (!(mode === 'trail' && e.type === 'boss')) e.awake = true; e.missT = 0; e.seenSnap = true;
+      if (!(mode === 'trail' && e.type === 'boss')) { e.awake = true; dropIfHung(e); } e.missT = 0; e.seenSnap = true;
       const tx = num(s[1], -1e5, 1e5) / 10, tz = num(s[2], -1e5, 1e5) / 10, k = 1 - Math.exp(-dt * 12);
       e.moving = Math.hypot(tx - e.pos.x, tz - e.pos.z) > 0.06;
       e.pos.x += (tx - e.pos.x) * k; e.pos.z += (tz - e.pos.z) * k; e.pos.y = heightAt(e.pos.x, e.pos.z);
@@ -5083,7 +5601,7 @@ function updateEnemiesGuest(dt) {
       e.flags = s[5] | 0; e.airShow = num(s[6], 0, 200) / 10;
     } else if (e.awake && e.seenSnap && fresh && !c.snapFull) { e.missT = (e.missT || 0) + dt; if (e.missT > 1) { killEnemy(e); continue; } }
     if (e.type === 'boss' && e.awake) bossE = e;
-    if (!e.awake) { P.g.position.copy(e.pos); P.torso.rotation.x = 0.35 + Math.sin(now * 1.3 + e.phase) * 0.05; e.hitT -= dt; continue; }
+    if (!e.awake) { P.g.position.copy(e.pos); if (e.hang) hangIdle(e, dt); else P.torso.rotation.x = 0.35 + Math.sin(now * 1.3 + e.phase) * 0.05; e.hitT -= dt; continue; }
     P.torso.rotation.x = 0;
     if (e.spawnT > 0) { e.spawnT -= dt; P.g.scale.setScalar(Math.max(0.01, e.def.scale * (1 - clamp(e.spawnT / 0.6, 0, 1)))); }
     // pass on stuns, slows, knockback and launches your skills put on it
@@ -5104,12 +5622,12 @@ function updateEnemiesGuest(dt) {
     P.arms.forEach(a => a.rotation.x = lerp(a.rotation.x, atk ? -2.6 : stun ? 0.3 : 0, dt * (atk ? 5 : 8)));
     if (stun && Math.random() < 0.25) { const a = now * 6; FX.emit(e.pos.x + Math.cos(a) * 0.4 * e.def.scale, e.pos.y + 2.1 * e.def.scale, e.pos.z + Math.sin(a) * 0.4 * e.def.scale, 0, 0.3, 0, 0.3, 0xffe680, 0, 0); }
     if (e.type === 'boss') P.wings.forEach((w, j) => w.rotation.y = (j ? -1 : 1) * (0.4 + Math.sin(now * 4) * 0.35));
-    P.g.position.copy(e.pos); P.g.position.y += e.airShow || 0; P.g.rotation.x = -(e.airShow || 0) * 0.25;
+    P.g.position.copy(e.pos); P.g.position.y += e.airShow || 0; P.g.rotation.x = -(e.airShow || 0) * 0.25; dropAnim(e, dt);
     if (e.type === 'wraith') P.g.position.y += 0.35 + Math.sin(now * 2.4 + e.id) * 0.12;
     if (e.type === 'bloater') P.torso.scale.setScalar(atk ? 1 + 0.25 * (1 + Math.sin(now * 18)) : 1);
     e.phase += dt * (e.moving ? e.speed * 2.2 / e.def.scale : 0);
-    P.legs[0].rotation.x = Math.sin(e.phase) * 0.6 * (e.moving ? 1 : 0);
-    P.legs[1].rotation.x = -Math.sin(e.phase) * 0.6 * (e.moving ? 1 : 0);
+    P.legs[0].rotation.x = Math.sin(e.phase) * (P.legK || 0.6) * (e.moving ? 1 : 0);
+    P.legs[1].rotation.x = -Math.sin(e.phase) * (P.legK || 0.6) * (e.moving ? 1 : 0);
     P.torso.position.y = 0.95 + Math.abs(Math.sin(e.phase)) * 0.05;
     e.hitT -= dt;
   }
@@ -5441,6 +5959,8 @@ function updateViewmodel(dt) {
   vmRoot.rotation.set(-easeOut(equipAnim) * 0.6, 0, 0);
   let recording = false;
   if (weaponObj) { weaponObj.rotation.set(0, 0, 0); weaponObj.position.set(0, 0, 0); }
+  if (weaponObj && gear.weapon.base === 'javelin') weaponObj.visible = !(player.javHide > now);
+  if (weaponObj && weaponObj.userData.arrow) weaponObj.userData.arrow.visible = !(player.arrowT > now);
   if (swing && swing.kind === 'sig') {
     swing.t += dt / swing.dur;
     const t = Math.min(1, swing.t), H = swing.sig.h;
@@ -5476,6 +5996,8 @@ function updateViewmodel(dt) {
   // left hand: fist or shield, rises on block
   blockAnim = Math.max(0, blockAnim - dt * 2.5);
   applyPose(gear.shield ? POSES.lshield : POSES.lrest, gear.weapon.base === 'shield' ? POSES.lrest : POSES.lblock, easeOut(Math.min(1, blockAnim * 1.6)), leftHand);
+  // the off claw rakes forward out of step with the right
+  if (clawLObj && swing && swing.kind !== 'whirl') { const u = clamp((Math.min(1, swing.t) - 0.15) / 0.6, 0, 1), k = Math.sin(u * Math.PI); leftHand.position.z -= 0.32 * k; leftHand.position.x += 0.14 * k; leftHand.position.y += 0.06 * k; leftHand.rotation.z -= 0.6 * k; }
   // inspect: hold V to raise both hands and turn them
   inspectK = clamp(inspectK + (keys.has('KeyV') && !swing ? dt : -dt) * 4, 0, 1);
   if (inspectK > 0) {
@@ -5539,6 +6061,7 @@ function updateEnemies(dt) {
       P.g.rotation.x = lerp(P.g.rotation.x, -1.5, dt * 6);
       P.g.position.y -= dt * (e.fell ? 18 : 0.8);
       if (e.fell) { P.g.position.x += e.kb.x * dt; P.g.position.z += e.kb.z * dt; }
+      dropAnim(e, dt);
       if (e.deadT <= 0) { scene.remove(P.g); enemies.splice(i, 1); pending--; }
       continue;
     }
@@ -5571,8 +6094,8 @@ function updateEnemies(dt) {
     let mx = dx, mz = dz, md = d;
     if (mode === 'dungeon') {
       if (!e.awake) {
-        if (e.type !== 'boss' && d < 15 && pathTiles(e.pos, F) <= 4) wakeEnemy(e);
-        else { P.g.position.copy(e.pos); P.g.rotation.y += Math.sin(now * 0.7 + e.phase) * 0.002; P.torso.rotation.x = 0.35 + Math.sin(now * 1.3 + e.phase) * 0.05; e.hitT -= dt; continue; }
+        if (e.hang ? d < 7 && tAlive && pathTiles(e.pos, F) <= 3 : e.type !== 'boss' && d < 15 && pathTiles(e.pos, F) <= 4) wakeEnemy(e);
+        else { P.g.position.copy(e.pos); if (e.hang) hangIdle(e, dt); else { P.g.rotation.y += Math.sin(now * 0.7 + e.phase) * 0.002; P.torso.rotation.x = 0.35 + Math.sin(now * 1.3 + e.phase) * 0.05; } e.hitT -= dt; continue; }
       }
       P.torso.rotation.x = e.type === 'imp' ? 0.55 : 0;
       const ft = flowTarget(e.pos, F);
@@ -5645,14 +6168,15 @@ function updateEnemies(dt) {
     e.pos.y = heightAt(e.pos.x, e.pos.z);
     P.g.position.copy(e.pos);
     if (e.type === 'wraith') P.g.position.y += 0.35 + Math.sin(now * 2.4 + e.id) * 0.12;
+    dropAnim(e, dt);
     if (e.airV || e.airY) {
       e.airV -= 24 * dt; e.airY = (e.airY || 0) + e.airV * dt;
       if (e.airY <= 0) { e.airY = 0; e.airV = 0; burst(e.pos.clone().setY(e.pos.y + 0.2), 0x8a7a5a, 10, 3, 0.4, 6); }
       P.g.position.y += e.airY; P.g.rotation.x = -e.airY * 0.25;
     } else if (e.alive) P.g.rotation.x = 0;
     e.phase += dt * (moving ? e.speed * slow * 2.2 / e.def.scale : 0);
-    P.legs[0].rotation.x = Math.sin(e.phase) * 0.6 * (moving ? 1 : 0);
-    P.legs[1].rotation.x = -Math.sin(e.phase) * 0.6 * (moving ? 1 : 0);
+    P.legs[0].rotation.x = Math.sin(e.phase) * (P.legK || 0.6) * (moving ? 1 : 0);
+    P.legs[1].rotation.x = -Math.sin(e.phase) * (P.legK || 0.6) * (moving ? 1 : 0);
     P.torso.position.y = 0.95 + Math.abs(Math.sin(e.phase)) * 0.05;
     e.hitT -= dt;
   }
