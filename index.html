@@ -199,6 +199,19 @@ button.go.small { font-size: 16px; padding: 6px 18px; }
 #campRow .mbtn { font-size: 17px; padding: 5px 14px; }
 .cls .clv { font-size: 12px; font-weight: 800; color: var(--good); }
 #campOv { background: rgba(14,11,8,.97); z-index: 6; }
+.cbar.slim { padding: 6px 10px; }
+.cbar .big.core { color: #ff9a5a; font-size: 24px; }
+button.cchar { text-align: left; font-family: var(--body); cursor: pointer; }
+button.cchar.on, button.cchar:hover, button.cchar:focus-visible { border-color: #ffd98a; outline: none; }
+.bench { border-top: 1px solid var(--bronze-dim); padding-top: 8px; display: grid; gap: 6px; }
+.bench .bh { font-family: var(--display); font-size: 18px; color: var(--parch); }
+.bench .bh span { display: block; font-family: var(--body); font-size: 13px; color: var(--muted); }
+.affs { display: grid; gap: 4px; }
+.aff { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.aff em { color: var(--muted); font-size: 12px; font-style: normal; flex: 1; }
+.aff.lk span::before { content: '🔒 '; }
+.aff .mbtn, .bench .acts .mbtn { font-size: 15px; padding: 3px 10px; }
+.bench .mbtn[disabled] { opacity: .45; cursor: default; }
 #campOv .box { max-width: 760px; text-align: left; justify-items: stretch; }
 #campOv h2 { text-align: center; }
 #campOv h3 { margin: 4px 0 0; font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--parch); }
@@ -368,7 +381,7 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
       <div class="crow"><button class="mbtn" id="coopHost" type="button">Host a run</button><span class="cor">or</span><input id="coopCode" maxlength="6" placeholder="Friend's code" autocomplete="off" spellcheck="false"><button class="mbtn" id="coopJoin" type="button">Join</button></div>
       <div class="crow" id="coopKind"><span class="cor">The host plays</span><button class="mbtn kb on" type="button" data-k="dungeon">Dungeon</button><button class="mbtn kb" type="button" data-k="arena">Arena</button><button class="mbtn kb" type="button" data-k="trail">Island</button></div>
       <div id="coopStat">Both open this same page. One of you hosts and shares the code, the other joins with it. Then both pick a class.</div>
-      <div id="coopDiag">Version 29</div>
+      <div id="coopDiag">Version 30</div>
     </div>
     <div id="campRow"><span class="ci" id="campInfo"></span><button class="mbtn" id="campBtn" type="button">Camp</button></div>
     <div class="classes" id="classes"></div>
@@ -391,8 +404,11 @@ button.go:focus-visible { outline: 2px solid var(--parch); outline-offset: 3px; 
   <div class="box">
     <h2>Camp</h2>
     <div class="cbar"><span class="big" id="cSalv">0</span><span class="grow" id="cIdle"></span><button class="mbtn" id="cCollect" type="button">Collect</button></div>
-    <h3>Characters <span>each class keeps its level, gear and skills</span></h3>
+    <div class="cbar slim"><span class="big core" id="cCores">0</span><span class="grow">ashen cores, earned by clearing dungeon floors (more on deeper floors). The crafting bench spends them to empower gear.</span></div>
+    <h3>Characters <span>pick one to see and craft on its gear</span></h3>
     <div class="cchars" id="cChars"></div>
+    <h3 id="cGearH" hidden></h3>
+    <div class="stash" id="cGear" hidden></div>
     <h3>Shared stash <span id="cStashN"></span></h3>
     <div class="stash" id="cStash"></div>
     <div class="sdetail" id="cItem" hidden></div>
@@ -786,15 +802,15 @@ const ELEMS = ['fire', 'frost', 'lightning', 'void'];
 // Gloves, bracelets and rings carry no raw stats. They carry modifiers, and every modifier
 // adds a visible piece to your arm. Weapon modifiers change what your hits do; player modifiers change you.
 const MODS = {
-  burn: { kind: 'Weapon', slots: ['gloves', 'ring'], name: 'Smoldering', col: 0xff7a1a, roll: (r) => 15 + r * 8, text: (v) => `Hits burn enemies for ${v}% weapon damage per second` },
-  chain: { kind: 'Weapon', slots: ['gloves', 'ring'], name: 'Arcing', col: 0xfff07a, roll: (r) => 12 + r * 5, text: (v) => `${v}% chance on hit to arc lightning to 3 nearby enemies` },
-  frost: { kind: 'Weapon', slots: ['gloves', 'ring'], name: 'Rimed', col: 0x8fe4ff, roll: (r) => 8 + r * 4, text: (v) => `Hits slow enemies, with a ${v}% chance to freeze them` },
-  cleave: { kind: 'Weapon', slots: ['gloves', 'bracelet'], name: 'Reaping', col: 0xe8dcc0, roll: (r) => 50 + r * 15, text: (v) => `Every third attack also sends a slash wave for ${v}% weapon damage` },
-  critboom: { kind: 'Weapon', slots: ['ring', 'gloves'], name: 'Volatile', col: 0xff4030, roll: (r) => 40 + r * 15, text: (v) => `Critical hits explode for ${v}% weapon damage` },
-  leech: { kind: 'Weapon', slots: ['ring', 'gloves'], name: 'Vampiric', col: 0xd01838, roll: (r) => 2 + r, text: (v) => `${v}% of the damage you deal heals you` },
-  echo: { kind: 'Weapon', slots: ['gloves', 'ring'], name: 'Echoing', col: 0xb8a0ff, roll: (r) => 10 + r * 5, text: (v) => `${v}% chance for a hit to strike a second time` },
-  ghost: { kind: 'Weapon', slots: ['bracelet', 'ring'], name: 'Haunted', col: 0x9fe4ff, roll: (r) => 60 + r * 20, text: (v) => `Critical hits loose a spectral blade at another enemy for ${v}% weapon damage` },
-  crit: { kind: 'Weapon', slots: ['ring', 'gloves'], name: 'Keen', col: 0xffd66a, roll: (r) => 3 + r * 2, text: (v) => `+${v}% critical chance` },
+  burn: { kind: 'Weapon', slots: ['gloves', 'ring', 'weapon'], name: 'Smoldering', col: 0xff7a1a, roll: (r) => 15 + r * 8, text: (v) => `Hits burn enemies for ${v}% weapon damage per second` },
+  chain: { kind: 'Weapon', slots: ['gloves', 'ring', 'weapon'], name: 'Arcing', col: 0xfff07a, roll: (r) => 12 + r * 5, text: (v) => `${v}% chance on hit to arc lightning to 3 nearby enemies` },
+  frost: { kind: 'Weapon', slots: ['gloves', 'ring', 'weapon'], name: 'Rimed', col: 0x8fe4ff, roll: (r) => 8 + r * 4, text: (v) => `Hits slow enemies, with a ${v}% chance to freeze them` },
+  cleave: { kind: 'Weapon', slots: ['gloves', 'bracelet', 'weapon'], name: 'Reaping', col: 0xe8dcc0, roll: (r) => 50 + r * 15, text: (v) => `Every third attack also sends a slash wave for ${v}% weapon damage` },
+  critboom: { kind: 'Weapon', slots: ['ring', 'gloves', 'weapon'], name: 'Volatile', col: 0xff4030, roll: (r) => 40 + r * 15, text: (v) => `Critical hits explode for ${v}% weapon damage` },
+  leech: { kind: 'Weapon', slots: ['ring', 'gloves', 'weapon'], name: 'Vampiric', col: 0xd01838, roll: (r) => 2 + r, text: (v) => `${v}% of the damage you deal heals you` },
+  echo: { kind: 'Weapon', slots: ['gloves', 'ring', 'weapon'], name: 'Echoing', col: 0xb8a0ff, roll: (r) => 10 + r * 5, text: (v) => `${v}% chance for a hit to strike a second time` },
+  ghost: { kind: 'Weapon', slots: ['bracelet', 'ring', 'weapon'], name: 'Haunted', col: 0x9fe4ff, roll: (r) => 60 + r * 20, text: (v) => `Critical hits loose a spectral blade at another enemy for ${v}% weapon damage` },
+  crit: { kind: 'Weapon', slots: ['ring', 'gloves', 'weapon'], name: 'Keen', col: 0xffd66a, roll: (r) => 3 + r * 2, text: (v) => `+${v}% critical chance` },
   swift: { kind: 'Player', slots: ['bracelet', 'gloves'], name: 'Swift', col: 0xf0f4ff, roll: (r) => 6 + r * 3, text: (v) => `Move ${v}% faster` },
   dashfire: { kind: 'Player', slots: ['bracelet'], name: 'Blazing', col: 0xff8a2a, roll: (r) => 30 + r * 10, text: (v) => `Dashing leaves a trail of fire that burns for ${v}% weapon damage` },
   dashshock: { kind: 'Player', slots: ['bracelet', 'ring'], name: 'Thundering', col: 0x4ab0ff, roll: (r) => 60 + r * 20, text: (v) => `Dashing ends in a shockwave for ${v}% weapon damage` },
@@ -802,19 +818,20 @@ const MODS = {
   regen: { kind: 'Player', slots: ['bracelet', 'ring'], name: 'Verdant', col: 0x6fdc6f, roll: (r) => 5 + r * 3, text: (v) => `Regenerate ${(v / 10).toFixed(1)}% health per second, even in combat` },
   killheal: { kind: 'Player', slots: ['ring', 'bracelet'], name: 'Grim', col: 0xe8e0d0, roll: (r) => 2 + r, text: (v) => `Kills heal ${v}% of your health` },
   haste: { kind: 'Player', slots: ['ring', 'bracelet'], name: 'Timeless', col: 0x7ad8ff, roll: (r) => 8 + r * 4, text: (v) => `Skills and your signature move recharge ${v}% faster` },
-  wrath: { kind: 'Player', slots: ['gloves', 'ring'], name: 'Wrathful', col: 0xff3020, roll: (r) => 20 + r * 10, text: (v) => `Below 40% health, deal ${v}% more damage` },
+  wrath: { kind: 'Player', slots: ['gloves', 'ring', 'weapon'], name: 'Wrathful', col: 0xff3020, roll: (r) => 20 + r * 10, text: (v) => `Below 40% health, deal ${v}% more damage` },
   orbit: { kind: 'Player', slots: ['bracelet', 'ring'], name: 'Starbound', col: 0xc070ff, roll: (r) => (r >= 3 ? 2 : 1), text: (v) => `${v} spirit orb${v > 1 ? 's' : ''} circle${v > 1 ? '' : 's'} you, burning what they touch` },
   guard: { kind: 'Player', slots: ['bracelet', 'gloves'], name: 'Warded', col: 0xb8c4d0, roll: (r) => 5 + r * 3, text: (v) => `Take ${v}% less damage` },
 };
 const MOD_SHORT = { burn: 'Burning hits', chain: 'Chain lightning', frost: 'Freezing hits', cleave: 'Slash waves', critboom: 'Exploding crits', leech: 'Life steal', echo: 'Double strikes', ghost: 'Spectral blades', crit: 'More critical hits', swift: 'Faster movement', dashfire: 'Fire trail dash', dashshock: 'Shockwave dash', thorns: 'Thorns', regen: 'Regeneration', killheal: 'Heal on kill', haste: 'Faster cooldowns', wrath: 'Low-health fury', orbit: 'Spirit orbs', guard: 'Damage reduction' };
 function rollMods(slot, rarity) {
-  const n = [1, 1, 2, 3, 3][rarity], pool = Object.keys(MODS).filter(k => MODS[k].slots.includes(slot)), out = [];
+  const n = (slot === 'weapon' ? [0, 0, 1, 1, 2] : [1, 1, 2, 3, 3])[rarity], pool = Object.keys(MODS).filter(k => MODS[k].slots.includes(slot)), out = [];
   while (out.length < n && pool.length) {
     const id = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
     out.push({ id, v: Math.max(1, Math.round(MODS[id].roll(rarity) * rand(0.85, 1.15) * (rarity === 4 ? 1.35 : 1))) });
   }
   return out;
 }
+const modLine = (m, locked) => `<span class="mod" style="--mc:#${new T.Color(MODS[m.id].col).getHexString()}"><i>${locked ? 'Locked' : MODS[m.id].kind}</i>${MODS[m.id].text(m.v)}</span>`;
 const STYLE = {
   sword: { name: 'Slash', desc: 'Fast slashes. Every third hit lunges forward and pierces' },
   axe: { name: 'Cleave', desc: 'Wide cleaves that hit everything in front. Every third hit is a full spin' },
@@ -1156,6 +1173,7 @@ function genItem(level, rarity, slot, opts = {}) {
     it.sub = SUB[it.base][it.combo];
     it.name = rarity === 4 ? UNIQUE[it.base][it.element]
       : (rarity === 0 ? 'Worn ' : '') + elName(it.element) + it.sub + (rarity >= 2 ? ' ' + pick(SUFFIX) : '');
+    it.mods = opts.mods || rollMods('weapon', rarity);
   } else if (slot === 'torch' || slot === 'trinket') {
     const L = slot === 'torch' ? TORCHES : TRINKETS;
     it.kind = opts.kind || pick(Object.keys(L).filter(k => k !== 'plain'));
@@ -1194,7 +1212,7 @@ function computeStats(g = gear) {
   const w = g.weapon.stats, gl = g.gloves ? g.gloves.stats : {}, br = g.bracelet ? g.bracelet.stats : {}, rg = g.ring ? g.ring.stats : {}, sh = g.shield ? g.shield.stats : {};
   const lm = 1 + 0.09 * (player.level - 1);
   const mods = {};
-  for (const k of ['gloves', 'bracelet', 'ring']) if (g[k] && g[k].mods) for (const m of g[k].mods) mods[m.id] = (mods[m.id] || 0) + m.v;
+  for (const k of ['weapon', 'gloves', 'bracelet', 'ring']) if (g[k] && g[k].mods) for (const m of g[k].mods) mods[m.id] = (mods[m.id] || 0) + m.v;
   const dm = lm, ep = 1;
   const st = {
     min: w.min * dm, max: w.max * dm,
@@ -1986,12 +2004,13 @@ function statLines(it) {
     L.push(`${s.reach.toFixed(1)} m reach`);
     if (s.hp) L.push(`+${s.hp} health`);
     if (s.block) { L.push(`${s.block}% chance to block a hit`); L.push(`${s.armor}% less damage taken`); }
+    for (const m of it.mods || []) L.push(modLine(m, m.id === it.lock));
   } else if (it.slot === 'torch' || it.slot === 'trinket') {
     const D = ohDef(it);
     L.push(`<b>Shift: ${D.abil}</b>`); L.push(D.desc + (it.rarity ? ` (+${15 * it.rarity}% stronger)` : '')); L.push(`${ohCdFor(it).toFixed(0)}s cooldown`);
   } else if (it.mods) {
     if (!it.mods.length) L.push('No modifiers');
-    for (const m of it.mods) L.push(`<span class="mod" style="--mc:#${new T.Color(MODS[m.id].col).getHexString()}"><i>${MODS[m.id].kind}</i>${MODS[m.id].text(m.v)}</span>`);
+    for (const m of it.mods) L.push(modLine(m, m.id === it.lock));
   } else {
     L.push(`+${s.hp} health`);
     L.push(`${s.armor}% less damage taken`);
@@ -2030,7 +2049,7 @@ function verdicts(it, cur, a, b) {
     const ra = gear.weapon.stats.reach, rb = it.stats.reach;
     if (rb > ra * 1.08) out.push(row('up', '▲', 'Longer reach')); else if (rb < ra * 0.92) out.push(row('down', '▼', 'Shorter reach'));
     if (it.element) out.push(row('same', '◆', `${ENAME[it.element]} hits`));
-    return out;
+    if (!(it.mods && it.mods.length) && !(cur && cur.mods && cur.mods.length)) return out;
   }
   if (it.slot === 'torch' || it.slot === 'trinket') {
     const D = ohDef(it), C = it.slot === 'torch' ? ohDef(cur) || TORCHES.plain : ohDef(cur);
@@ -2293,7 +2312,8 @@ const store = {
   set(v) { try { localStorage.setItem(SAVE_KEY, v); return true; } catch (e) { return false; } },
 };
 let acct = null, saveDirty = false, lastSave = 0, storeOk = true;
-const newAcct = () => ({ v: 1, created: Date.now(), seen: Date.now(), salvage: 0, idle: 0, stash: [], chars: {} });
+const newAcct = () => ({ v: 1, created: Date.now(), seen: Date.now(), salvage: 0, cores: 0, idle: 0, stash: [], chars: {} });
+let runFloor = 0, charLive = false; // charLive: the live run holds this class's character (false between a reset and the next start)
 const fin = (x, d = 0) => (typeof x === 'number' && Number.isFinite(x) ? x : d);
 // Rebuild an item from saved data, keeping only known fields and sane values (save codes can come from anywhere)
 function cleanItem(o) {
@@ -2307,6 +2327,7 @@ function cleanItem(o) {
     it.base = o.base; it.combo = clamp(fin(o.combo) | 0, 0, 2); it.sub = SUB[it.base][it.combo];
     for (const k of ['min', 'max', 'aps', 'crit', 'reach']) if (!(k in it.stats)) return null;
     it.stats.aps = Math.max(0.3, it.stats.aps); it.stats.elem = it.stats.elem || 0;
+    it.mods = cleanMods(o.mods, slot);
   } else if (slot === 'torch' || slot === 'trinket') {
     const L = slot === 'torch' ? TORCHES : TRINKETS;
     if (!L[o.kind] || o.kind === 'plain') return null;
@@ -2314,11 +2335,17 @@ function cleanItem(o) {
   } else if (slot === 'shield') {
     for (const k of ['hp', 'armor', 'block']) it.stats[k] = it.stats[k] || 0;
   } else {
-    it.mods = (Array.isArray(o.mods) ? o.mods : []).filter(m => m && MODS[m.id] && MODS[m.id].slots.includes(slot) && typeof m.v === 'number' && Number.isFinite(m.v)).slice(0, 4).map(m => ({ id: m.id, v: clamp(Math.round(m.v), 1, 999) }));
+    it.mods = cleanMods(o.mods, slot);
     it.col = it.mods.length ? MODS[it.mods[0].id].col : 0xd8c8a0; it.element = null;
   }
+  if (it.mods && it.mods.some(m => m.id === o.lock)) it.lock = o.lock;
   it.name = typeof o.name === 'string' && o.name.length <= 60 && /^[\p{L}\p{N} '\-,.]+$/u.test(o.name) ? o.name : RARITY[it.rarity] + ' ' + (slot === 'weapon' ? it.sub : SLOT_NAME[slot]);
   return it;
+}
+function cleanMods(a, slot) {
+  const out = [];
+  for (const m of Array.isArray(a) ? a : []) if (m && MODS[m.id] && MODS[m.id].slots.includes(slot) && typeof m.v === 'number' && Number.isFinite(m.v) && !out.some(x => x.id === m.id) && out.length < 4) out.push({ id: m.id, v: clamp(Math.round(m.v), 1, 999) });
+  return out;
 }
 function cleanChar(base, c) {
   if (!c || typeof c !== 'object') return null;
@@ -2340,7 +2367,7 @@ function cleanAcct(a) {
   if (!a || typeof a !== 'object' || a.v !== 1) return null;
   const out = newAcct();
   out.created = clamp(fin(a.created, Date.now()), 0, 1e13); out.seen = clamp(fin(a.seen, Date.now()), 0, Date.now());
-  out.salvage = clamp(fin(a.salvage) | 0, 0, 1e7); out.idle = clamp(fin(a.idle), 0, 1e5);
+  out.salvage = clamp(fin(a.salvage) | 0, 0, 1e7); out.cores = clamp(fin(a.cores) | 0, 0, 1e5); out.idle = clamp(fin(a.idle), 0, 1e5);
   out.stash = (Array.isArray(a.stash) ? a.stash : []).slice(0, STASH_MAX).map(cleanItem).filter(Boolean);
   if (a.chars && typeof a.chars === 'object') for (const b of WEAPON_BASES) { const c = cleanChar(b, a.chars[b]); if (c) out.chars[b] = c; }
   return out;
@@ -2359,7 +2386,7 @@ function loadAcct() {
   storeOk = store.set(JSON.stringify(acct));
 }
 function snapChar() {
-  if (!acct || !playerClass || !started) return;
+  if (!acct || !playerClass || !started || !charLive) return;
   const prev = acct.chars[playerClass], g = {};
   for (const k of GEAR_KEYS) g[k] = gear[k] || null;
   const picks = pendingPicks + (tomes.some(t => t.o.k !== 'RMB') || (choosing && choosing.ch && choosing.ch.some(o => o.k !== 'RMB')) ? 1 : 0);
@@ -2386,7 +2413,7 @@ function applyChar(base) {
   const C = acct && acct.chars[base];
   if (!C) return false;
   player.level = C.level; player.xp = C.xp;
-  for (const k of GEAR_KEYS) { if (k === 'weapon') { if (C.gear.weapon) gear.weapon = C.gear.weapon; } else if (k === 'gloves') { if (C.gear.gloves) gear.gloves = C.gear.gloves; } else gear[k] = C.gear[k] || null; }
+  for (const k of GEAR_KEYS) { if (k === 'weapon') { if (C.gear.weapon) gear.weapon = C.gear.weapon; } else if (k === 'gloves') { gear.gloves = C.gear.gloves || genItem(1, 0, 'gloves', { name: 'Worn Wraps', mods: [] }); } else gear[k] = C.gear[k] || null; }
   for (const k of KEYS3) skillSlots[k] = C.skills[k] ? { id: C.skills[k].id, lvl: C.skills[k].lvl, cd: 0 } : null;
   sigState.idx = C.sig.idx; sigState.rank = C.sig.rank; pendingSig = C.sigPicks;
   const open = KEYS3.some(k => !skillSlots[k] && player.level >= UNLOCK[k]);
@@ -2404,44 +2431,154 @@ const ago = (ms) => { const m = Math.round(ms / 60000); return m < 60 ? `${Math.
 function renderClasses() {
   $('classes').innerHTML = WEAPON_BASES.map(b => { const c = acct && acct.chars[b]; return `<button class="cls" type="button" data-b="${b}"><b>${CLASSES[b].name}</b><em>${b}</em><span>${CLASSES[b].blurb}</span>${c ? `<span class="clv">Level ${c.level}</span>` : ''}</button>`; }).join('');
   const n = Math.floor(acct.idle);
-  $('campInfo').innerHTML = `<b>${acct.salvage}</b> salvage · stash <b>${acct.stash.length}</b>/${STASH_MAX}${n >= 1 ? ` · <b>${n}</b> waiting at camp` : ''}${storeOk ? '' : ' · <span style="color:var(--bad)">this browser is not saving</span>'}`;
+  $('campInfo').innerHTML = `<b>${acct.salvage}</b> salvage · <b>${acct.cores}</b> cores · stash <b>${acct.stash.length}</b>/${STASH_MAX}${n >= 1 ? ` · <b>${n}</b> waiting at camp` : ''}${storeOk ? '' : ' · <span style="color:var(--bad)">this browser is not saving</span>'}`;
 }
-let campSel = -1;
+// Crafting bench: deterministic tinkering with salvage and ashen cores
+function gainCores(n) {
+  if (!acct) return;
+  acct.cores += n; saveSoon();
+  setTimeout(() => toast(`+${n} ashen core${n > 1 ? 's' : ''}<small>For empowering gear at the camp's crafting bench · you have ${acct.cores}</small>`, 2), 1600);
+}
+const MOD_N = { weapon: [0, 0, 1, 1, 2], gloves: [1, 1, 2, 3, 3], bracelet: [1, 1, 2, 3, 3], ring: [1, 1, 2, 3, 3] };
+const rollModV = (id, r) => Math.max(1, Math.round(MODS[id].roll(r) * rand(0.85, 1.15) * (r === 4 ? 1.35 : 1)));
+const modScore = (it, m) => m.v / Math.max(1, MODS[m.id].roll(it.rarity) * (it.rarity === 4 ? 1.35 : 1));
+function lowestMod(it) { let lo = null; for (const m of it.mods || []) if (m.id !== it.lock && (!lo || modScore(it, m) < modScore(it, lo))) lo = m; return lo; }
+const COST = {
+  reroll: (it) => 8 + 6 * it.rarity,
+  lock: () => 20,
+  reforge: (it, t) => Math.ceil((t - it.level) * (2 + it.rarity)),
+  empower: (it) => [[25, 1], [60, 2], [140, 4]][it.rarity],
+};
+const levelled = (it) => it.slot === 'weapon' || it.slot === 'shield';
+// Rescale an item's base stats to a new level and rarity, keeping its own roll
+function regenStats(it, lvl, r) {
+  const s = it.stats, tier = 1 + 0.18 * (lvl - 1), rm = 1 + 0.4 * r;
+  if (it.slot === 'weapon') {
+    const B = BASES[it.base], roll = clamp(s.min / Math.max(1, B.dmg[0] * (1 + 0.18 * (it.level - 1)) * (1 + 0.4 * it.rarity)), 0.85, 1.15);
+    s.min = Math.round(B.dmg[0] * tier * rm * roll); s.max = Math.max(s.min + 1, Math.round(B.dmg[1] * tier * rm * roll));
+    s.aps = +(B.aps * (1 + 0.03 * r)).toFixed(2);
+    s.crit = Math.round(s.crit + (r - it.rarity) * 1.5);
+    s.elem = it.element ? Math.round((s.min + s.max) / 2 * (0.25 + 0.14 * r)) : 0;
+    s.reach = +(B.reach + r * 0.12).toFixed(2);
+    s.hp = Math.round((8 + r * 8) * tier);
+    if (it.base === 'shield') { s.block = 10 + r * 4; s.armor = 8 + r * 4; s.hp = Math.round((10 + r * 8) * tier); }
+  } else if (it.slot === 'shield') { s.hp = Math.round((14 + r * 12) * tier); s.armor = 5 + r * 4; s.block = 8 + r * 4; }
+  it.level = lvl;
+}
+function craftReroll(it) {
+  const lo = lowestMod(it); if (!lo) return null;
+  const have = new Set(it.mods.map(m => m.id)), pool = Object.keys(MODS).filter(k => MODS[k].slots.includes(it.slot) && !have.has(k));
+  pool.push(lo.id);
+  const id = pick(pool), i = it.mods.indexOf(lo), nm = { id, v: rollModV(id, it.rarity) };
+  it.mods[i] = nm;
+  if (i === 0 && it.slot !== 'weapon') it.col = MODS[id].col;
+  return [lo, nm];
+}
+function craftEmpower(it) {
+  const r0 = it.rarity, r = r0 + 1;
+  if (levelled(it)) regenStats(it, it.level, r);
+  if (it.mods) {
+    for (const m of it.mods) m.v = Math.max(1, Math.round(m.v * MODS[m.id].roll(r) / Math.max(1, MODS[m.id].roll(r0))));
+    const want = MOD_N[it.slot] ? MOD_N[it.slot][r] : 0;
+    while (it.mods.length < want) {
+      const pool = Object.keys(MODS).filter(k => MODS[k].slots.includes(it.slot) && !it.mods.some(m => m.id === k)); if (!pool.length) break;
+      const id = pick(pool); it.mods.push({ id, v: rollModV(id, r) });
+    }
+    if (it.slot !== 'weapon' && it.mods.length) it.col = MODS[it.mods[0].id].col;
+  }
+  if (it.slot === 'shield' && r >= 3 && !it.element) it.element = pick(ELEMS);
+  it.rarity = r;
+  if (it.slot === 'torch' || it.slot === 'trinket') { const L = it.slot === 'torch' ? TORCHES : TRINKETS; it.name = (OH_ADJ[r] ? OH_ADJ[r] + ' ' : '') + L[it.kind].name; }
+  else { it.name = it.name.replace(/^Worn /, ''); if (NAMES[it.slot] && NAMES[it.slot][r0] && it.slot !== 'shield') it.name = it.name.replace(NAMES[it.slot][r0], NAMES[it.slot][r]); }
+}
+function benchHtml(it, target) {
+  const can = (n, c = 0) => acct.salvage >= n && acct.cores >= c;
+  const btn = (a, label, ok, extra = '') => `<button class="mbtn" type="button" data-a="${a}"${extra}${ok ? '' : ' disabled'}>${label}</button>`;
+  const rows = [];
+  if (it.mods && it.mods.length) {
+    rows.push(`<div class="affs">${it.mods.map(m => `<div class="aff${m.id === it.lock ? ' lk' : ''}"><span style="color:#${new T.Color(MODS[m.id].col).getHexString()}">${MOD_SHORT[m.id]}</span><em>${Math.round(modScore(it, m) * 100)}% roll</em>${m.id === it.lock ? btn('unlock', 'Unlock', true, ` data-m="${m.id}"`) : btn('lock', `Lock · ${COST.lock()}`, can(COST.lock()), ` data-m="${m.id}"`)}</div>`).join('')}</div>`);
+  }
+  const acts = [], lo = lowestMod(it);
+  if (lo) acts.push(btn('reroll', `Reroll ${MOD_SHORT[lo.id].toLowerCase()} · ${COST.reroll(it)}`, can(COST.reroll(it))));
+  if (levelled(it) && target > it.level) acts.push(btn('reforge', `Reforge to level ${target} · ${COST.reforge(it, target)}`, can(COST.reforge(it, target))));
+  if (it.rarity < 3) { const [c, k] = COST.empower(it); acts.push(btn('empower', `Empower to ${RARITY[it.rarity + 1]} · ${c} + ${k} core${k > 1 ? 's' : ''}`, can(c, k))); }
+  if (!rows.length && !acts.length) return '';
+  return `<div class="bench"><div class="bh">Crafting bench <span>Reroll changes the weakest unlocked modifier. A locked one is never rerolled. Cores come from clearing dungeon floors.</span></div>${rows.join('')}${acts.length ? `<div class="acts">${acts.join('')}</div>` : ''}</div>`;
+}
+function craft(it, a, mid, target) {
+  let msg = '';
+  if (a === 'lock') { if (acct.salvage < COST.lock()) return; acct.salvage -= COST.lock(); it.lock = mid; msg = `Locked ${MOD_SHORT[mid].toLowerCase()}`; }
+  else if (a === 'unlock') { delete it.lock; msg = 'Unlocked'; }
+  else if (a === 'reroll') { const c = COST.reroll(it); if (acct.salvage < c) return; acct.salvage -= c; const r = craftReroll(it); if (!r) return; msg = `${MOD_SHORT[r[0].id]} became ${MOD_SHORT[r[1].id].toLowerCase()}: ${MODS[r[1].id].text(r[1].v)}`; }
+  else if (a === 'reforge') { const c = COST.reforge(it, target); if (!(target > it.level) || acct.salvage < c) return; acct.salvage -= c; regenStats(it, target, it.rarity); msg = `${it.name} is now item level ${target}`; }
+  else if (a === 'empower') { if (it.rarity >= 3) return; const [c, k] = COST.empower(it); if (acct.salvage < c || acct.cores < k) return; acct.salvage -= c; acct.cores -= k; craftEmpower(it); msg = `${it.name} is now ${RARITY[it.rarity]}`; }
+  else return;
+  sfx('loot'); persist(); campMsg(msg); renderCamp();
+}
+let campSel = null, campChar = null;
+const selItem = () => !campSel ? null : campSel.src === 'stash' ? acct.stash[campSel.i] : acct.chars[campSel.b] ? acct.chars[campSel.b].gear[campSel.slot] : null;
+const sitemHtml = (it, key, on) => `<button class="sitem${on ? ' on' : ''}" type="button" data-k="${key}"><b class="rar${it.rarity}">${it.name}</b><span>${it.slot === 'weapon' ? `${CLASSES[it.base].name} · ${it.sub}` : SLOT_NAME[it.slot]} · level ${it.level}${it.mods && it.mods.length ? ` · ${it.mods.length} mod${it.mods.length > 1 ? 's' : ''}` : ''}</span></button>`;
 function renderCamp() {
   idleTick();
   const n = Math.floor(acct.idle), rate = idleRate();
   $('cSalv').textContent = acct.salvage;
   $('cIdle').innerHTML = `salvage. ${n >= 1 ? `Your camp gathered <b style="color:#ffd98a">${n}</b> more while you were away.` : 'Nothing gathered yet.'} It gathers ${rate} an hour, up to ${IDLE_CAP_H} hours' worth, and every class at level 5 or higher adds 2 an hour.`;
   $('cCollect').disabled = n < 1; $('cCollect').style.opacity = n < 1 ? 0.5 : 1;
-  $('cChars').innerHTML = WEAPON_BASES.map(b => { const c = acct.chars[b]; return c ? `<div class="cchar"><b>${CLASSES[b].name}</b>Level ${c.level} · ${c.gear.weapon ? `<span class="rar${c.gear.weapon.rarity}">${c.gear.weapon.name}</span>` : b}<br>Floor ${c.best.dungeon} · island ${c.best.trail} · wave ${c.best.arena}</div>` : `<div class="cchar none"><b>${CLASSES[b].name}</b>Not played yet</div>`; }).join('');
+  $('cCores').textContent = acct.cores;
+  $('cChars').innerHTML = WEAPON_BASES.map(b => { const c = acct.chars[b]; return c ? `<button class="cchar${campChar === b ? ' on' : ''}" type="button" data-b="${b}"><b>${CLASSES[b].name}</b>Level ${c.level} · ${c.gear.weapon ? `<span class="rar${c.gear.weapon.rarity}">${c.gear.weapon.name}</span>` : b}<br>Floor ${c.best.dungeon} · island ${c.best.trail} · wave ${c.best.arena}</button>` : `<div class="cchar none"><b>${CLASSES[b].name}</b>Not played yet</div>`; }).join('');
+  const C = campChar && acct.chars[campChar];
+  $('cGearH').hidden = $('cGear').hidden = !C;
+  if (C) {
+    $('cGearH').innerHTML = `${CLASSES[campChar].name}'s gear <span>pick a piece to craft on it</span>`;
+    const L = GEAR_KEYS.filter(k => C.gear[k]).map(k => sitemHtml(C.gear[k], 'g' + k, campSel && campSel.src === 'gear' && campSel.b === campChar && campSel.slot === k));
+    $('cGear').innerHTML = L.join('') || '<div class="sempty">Nothing equipped yet.</div>';
+  }
   $('cStashN').textContent = `${acct.stash.length} of ${STASH_MAX}`;
-  $('cStash').innerHTML = acct.stash.length ? acct.stash.map((it, i) => `<button class="sitem${i === campSel ? ' on' : ''}" type="button" data-i="${i}"><b class="rar${it.rarity}">${it.name}</b><span>${it.slot === 'weapon' ? `${CLASSES[it.base].name} · ${it.sub}` : SLOT_NAME[it.slot]} · level ${it.level}</span></button>`).join('') : '<div class="sempty">Empty. Weapons for your other classes land here when you pick them up, and you can press G on any item to send it here.</div>';
-  const it = acct.stash[campSel], d = $('cItem');
-  if (!it) { d.hidden = true; campSel = -1; return; }
-  const who = it.slot === 'weapon' ? [it.base] : WEAPON_BASES.filter(b => acct.chars[b]);
-  const cur = (b) => acct.chars[b] && acct.chars[b].gear[it.slot];
+  $('cStash').innerHTML = acct.stash.length ? acct.stash.map((it, i) => sitemHtml(it, 's' + i, campSel && campSel.src === 'stash' && campSel.i === i)).join('') : '<div class="sempty">Empty. Weapons for your other classes land here when you pick them up, and you can press G on any item to send it here.</div>';
+  const it = selItem(), d = $('cItem');
+  if (!it) { d.hidden = true; campSel = null; return; }
   const fx = fxLine(it);
-  d.innerHTML = `<div class="sn rar${it.rarity}">${it.name}</div><div class="sd">${RARITY[it.rarity]} ${it.slot === 'weapon' ? it.sub + ' for the ' + CLASSES[it.base].name : SLOT_NAME[it.slot]} · item level ${it.level}</div>
-    <div>${statLines(it).join('<br>')}${fx ? `<br><i class="sd">${fx}</i>` : ''}</div>
-    <div class="acts">${who.length ? `<select id="cWho" aria-label="Class to equip">${who.map(b => `<option value="${b}">${CLASSES[b].name}${acct.chars[b] ? ' (level ' + acct.chars[b].level + ')' : ''}</option>`).join('')}</select><button class="mbtn" id="cEquip" type="button">Equip</button>` : '<span class="sd">Play a class first to equip this</span>'}
+  const head = `<div class="sn rar${it.rarity}">${it.name}</div><div class="sd">${RARITY[it.rarity]} ${it.slot === 'weapon' ? it.sub + ' for the ' + CLASSES[it.base].name : SLOT_NAME[it.slot]} · item level ${it.level}${campSel.src === 'gear' ? ` · worn by your ${CLASSES[campSel.b].name}` : ''}</div>
+    <div>${statLines(it).join('<br>')}${fx ? `<br><i class="sd">${fx}</i>` : ''}</div>`;
+  let acts, target;
+  if (campSel.src === 'stash') {
+    const who = it.slot === 'weapon' ? [it.base] : WEAPON_BASES.filter(b => acct.chars[b]);
+    const cur = (b) => acct.chars[b] && acct.chars[b].gear[it.slot];
+    target = Math.max(1, ...Object.values(acct.chars).map(c => c.level));
+    acts = `<div class="acts">${who.length ? `<select id="cWho" aria-label="Class to equip">${who.map(b => `<option value="${b}">${CLASSES[b].name}${acct.chars[b] ? ' (level ' + acct.chars[b].level + ')' : ''}</option>`).join('')}</select><button class="mbtn" id="cEquip" type="button">Equip</button>` : '<span class="sd">Play a class first to equip this</span>'}
     <button class="mbtn danger" id="cSalvage" type="button">Salvage for ${salvValue(it)}</button></div>
     <div class="sd" id="cSwapNote">${who.length && cur(who[0]) ? `Swaps out ${cur(who[0]).name}, which goes to the stash` : ''}</div>`;
+  } else {
+    target = acct.chars[campSel.b].level;
+    acts = it.slot === 'weapon' ? '<div class="sd">Equip another weapon from the stash to swap this one out.</div>' : `<div class="acts"><button class="mbtn" id="cUnequip" type="button">Send to the stash</button></div>`;
+  }
+  d.innerHTML = head + acts + benchHtml(it, target);
   d.hidden = false;
 }
 function campMsg(t) { $('cMsg').textContent = t; }
-$('campBtn').addEventListener('click', () => { campSel = -1; campMsg(''); $('cCode').hidden = true; $('cImportGo').hidden = true; renderCamp(); $('campOv').hidden = false; });
+function openCamp() { campSel = null; campChar = null; campMsg(''); $('cCode').hidden = true; $('cImportGo').hidden = true; renderCamp(); $('campOv').hidden = false; }
+$('campBtn').addEventListener('click', openCamp);
 $('cClose').addEventListener('click', () => { $('campOv').hidden = true; persist(); renderClasses(); });
 $('cCollect').addEventListener('click', () => { const n = Math.floor(acct.idle); if (n < 1) return; acct.salvage += n; acct.idle -= n; persist(); campMsg(`Collected ${n} salvage`); renderCamp(); });
-$('cStash').addEventListener('click', (e) => { const b = e.target.closest('.sitem'); if (!b) return; campSel = +b.dataset.i === campSel ? -1 : +b.dataset.i; renderCamp(); if (campSel >= 0) $('cItem').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
-$('cItem').addEventListener('change', (e) => { if (e.target.id !== 'cWho') return; const it = acct.stash[campSel], c = acct.chars[e.target.value], o = c && c.gear[it.slot]; $('cSwapNote').textContent = o ? `Swaps out ${o.name}, which goes to the stash` : ''; });
+$('cChars').addEventListener('click', (e) => { const b = e.target.closest('.cchar[data-b]'); if (!b) return; campChar = campChar === b.dataset.b ? null : b.dataset.b; if (campSel && campSel.src === 'gear') campSel = null; renderCamp(); });
+const pickSel = (k) => k[0] === 's' ? { src: 'stash', i: +k.slice(1) } : { src: 'gear', b: campChar, slot: k.slice(1) };
+const sameSel = (a, b) => a && b && a.src === b.src && a.i === b.i && a.b === b.b && a.slot === b.slot;
+for (const id of ['cStash', 'cGear']) $(id).addEventListener('click', (e) => { const b = e.target.closest('.sitem'); if (!b) return; const n = pickSel(b.dataset.k); campSel = sameSel(n, campSel) ? null : n; renderCamp(); if (campSel) $('cItem').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+$('cItem').addEventListener('change', (e) => { if (e.target.id !== 'cWho') return; const it = selItem(), c = acct.chars[e.target.value], o = c && c.gear[it.slot]; $('cSwapNote').textContent = o ? `Swaps out ${o.name}, which goes to the stash` : ''; });
 $('cItem').addEventListener('click', (e) => {
-  const it = acct.stash[campSel]; if (!it) return;
-  if (e.target.id === 'cSalvage') { const v = salvValue(it); acct.stash.splice(campSel, 1); acct.salvage += v; campSel = -1; persist(); campMsg(`Salvaged ${it.name} for ${v}`); renderCamp(); }
+  const it = selItem(); if (!it) return;
+  const a = e.target.closest('[data-a]');
+  if (a && !a.disabled) { craft(it, a.dataset.a, a.dataset.m, campSel.src === 'stash' ? Math.max(1, ...Object.values(acct.chars).map(c => c.level)) : acct.chars[campSel.b].level); return; }
+  if (e.target.id === 'cSalvage') { const v = salvValue(it); acct.stash.splice(campSel.i, 1); acct.salvage += v; campSel = null; persist(); campMsg(`Salvaged ${it.name} for ${v}`); renderCamp(); }
+  if (e.target.id === 'cUnequip') {
+    if (acct.stash.length >= STASH_MAX) { campMsg('The stash is full'); return; }
+    acct.chars[campSel.b].gear[campSel.slot] = null; acct.stash.push(it); campSel = null; persist(); campMsg(`${it.name} went to the stash`); renderCamp();
+  }
   if (e.target.id === 'cEquip') {
     const b = $('cWho').value, c = acct.chars[b] || (acct.chars[b] = cleanChar(b, { level: 1 }));
     const old = c.gear[it.slot];
-    c.gear[it.slot] = it; acct.stash.splice(campSel, 1); if (old) acct.stash.push(old);
-    campSel = -1; persist(); campMsg(`${it.name} is now on your ${CLASSES[b].name}`); renderCamp();
+    c.gear[it.slot] = it; acct.stash.splice(campSel.i, 1); if (old) acct.stash.push(old);
+    campSel = null; persist(); campMsg(`${it.name} is now on your ${CLASSES[b].name}`); renderCamp();
   }
 });
 // Save codes: the whole account, compressed when the browser can, as text you can paste anywhere
@@ -2474,7 +2611,7 @@ $('cImport').addEventListener('click', () => { const ta = $('cCode'); ta.value =
 $('cImportGo').addEventListener('click', async () => {
   let a = null;
   try { a = await importCode($('cCode').value); } catch (e) { campMsg('That is not a working save code.'); return; }
-  acct = a; acct.seen = Date.now(); persist(); campSel = -1;
+  acct = a; acct.seen = Date.now(); persist(); campSel = null; campChar = null;
   $('cCode').hidden = true; $('cImportGo').hidden = true;
   campMsg(`Loaded: ${Object.keys(acct.chars).length} characters, ${acct.stash.length} items in the stash, ${acct.salvage} salvage.`); renderCamp(); renderClasses();
 });
@@ -2497,7 +2634,7 @@ $('classes').addEventListener('click', (e) => {
 function startAs(base) {
   playerClass = base;
   gear.weapon = genItem(1, 0, 'weapon', { base, element: null, combo: 0 });
-  const had = applyChar(base);
+  const had = applyChar(base); charLive = true;
   stats = computeStats(); player.hp = stats.maxHp; $('lvl').textContent = player.level;
   rebuildViewmodel(); updateGearHud(); renderSkillBar();
   started = true; $('startOv').hidden = true; audio(); if (AC && AC.resume) AC.resume();
@@ -4695,7 +4832,7 @@ function clearWorld() {
 }
 function resetRun() {
   if (started && playerClass) persist();
-  runId++;
+  runId++; runFloor = 0; charLive = false;
   clearWorld();
   setMode('arena');
   for (const k in buffs) delete buffs[k];
@@ -5053,6 +5190,8 @@ function enterDungeon(depth, seed) {
   const carry = tomes.length > 0; clearWorld(); if (carry) pendingPicks++;
   setMode('dungeon');
   const L = buildDungeon(depth);
+  if (runFloor && depth === runFloor + 1) gainCores(1 + Math.floor((depth - 1) / 3));
+  runFloor = depth;
   DG.depth = depth; noteBest('dungeon', depth); DG.bossStarted = false; DG.boss = null; DG.stairs = null; DG.gateMeshes = []; DG.flowAt = -1; DG.goal = 'Find the boss chamber';
   wave = 1 + (depth - 1) * 2; waveDelay = -1; pending = 999;
   player.pos.set(tCen(L.si), 0, tCen(L.sj)); player.vel.set(0, 0, 0);
@@ -5585,7 +5724,7 @@ function loadNetLib() {
   if (!netLib) netLib = import(NET_URL).then(m => { if (!m.joinRoom) throw 0; return m; }).catch(() => { netLib = null; throw { type: 'load' }; });
   return netLib;
 }
-const NET_VER = 29;
+const NET_VER = 30;
 function netDiag(text) { $('coopDiag').textContent = `Version ${NET_VER}` + (text ? ' · ' + text : ''); }
 function netJoin(host, code) {
   return loadNetLib().then((T) => new Promise((resolve, reject) => {

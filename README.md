@@ -8,6 +8,8 @@ A first-person action RPG that runs in the browser. Pick a class, crawl the dung
 
 Each class keeps its level, gear, skills and the furthest floor and island it has reached, saved in the browser. Open **Camp** on the start screen to see your characters, the shared stash (40 slots; weapons for your other classes land there, and G sends any item there), and salvage your camp gathers while you are away. **Copy save code** and **Load a save code** move a save to another browser.
 
+Pick a character at camp to see its gear. The **crafting bench** works on any item there or in the stash: reroll the weakest modifier, lock one so rerolls never touch it, reforge a weapon or shield up to your level, or empower an item a rarity tier (up to epic) with salvage and ashen cores, which you earn by clearing dungeon floors. Weapons now roll modifiers too.
+
 ## Co-op
 
 Both players open the link above. One picks **Co-op**, chooses **Dungeon**, **Arena** or **Island**, clicks **Host a run** and shares the 4-letter code; the other picks **Co-op**, types the code and hits **Join**. The host's browser runs the monsters; the two browsers find each other through public Nostr relays (Trystero) and then connect directly, so there is no server to run.
