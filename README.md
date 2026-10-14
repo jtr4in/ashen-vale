@@ -18,6 +18,12 @@ Each mode pays its own way: the Island Trail pays salvage and gear for your clas
 
 An experimental story build on the same engine, in `story/index.html` with its own save. Four classes (Warrior, Templar, Rogue, Mystic) split into three subclasses each at level 6, covering all twelve weapons. You start in Hollowmere, a small village at night under falling ash, with an elder, a blacksmith (crafting bench), a healer, a witch (subclasses) and a stash chest. The chapel leads down into Act 1: four darker crypt floors with lore pages, two quests and the Hollow Abbot.
 
+## Ashen Realms (realm war version)
+
+**Play:** https://jtr4in.github.io/ashen-vale/realms/
+
+An experimental open-world build in `realms/index.html` with its own save. One big map split between three realms (Emberhold, Frostmark, Thornwood), each with a capital castle, two keeps and three villages, plus the neutral Ashen Crown in the middle and monster camps in the wilds. Swear to a realm and pick a class. The AI realms send war parties along the roads and besiege each other's strongholds whether you're there or not. Ride to your villages to break raids, storm enemy villages, keeps and castles to raise your banner, and hold all three capitals to win the season. **M** opens the war map, where you can travel to anything your realm holds.
+
 ## Co-op
 
 Both players open the link above. One picks **Co-op**, chooses **Dungeon**, **Arena** or **Island**, clicks **Host a run** and shares the 4-letter code; the other picks **Co-op**, types the code and hits **Join**. The host's browser runs the monsters; the two browsers find each other through public Nostr relays (Trystero) and then connect directly, so there is no server to run.
