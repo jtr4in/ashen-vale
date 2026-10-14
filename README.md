@@ -12,6 +12,12 @@ Pick a character at camp to see its gear. The **crafting bench** works on any it
 
 Each mode pays its own way: the Island Trail pays salvage and gear for your class at every island, the dungeon pays ashen cores per floor, and the arena pays marks (free rerolls) for every boss wave. Every 3rd floor or island and every 8th wave also gives a vale key. Toggle **Heroic** on the start screen to spend a key on a solo run with tougher monsters, better drops, doubled rewards and a cache from every boss.
 
+## The Chapel Below (story version)
+
+**Play:** https://jtr4in.github.io/ashen-vale/story/
+
+An experimental story build on the same engine, in `story/index.html` with its own save. Four classes (Warrior, Templar, Rogue, Mystic) split into three subclasses each at level 6, covering all twelve weapons. You start in Hollowmere, a small village at night under falling ash, with an elder, a blacksmith (crafting bench), a healer, a witch (subclasses) and a stash chest. The chapel leads down into Act 1: four darker crypt floors with lore pages, two quests and the Hollow Abbot.
+
 ## Co-op
 
 Both players open the link above. One picks **Co-op**, chooses **Dungeon**, **Arena** or **Island**, clicks **Host a run** and shares the 4-letter code; the other picks **Co-op**, types the code and hits **Join**. The host's browser runs the monsters; the two browsers find each other through public Nostr relays (Trystero) and then connect directly, so there is no server to run.
